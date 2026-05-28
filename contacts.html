@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khoyor Zagal — Contacts & Rates</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f0;color:#1a1a1a;font-size:14px}
+.top-bar{background:#fff;border-bottom:1px solid #e0dfd8;padding:10px 24px;display:flex;align-items:center;justify-content:space-between}
+.top-bar h1{font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px}
+.top-bar .camp-badge{font-size:11px;padding:3px 10px;border-radius:20px;background:#EEEDFE;color:#534AB7;font-weight:500}
+.nav-links{display:flex;gap:8px}
+.nav-btn{display:flex;align-items:center;gap:5px;font-size:13px;color:#534AB7;text-decoration:none;font-weight:500;padding:5px 12px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer;transition:all .15s}
+.nav-btn:hover{background:#EEEDFE;border-color:#534AB7}
+
+.page-wrap{max-width:1100px;margin:0 auto;padding:24px}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.page-title{font-size:18px;font-weight:600;display:flex;align-items:center;gap:8px}
+.page-title i{font-size:20px;color:#534AB7}
+
+/* Default rates card */
+.default-card{background:#fff;border-radius:10px;border:1px solid #e0dfd8;padding:20px;margin-bottom:20px}
+.default-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.default-card-title{font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;color:#1a1a1a}
+.default-card-title i{color:#888;font-size:16px}
+.default-badge{font-size:10px;padding:2px 8px;border-radius:10px;background:#f0efe8;color:#888;font-weight:500}
+
+/* Rate grid */
+.rate-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));gap:10px}
+.rate-cell{background:#fafaf7;border:1px solid #eee;border-radius:8px;padding:10px}
+.rate-label{font-size:10px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
+.rate-value{font-size:15px;font-weight:600;color:#1a1a1a}
+.rate-value .unit{font-size:11px;font-weight:400;color:#aaa}
+.rate-input{width:100%;padding:5px 8px;font-size:13px;border:1px solid #ddd;border-radius:5px;background:#fff;color:#1a1a1a;text-align:right;font-weight:500}
+.rate-input:focus{outline:none;border-color:#534AB7;box-shadow:0 0 0 2px rgba(83,74,183,.12)}
+
+/* Company cards */
+.company-list{display:flex;flex-direction:column;gap:12px}
+.company-card{background:#fff;border-radius:10px;border:1px solid #e0dfd8;overflow:hidden;transition:box-shadow .2s}
+.company-card:hover{box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.company-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;user-select:none}
+.company-name{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.company-name .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.company-meta{font-size:11px;color:#aaa;display:flex;align-items:center;gap:12px}
+.company-body{border-top:1px solid #eee;padding:16px 18px;display:none}
+.company-card.open .company-body{display:block}
+.company-card.open .chevron{transform:rotate(180deg)}
+.chevron{transition:transform .2s;color:#ccc;font-size:16px}
+
+/* Section labels inside card */
+.rate-section{font-size:10px;font-weight:600;color:#534AB7;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 8px;display:flex;align-items:center;gap:5px}
+.rate-section:first-child{margin-top:0}
+.rate-section i{font-size:12px}
+
+/* Contact fields */
+.contact-row{display:flex;gap:10px;margin-bottom:10px}
+.contact-row>div{flex:1}
+.contact-label{font-size:11px;color:#888;margin-bottom:3px;font-weight:500}
+.contact-input{width:100%;padding:6px 10px;font-size:13px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#1a1a1a}
+.contact-input:focus{outline:none;border-color:#534AB7;box-shadow:0 0 0 2px rgba(83,74,183,.12)}
+
+/* Buttons */
+.btn{padding:8px 16px;font-size:13px;font-weight:500;border-radius:7px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s}
+.btn-primary{background:#534AB7;color:#fff}
+.btn-primary:hover{background:#4338a0}
+.btn-danger{background:#fff;color:#DC2626;border:1px solid #fecaca}
+.btn-danger:hover{background:#FEF2F2}
+.btn-save{background:#0F6E56;color:#fff}
+.btn-save:hover{background:#0b5a46}
+.btn-outline{background:#fff;color:#534AB7;border:1px solid #ddd}
+.btn-outline:hover{background:#EEEDFE;border-color:#534AB7}
+
+.card-actions{display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid #eee}
+
+/* Add form */
+.add-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center}
+.add-overlay.show{display:flex}
+.add-modal{background:#fff;border-radius:12px;padding:24px;width:560px;max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.15)}
+.add-modal h2{font-size:16px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.add-modal h2 i{color:#534AB7;font-size:18px}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a1a1a;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:500;opacity:0;transition:all .3s ease;z-index:200;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Empty state */
+.empty-state{text-align:center;padding:40px;color:#bbb;font-size:13px}
+.empty-state i{font-size:32px;display:block;margin-bottom:8px}
+
+/* Diff indicators */
+.rate-diff{font-size:10px;margin-left:4px;font-weight:600}
+.rate-diff.lower{color:#16A34A}
+.rate-diff.higher{color:#DC2626}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1><i class="ti ti-tent" style="font-size:20px;color:#534AB7"></i> Khoyor Zagal <span class="camp-badge">Contacts & Rates</span></h1>
+  <div class="nav-links">
+    <a href="index.html" class="nav-btn"><i class="ti ti-home" style="font-size:14px"></i> Booking</a>
+    <a href="calendar.html" class="nav-btn"><i class="ti ti-calendar-event" style="font-size:14px"></i> Calendar</a>
+    <a href="finance.html" class="nav-btn" style="color:#0F766E"><i class="ti ti-report-money" style="font-size:14px"></i> Finance</a>
+  </div>
+</div>
+
+<div class="page-wrap">
+  <!-- Default rates -->
+  <div class="default-card">
+    <div class="default-card-header">
+      <div class="default-card-title"><i class="ti ti-tag"></i> Default rates (standard pricing)</div>
+      <span class="default-badge">Applied when no company is selected</span>
+    </div>
+    <div class="rate-section"><i class="ti ti-bed"></i> Accommodation (per bed/night)</div>
+    <div class="rate-grid" id="defaultBedRates"></div>
+    <div class="rate-section" style="margin-top:14px"><i class="ti ti-tools-kitchen-2"></i> Meals (per person)</div>
+    <div class="rate-grid" id="defaultMealRates"></div>
+  </div>
+
+  <!-- Company list header -->
+  <div class="page-header">
+    <div class="page-title"><i class="ti ti-building"></i> Tour operators <span style="font-size:12px;font-weight:400;color:#aaa;margin-left:4px" id="companyCount"></span></div>
+    <button class="btn btn-primary" onclick="openAddModal()"><i class="ti ti-plus"></i> Add company</button>
+  </div>
+
+  <div id="companyList" class="company-list"></div>
+</div>
+
+<!-- Add/Edit modal -->
+<div class="add-overlay" id="addOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="add-modal" id="addModal">
+    <h2 id="modalTitle"><i class="ti ti-building-plus"></i> Add tour operator</h2>
+    <input type="hidden" id="editId" value="">
+
+    <div class="contact-row">
+      <div><div class="contact-label">Company name *</div><input class="contact-input" id="mCompany" placeholder="e.g. Nomadic Journeys"></div>
+    </div>
+    <div class="contact-row">
+      <div><div class="contact-label">Contact person</div><input class="contact-input" id="mContact" placeholder="Name"></div>
+      <div><div class="contact-label">Phone</div><input class="contact-input" id="mPhone" placeholder="+976..."></div>
+    </div>
+    <div class="contact-row">
+      <div><div class="contact-label">Email</div><input class="contact-input" id="mEmail" placeholder="info@company.mn"></div>
+    </div>
+
+    <div class="rate-section" style="margin-top:18px"><i class="ti ti-bed"></i> Accommodation (per bed/night)</div>
+    <div class="rate-grid" id="modalBedRates"></div>
+
+    <div class="rate-section" style="margin-top:14px"><i class="ti ti-tools-kitchen-2"></i> Meals (per person)</div>
+    <div class="rate-grid" id="modalMealRates"></div>
+
+    <div class="rate-section" style="margin-top:14px"><i class="ti ti-tools-kitchen-2"></i> Staff rates</div>
+    <div class="rate-grid" id="modalStaffRates"></div>
+
+    <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-save" id="modalSaveBtn" onclick="saveCompany()"><i class="ti ti-check"></i> Save company</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── Default rates (matching index.html) ───
+const DEFAULT_RATES={
+  bed:{
+    ensuite_group:190000,
+    ensuite_single:280000,
+    standard_group:65000,
+    standard_single:125000
+  },
+  meal:{
+    breakfast:25000,
+    lunch:55000,
+    dinner:45000,
+    khorkhog:55000,
+    boolton:40000
+  },
+  staff:{
+    bed:45000,
+    supplement:60000,
+    breakfast:12000,
+    lunch:29000,
+    dinner:24000
+  }
+};
+
+const BED_FIELDS=[
+  {key:'ensuite_group',label:'Ensuite (group)'},
+  {key:'ensuite_single',label:'Ensuite (single)'},
+  {key:'standard_group',label:'Standard (group)'},
+  {key:'standard_single',label:'Standard (single)'}
+];
+const MEAL_FIELDS=[
+  {key:'breakfast',label:'Breakfast'},
+  {key:'lunch',label:'Lunch'},
+  {key:'dinner',label:'Dinner'},
+  {key:'khorkhog',label:'Khorkhog'},
+  {key:'boolton',label:'Boolton'}
+];
+const STAFF_FIELDS=[
+  {key:'bed',label:'Staff bed'},
+  {key:'supplement',label:'Single suppl.'},
+  {key:'breakfast',label:'Breakfast'},
+  {key:'lunch',label:'Lunch'},
+  {key:'dinner',label:'Dinner'}
+];
+
+// ─── Pre-seeded companies from spreadsheet ───
+const SEED_COMPANIES=[
+  {company:'New Juulchin Tours',contact:'',phone:'',email:'',
+   bed:{ensuite_group:null,ensuite_single:null,standard_group:65000,standard_single:null},
+   meal:{breakfast:null,lunch:null,dinner:null,khorkhog:null,boolton:null},
+   staff:{bed:null,supplement:null,breakfast:null,lunch:null,dinner:null}},
+  {company:'H&A',contact:'',phone:'',email:'',
+   bed:{ensuite_group:165000,ensuite_single:null,standard_group:65000,standard_single:63000},
+   meal:{breakfast:23000,lunch:45000,dinner:40000,khorkhog:40000,boolton:null},
+   staff:{bed:null,supplement:null,breakfast:null,lunch:null,dinner:null}},
+  {company:'Tour Lab',contact:'',phone:'',email:'',
+   bed:{ensuite_group:155000,ensuite_single:null,standard_group:55000,standard_single:85000},
+   meal:{breakfast:null,lunch:44000,dinner:41000,khorkhog:55000,boolton:null},
+   staff:{bed:null,supplement:null,breakfast:null,lunch:null,dinner:null}},
+  {company:'Tarun',contact:'',phone:'',email:'',
+   bed:{ensuite_group:190000,ensuite_single:null,standard_group:65000,standard_single:85000},
+   meal:{breakfast:25000,lunch:55000,dinner:45000,khorkhog:55000,boolton:null},
+   staff:{bed:null,supplement:null,breakfast:null,lunch:null,dinner:null}},
+  {company:'Rich Travel',contact:'',phone:'',email:'',
+   bed:{ensuite_group:170000,ensuite_single:null,standard_group:65000,standard_single:85000},
+   meal:{breakfast:null,lunch:55000,dinner:40000,khorkhog:55000,boolton:null},
+   staff:{bed:null,supplement:null,breakfast:null,lunch:null,dinner:null}},
+  {company:'Royal Smile',contact:'',phone:'',email:'',
+   bed:{ensuite_group:150000,ensuite_single:null,standard_group:45000,standard_single:54000},
+   meal:{breakfast:23000,lunch:47000,dinner:40000,khorkhog:40000,boolton:null},
+   staff:{bed:35000,supplement:null,breakfast:12000,lunch:29000,dinner:23000}},
+];
+
+// ─── LocalStorage persistence ───
+const LS_KEY='kz_companies';
+let companies=[];
+
+function loadCompanies(){
+  try{companies=JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){companies=[];}
+  if(!companies.length){
+    // Seed from spreadsheet data on first load
+    companies=SEED_COMPANIES.map((c,i)=>({id:Date.now()+i,...c}));
+    saveCompanies();
+  }
+}
+function saveCompanies(){localStorage.setItem(LS_KEY,JSON.stringify(companies));}
+
+function fmt(n){
+  if(n===null||n===undefined||n==='')return '—';
+  return Number(n).toLocaleString('en-US')+'₮';
+}
+function fmtInput(n){
+  if(n===null||n===undefined||n==='')return '';
+  return String(n);
+}
+
+// ─── Render default rates (read-only display) ───
+function renderDefaults(){
+  let h='';
+  BED_FIELDS.forEach(f=>{
+    h+=`<div class="rate-cell"><div class="rate-label">${f.label}</div><div class="rate-value">${fmt(DEFAULT_RATES.bed[f.key])}</div></div>`;
+  });
+  document.getElementById('defaultBedRates').innerHTML=h;
+
+  h='';
+  MEAL_FIELDS.forEach(f=>{
+    h+=`<div class="rate-cell"><div class="rate-label">${f.label}</div><div class="rate-value">${fmt(DEFAULT_RATES.meal[f.key])}</div></div>`;
+  });
+  document.getElementById('defaultMealRates').innerHTML=h;
+}
+
+// ─── Diff badge ───
+function diffBadge(special,defaultVal){
+  if(special===null||special===undefined||special==='')return '';
+  const s=Number(special),d=Number(defaultVal);
+  if(isNaN(s)||isNaN(d)||s===d)return '';
+  const pct=Math.round(((s-d)/d)*100);
+  if(pct<0) return `<span class="rate-diff lower">${pct}%</span>`;
+  return `<span class="rate-diff higher">+${pct}%</span>`;
+}
+
+// ─── Render company list ───
+function renderCompanies(){
+  const el=document.getElementById('companyList');
+  document.getElementById('companyCount').textContent=`(${companies.length})`;
+
+  if(!companies.length){
+    el.innerHTML='<div class="empty-state"><i class="ti ti-building-off"></i>No tour operators yet. Click "Add company" to get started.</div>';
+    return;
+  }
+
+  let html='';
+  companies.forEach(c=>{
+    // Count how many rates differ from default
+    let diffs=0;
+    BED_FIELDS.forEach(f=>{if(c.bed&&c.bed[f.key]!=null&&c.bed[f.key]!==DEFAULT_RATES.bed[f.key])diffs++;});
+    MEAL_FIELDS.forEach(f=>{if(c.meal&&c.meal[f.key]!=null&&c.meal[f.key]!==DEFAULT_RATES.meal[f.key])diffs++;});
+
+    html+=`<div class="company-card" id="card-${c.id}">
+      <div class="company-header" onclick="toggleCard(${c.id})">
+        <div class="company-name">
+          <span class="dot" style="background:#534AB7"></span>
+          ${esc(c.company)}
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="company-meta">
+            ${c.contact?'<span><i class="ti ti-user" style="font-size:12px"></i> '+esc(c.contact)+'</span>':''}
+            ${c.phone?'<span><i class="ti ti-phone" style="font-size:12px"></i> '+esc(c.phone)+'</span>':''}
+            ${diffs?'<span style="color:#534AB7;font-weight:500">'+diffs+' special rate'+(diffs>1?'s':'')+'</span>':'<span>Default rates</span>'}
+          </span>
+          <i class="ti ti-chevron-down chevron"></i>
+        </div>
+      </div>
+      <div class="company-body">
+        <div class="rate-section"><i class="ti ti-bed"></i> Accommodation</div>
+        <div class="rate-grid">`;
+
+    BED_FIELDS.forEach(f=>{
+      const v=c.bed&&c.bed[f.key]!=null?c.bed[f.key]:null;
+      const display=v!==null?fmt(v):'<span style="color:#ccc">default</span>';
+      const badge=v!==null?diffBadge(v,DEFAULT_RATES.bed[f.key]):'';
+      html+=`<div class="rate-cell"><div class="rate-label">${f.label}</div><div class="rate-value">${display}${badge}</div></div>`;
+    });
+
+    html+=`</div><div class="rate-section" style="margin-top:10px"><i class="ti ti-tools-kitchen-2"></i> Meals</div><div class="rate-grid">`;
+
+    MEAL_FIELDS.forEach(f=>{
+      const v=c.meal&&c.meal[f.key]!=null?c.meal[f.key]:null;
+      const display=v!==null?fmt(v):'<span style="color:#ccc">default</span>';
+      const badge=v!==null?diffBadge(v,DEFAULT_RATES.meal[f.key]):'';
+      html+=`<div class="rate-cell"><div class="rate-label">${f.label}</div><div class="rate-value">${display}${badge}</div></div>`;
+    });
+
+    // Staff rates only if any are set
+    const hasStaff=c.staff&&STAFF_FIELDS.some(f=>c.staff[f.key]!=null);
+    if(hasStaff){
+      html+=`</div><div class="rate-section" style="margin-top:10px"><i class="ti ti-users"></i> Staff</div><div class="rate-grid">`;
+      STAFF_FIELDS.forEach(f=>{
+        const v=c.staff&&c.staff[f.key]!=null?c.staff[f.key]:null;
+        const display=v!==null?fmt(v):'<span style="color:#ccc">default</span>';
+        const badge=v!==null?diffBadge(v,DEFAULT_RATES.staff[f.key]):'';
+        html+=`<div class="rate-cell"><div class="rate-label">${f.label}</div><div class="rate-value">${display}${badge}</div></div>`;
+      });
+    }
+
+    html+=`</div>
+        <div class="card-actions">
+          <button class="btn btn-outline" onclick="editCompany(${c.id})"><i class="ti ti-pencil"></i> Edit</button>
+          <button class="btn btn-danger" onclick="deleteCompany(${c.id})"><i class="ti ti-trash"></i> Delete</button>
+        </div>
+      </div>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+
+function esc(s){return s?String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;'):''}
+
+function toggleCard(id){
+  document.getElementById('card-'+id).classList.toggle('open');
+}
+
+// ─── Modal ───
+function openAddModal(){
+  document.getElementById('editId').value='';
+  document.getElementById('modalTitle').innerHTML='<i class="ti ti-building-plus"></i> Add tour operator';
+  document.getElementById('modalSaveBtn').innerHTML='<i class="ti ti-check"></i> Save company';
+  document.getElementById('mCompany').value='';
+  document.getElementById('mContact').value='';
+  document.getElementById('mPhone').value='';
+  document.getElementById('mEmail').value='';
+
+  // Render rate inputs with empty values
+  renderModalRates(null);
+  document.getElementById('addOverlay').classList.add('show');
+}
+
+function editCompany(id){
+  const c=companies.find(x=>x.id===id);
+  if(!c)return;
+  document.getElementById('editId').value=id;
+  document.getElementById('modalTitle').innerHTML='<i class="ti ti-pencil"></i> Edit '+esc(c.company);
+  document.getElementById('modalSaveBtn').innerHTML='<i class="ti ti-device-floppy"></i> Update company';
+  document.getElementById('mCompany').value=c.company||'';
+  document.getElementById('mContact').value=c.contact||'';
+  document.getElementById('mPhone').value=c.phone||'';
+  document.getElementById('mEmail').value=c.email||'';
+
+  renderModalRates(c);
+  document.getElementById('addOverlay').classList.add('show');
+}
+
+function renderModalRates(c){
+  let h='';
+  BED_FIELDS.forEach(f=>{
+    const v=c&&c.bed?fmtInput(c.bed[f.key]):'';
+    h+=`<div class="rate-cell"><div class="rate-label">${f.label}</div><input class="rate-input" data-group="bed" data-key="${f.key}" value="${v}" placeholder="${DEFAULT_RATES.bed[f.key].toLocaleString()}" type="number"></div>`;
+  });
+  document.getElementById('modalBedRates').innerHTML=h;
+
+  h='';
+  MEAL_FIELDS.forEach(f=>{
+    const v=c&&c.meal?fmtInput(c.meal[f.key]):'';
+    h+=`<div class="rate-cell"><div class="rate-label">${f.label}</div><input class="rate-input" data-group="meal" data-key="${f.key}" value="${v}" placeholder="${DEFAULT_RATES.meal[f.key].toLocaleString()}" type="number"></div>`;
+  });
+  document.getElementById('modalMealRates').innerHTML=h;
+
+  h='';
+  STAFF_FIELDS.forEach(f=>{
+    const v=c&&c.staff?fmtInput(c.staff[f.key]):'';
+    h+=`<div class="rate-cell"><div class="rate-label">${f.label}</div><input class="rate-input" data-group="staff" data-key="${f.key}" value="${v}" placeholder="${DEFAULT_RATES.staff[f.key].toLocaleString()}" type="number"></div>`;
+  });
+  document.getElementById('modalStaffRates').innerHTML=h;
+}
+
+function closeModal(){
+  document.getElementById('addOverlay').classList.remove('show');
+}
+
+function saveCompany(){
+  const name=document.getElementById('mCompany').value.trim();
+  if(!name){showToast('Company name is required','#DC2626');return;}
+
+  const editId=document.getElementById('editId').value;
+  const bed={},meal={},staff={};
+
+  document.querySelectorAll('#addModal .rate-input').forEach(inp=>{
+    const g=inp.dataset.group,k=inp.dataset.key,v=inp.value.trim();
+    const obj=g==='bed'?bed:g==='meal'?meal:staff;
+    obj[k]=v?Number(v):null;
+  });
+
+  if(editId){
+    const idx=companies.findIndex(x=>x.id===Number(editId));
+    if(idx>-1){
+      companies[idx].company=name;
+      companies[idx].contact=document.getElementById('mContact').value.trim();
+      companies[idx].phone=document.getElementById('mPhone').value.trim();
+      companies[idx].email=document.getElementById('mEmail').value.trim();
+      companies[idx].bed=bed;
+      companies[idx].meal=meal;
+      companies[idx].staff=staff;
+    }
+    showToast('✓ '+name+' updated');
+  }else{
+    companies.push({
+      id:Date.now(),
+      company:name,
+      contact:document.getElementById('mContact').value.trim(),
+      phone:document.getElementById('mPhone').value.trim(),
+      email:document.getElementById('mEmail').value.trim(),
+      bed,meal,staff
+    });
+    showToast('✓ '+name+' added');
+  }
+
+  saveCompanies();
+  closeModal();
+  renderCompanies();
+}
+
+function deleteCompany(id){
+  const c=companies.find(x=>x.id===id);
+  if(!c)return;
+  if(!confirm('Delete '+c.company+'? This cannot be undone.'))return;
+  companies=companies.filter(x=>x.id!==id);
+  saveCompanies();
+  renderCompanies();
+  showToast(c.company+' deleted','#DC2626');
+}
+
+// ─── Toast ───
+function showToast(msg,bg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.style.background=bg||'#1a1a1a';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ─── Init ───
+loadCompanies();
+renderDefaults();
+renderCompanies();
+</script>
+</body>
+</html>

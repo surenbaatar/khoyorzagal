@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Load Mock Data — Khoyor Zagal</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f0;color:#1a1a1a;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.card{background:#fff;border:1px solid #e0dfd8;border-radius:12px;padding:32px;max-width:520px;width:100%;text-align:center}
+h1{font-size:20px;font-weight:700;margin-bottom:6px}
+p{font-size:13px;color:#888;margin-bottom:20px}
+.btn{padding:12px 28px;font-size:14px;font-weight:600;border:none;border-radius:8px;cursor:pointer;transition:all .15s;margin:6px}
+.btn-load{background:#0F766E;color:#fff}
+.btn-load:hover{background:#0D6860}
+.btn-clear{background:#FEE2E2;color:#DC2626}
+.btn-clear:hover{background:#FECACA}
+.btn-back{background:#fff;color:#534AB7;border:1px solid #ddd}
+.btn-back:hover{background:#EEEDFE}
+.result{margin-top:16px;font-size:13px;padding:12px;border-radius:8px;display:none}
+.result.success{display:block;background:#DCFCE7;color:#15803D}
+.result.cleared{display:block;background:#FEF3C7;color:#B45309}
+.stats{text-align:left;margin-top:16px;font-size:12px;color:#666;line-height:1.8}
+.stats strong{color:#1a1a1a}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Mock Data Loader</h1>
+  <p>Load sample reservations, companies, and payments into localStorage for testing.</p>
+  <button class="btn btn-load" onclick="loadMockData()">Load Mock Data</button>
+  <button class="btn btn-clear" onclick="clearAllData()">Clear All Data</button>
+  <br>
+  <a href="finance.html" class="btn btn-back" style="display:inline-block;text-decoration:none;margin-top:12px">Go to Finance</a>
+  <a href="index.html" class="btn btn-back" style="display:inline-block;text-decoration:none;margin-top:12px">Go to Booking</a>
+  <div class="result" id="result"></div>
+  <div class="stats" id="stats"></div>
+</div>
+
+<script>
+function loadMockData(){
+  // ── Companies ──
+  var companies = [
+    {name:'Wind Horse Tours', color:'#3B82F6', rates:{bed:{ensuite_rate:180000,ensuite_supplement:85000,standard_fit:80000,standard_group:60000,standard_supplement:55000}}},
+    {name:'Nomadic Journeys', color:'#EF4444', rates:{bed:{ensuite_rate:190000,ensuite_supplement:90000,standard_fit:85000,standard_group:65000,standard_supplement:60000}}},
+    {name:'Sunpath Mongolia', color:'#F59E0B', rates:{bed:{ensuite_rate:185000,ensuite_supplement:90000,standard_fit:82000,standard_group:62000,standard_supplement:58000}}},
+    {name:'Gobi Discovery', color:'#10B981', rates:{bed:{ensuite_rate:190000,ensuite_supplement:90000,standard_fit:85000,standard_group:65000,standard_supplement:60000}}},
+    {name:'Steppe Riders LLC', color:'#8B5CF6', rates:{bed:{ensuite_rate:175000,ensuite_supplement:85000,standard_fit:78000,standard_group:58000,standard_supplement:55000}}},
+    {name:'Blue Sky Expeditions', color:'#06B6D4', rates:{bed:{ensuite_rate:190000,ensuite_supplement:90000,standard_fit:85000,standard_group:65000,standard_supplement:60000}}},
+    {name:'Eternal Landscapes', color:'#EC4899', rates:{bed:{ensuite_rate:188000,ensuite_supplement:88000,standard_fit:83000,standard_group:63000,standard_supplement:58000}}},
+    {name:'Ger to Ger', color:'#F97316', rates:{bed:{ensuite_rate:185000,ensuite_supplement:90000,standard_fit:80000,standard_group:60000,standard_supplement:55000}}},
+    {name:'Khongor Expedition', color:'#14B8A6', rates:{bed:{ensuite_rate:190000,ensuite_supplement:90000,standard_fit:85000,standard_group:65000,standard_supplement:60000}}},
+    {name:'Happy Camel Travel', color:'#A855F7', rates:{bed:{ensuite_rate:182000,ensuite_supplement:88000,standard_fit:82000,standard_group:62000,standard_supplement:58000}}}
+  ];
+
+  localStorage.setItem('kz_companies', JSON.stringify(companies));
+
+  // ── Helper functions ──
+  function addDays(dateStr, n){
+    var d=new Date(dateStr+'T00:00:00');
+    d.setDate(d.getDate()+n);
+    return d.toISOString().split('T')[0];
+  }
+  function randInt(min,max){return Math.floor(Math.random()*(max-min+1))+min}
+  function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
+  var idCounter=1000;
+  function nextId(){return 'BK-'+(idCounter++)}
+
+  // Ger pools
+  var ensuiteGers=[];for(var i=1;i<=28;i++)ensuiteGers.push(i);
+  for(var i=101;i<=110;i++)ensuiteGers.push(i);
+  var standardGers=[];for(var i=29;i<=50;i++)standardGers.push(i);
+
+  // ── Generate reservations ──
+  var reservations=[];
+  var guides=['Bataa','Otgoo','Chimgee','Boldoo','Enkhee','Tuya','Ganaa','Sarnai'];
+  var tripCodes=['MN','GD','KZ','ST','NJ','EL','BS','HC','KE','GG'];
+
+  // Bookings spread from May to September 2026
+  var bookingConfigs = [
+    // Past bookings (May)
+    {co:0, checkIn:'2026-05-10', nights:3, adults:8,  ensuite:3, standard:2, guide:0, trip:'MN-2601'},
+    {co:1, checkIn:'2026-05-14', nights:2, adults:4,  ensuite:2, standard:0, guide:1, trip:'NJ-2601'},
+    {co:2, checkIn:'2026-05-18', nights:4, adults:12, ensuite:4, standard:3, guide:2, trip:'SP-2601'},
+    {co:7, checkIn:'2026-05-20', nights:2, adults:6,  ensuite:2, standard:2, guide:3, trip:'GG-2601'},
+    {co:3, checkIn:'2026-05-22', nights:3, adults:10, ensuite:3, standard:3, guide:4, trip:'GD-2601'},
+
+    // Current / near-current bookings (late May)
+    {co:4, checkIn:'2026-05-25', nights:3, adults:6,  ensuite:2, standard:2, guide:5, trip:'SR-2601'},
+    {co:5, checkIn:'2026-05-26', nights:4, adults:14, ensuite:5, standard:4, guide:6, trip:'BS-2601'},
+    {co:0, checkIn:'2026-05-27', nights:2, adults:4,  ensuite:2, standard:0, guide:0, trip:'MN-2602'},
+
+    // Upcoming bookings (June)
+    {co:1, checkIn:'2026-06-01', nights:3, adults:8,  ensuite:3, standard:2, guide:1, trip:'NJ-2602'},
+    {co:6, checkIn:'2026-06-03', nights:5, adults:16, ensuite:6, standard:5, guide:2, trip:'EL-2601'},
+    {co:2, checkIn:'2026-06-05', nights:2, adults:4,  ensuite:2, standard:0, guide:3, trip:'SP-2602'},
+    {co:8, checkIn:'2026-06-08', nights:3, adults:10, ensuite:4, standard:3, guide:4, trip:'KE-2601'},
+    {co:3, checkIn:'2026-06-10', nights:4, adults:12, ensuite:4, standard:4, guide:5, trip:'GD-2602'},
+    {co:9, checkIn:'2026-06-12', nights:2, adults:6,  ensuite:2, standard:2, guide:6, trip:'HC-2601'},
+    {co:0, checkIn:'2026-06-15', nights:3, adults:8,  ensuite:3, standard:2, guide:7, trip:'MN-2603'},
+    {co:4, checkIn:'2026-06-18', nights:4, adults:14, ensuite:5, standard:4, guide:0, trip:'SR-2602'},
+    {co:7, checkIn:'2026-06-20', nights:3, adults:10, ensuite:3, standard:4, guide:1, trip:'GG-2602'},
+    {co:5, checkIn:'2026-06-22', nights:2, adults:4,  ensuite:2, standard:0, guide:2, trip:'BS-2602'},
+
+    // July
+    {co:1, checkIn:'2026-07-01', nights:4, adults:16, ensuite:6, standard:5, guide:3, trip:'NJ-2603'},
+    {co:6, checkIn:'2026-07-05', nights:3, adults:8,  ensuite:3, standard:2, guide:4, trip:'EL-2602'},
+    {co:2, checkIn:'2026-07-08', nights:5, adults:20, ensuite:8, standard:6, guide:5, trip:'SP-2603'},
+    {co:8, checkIn:'2026-07-10', nights:3, adults:6,  ensuite:2, standard:2, guide:6, trip:'KE-2602'},
+    {co:0, checkIn:'2026-07-14', nights:4, adults:12, ensuite:4, standard:4, guide:7, trip:'MN-2604'},
+    {co:3, checkIn:'2026-07-18', nights:3, adults:10, ensuite:4, standard:3, guide:0, trip:'GD-2603'},
+    {co:9, checkIn:'2026-07-20', nights:2, adults:4,  ensuite:2, standard:0, guide:1, trip:'HC-2602'},
+
+    // August
+    {co:5, checkIn:'2026-08-01', nights:4, adults:14, ensuite:5, standard:5, guide:2, trip:'BS-2603'},
+    {co:4, checkIn:'2026-08-05', nights:3, adults:8,  ensuite:3, standard:2, guide:3, trip:'SR-2603'},
+    {co:7, checkIn:'2026-08-08', nights:5, adults:18, ensuite:7, standard:5, guide:4, trip:'GG-2603'},
+    {co:1, checkIn:'2026-08-12', nights:3, adults:10, ensuite:4, standard:3, guide:5, trip:'NJ-2604'},
+    {co:6, checkIn:'2026-08-15', nights:4, adults:12, ensuite:4, standard:4, guide:6, trip:'EL-2603'},
+
+    // September
+    {co:0, checkIn:'2026-09-01', nights:3, adults:6,  ensuite:2, standard:2, guide:7, trip:'MN-2605'},
+    {co:2, checkIn:'2026-09-05', nights:4, adults:8,  ensuite:3, standard:2, guide:0, trip:'SP-2604'},
+    {co:8, checkIn:'2026-09-10', nights:3, adults:10, ensuite:4, standard:3, guide:1, trip:'KE-2603'},
+  ];
+
+  for(var bi=0;bi<bookingConfigs.length;bi++){
+    var cfg=bookingConfigs[bi];
+    var co=companies[cfg.co];
+    var checkOut=addDays(cfg.checkIn, cfg.nights);
+    var gers=[];
+    var singles=[];
+
+    // Allocate ensuite gers
+    var ePool=ensuiteGers.slice();
+    for(var ei=0;ei<cfg.ensuite;ei++){
+      var idx=randInt(0,ePool.length-1);
+      var gn=ePool.splice(idx,1)[0];
+      var occ = (ei===0 && cfg.adults%2===1) ? 1 : 2;
+      if(occ===1) singles.push(gn);
+      gers.push({n:gn, occ:occ});
+    }
+    // Allocate standard gers
+    var sPool=standardGers.slice();
+    for(var si=0;si<cfg.standard;si++){
+      var idx=randInt(0,sPool.length-1);
+      var gn=sPool.splice(idx,1)[0];
+      gers.push({n:gn, occ:2});
+    }
+
+    var totalGuests=cfg.adults;
+    var children48=randInt(0,2);
+    var children03=randInt(0,1);
+
+    // Calculate invoice total properly
+    var nights=cfg.nights;
+    var isFIT=totalGuests<5;
+    var rates=co.rates.bed;
+    var bedTotal=0;
+    for(var gi=0;gi<gers.length;gi++){
+      var g=gers[gi];
+      var gn=g.n;
+      var isEns=(gn>=1&&gn<=28)||(gn>=101&&gn<=110);
+      var isSingle=singles.indexOf(gn)>=0;
+      var rate=isEns?rates.ensuite_rate:(isFIT?rates.standard_fit:rates.standard_group);
+      if(isSingle){
+        bedTotal+=(rate+(isEns?rates.ensuite_supplement:rates.standard_supplement))*nights;
+      }else{
+        bedTotal+=rate*g.occ*nights;
+      }
+    }
+    var invoiceTotal=bedTotal;
+
+    var res={
+      id: nextId(),
+      company: co.name,
+      color: co.color,
+      checkIn: cfg.checkIn,
+      checkOut: checkOut,
+      adults: cfg.adults,
+      children48: children48,
+      children03: children03,
+      guests: totalGuests + children48 + children03,
+      gers: gers,
+      gerNums: gers.map(function(g){return g.n}),
+      singles: singles,
+      guide: guides[cfg.guide],
+      tripCode: cfg.trip,
+      invoiceTotal: invoiceTotal,
+      notes: '',
+      mealSelections:{},
+      staffMealNights:{breakfast:0,lunch:0,dinner:0},
+      staffGers:[]
+    };
+    reservations.push(res);
+  }
+
+  // ── Mark some past bookings as cancelled (for credit transfer testing) ──
+  // Cancel the 3rd booking (Sunpath May 18) and 4th booking (Ger to Ger May 20) - they have payments
+  reservations[2].cancelled = true;
+  reservations[2].cancelledAt = '2026-05-15T10:00:00Z';
+  reservations[3].cancelled = true;
+  reservations[3].cancelledAt = '2026-05-17T14:30:00Z';
+
+  localStorage.setItem('kz_reservations', JSON.stringify(reservations));
+
+  // ── Generate payments ──
+  var payments={};
+  var today=new Date();
+  today.setHours(0,0,0,0);
+
+  for(var pi=0;pi<reservations.length;pi++){
+    var r=reservations[pi];
+    var key=r.company+'_'+r.checkIn+'_'+r.checkOut;
+    var ciDate=new Date(r.checkIn+'T00:00:00');
+    var inv=r.invoiceTotal;
+
+    // Determine payment pattern based on timing
+    var isPast=new Date(r.checkOut+'T00:00:00')<=today;
+    var isCurrent=ciDate<=today&&new Date(r.checkOut+'T00:00:00')>today;
+    var rand=Math.random();
+
+    var payEntries=[];
+
+    if(isPast){
+      // Past bookings: 60% fully paid, 30% partial, 10% unpaid
+      if(rand<0.6){
+        // Fully paid — 1 or 2 payments
+        if(Math.random()<0.5){
+          payEntries.push({date:addDays(r.checkIn,-randInt(5,15)),amount:Math.round(inv*0.5),bankRef:'GL-'+randInt(10000,99999),notes:'Deposit 50%'});
+          payEntries.push({date:addDays(r.checkOut,randInt(1,10)),amount:inv-Math.round(inv*0.5),bankRef:'GL-'+randInt(10000,99999),notes:'Final payment'});
+        }else{
+          payEntries.push({date:addDays(r.checkOut,randInt(1,7)),amount:inv,bankRef:'GL-'+randInt(10000,99999),notes:'Full payment'});
+        }
+      }else if(rand<0.9){
+        // Partial — deposit paid
+        var depPct=pick([0.3,0.5,0.7]);
+        payEntries.push({date:addDays(r.checkIn,-randInt(3,14)),amount:Math.round(inv*depPct),bankRef:'GL-'+randInt(10000,99999),notes:'Deposit '+Math.round(depPct*100)+'%'});
+      }
+      // else unpaid
+    }else if(isCurrent){
+      // Current: 40% have deposit
+      if(rand<0.4){
+        payEntries.push({date:addDays(r.checkIn,-randInt(3,10)),amount:Math.round(inv*0.5),bankRef:'GL-'+randInt(10000,99999),notes:'Deposit 50%'});
+      }
+    }else{
+      // Upcoming: 25% have deposit
+      if(rand<0.25){
+        var depDate=addDays(r.checkIn,-randInt(10,30));
+        if(new Date(depDate+'T00:00:00')<=today){
+          payEntries.push({date:depDate,amount:Math.round(inv*0.3),bankRef:'GL-'+randInt(10000,99999),notes:'Advance deposit 30%'});
+        }
+      }
+    }
+
+    if(payEntries.length>0){
+      payments[key]={payments:payEntries};
+    }
+  }
+
+  localStorage.setItem('kz_payments', JSON.stringify(payments));
+
+  // ── Show results ──
+  var totalInv=0,totalPaid=0,payCount=0;
+  for(var ri=0;ri<reservations.length;ri++) totalInv+=reservations[ri].invoiceTotal;
+  var pkeys=Object.keys(payments);
+  for(var pk=0;pk<pkeys.length;pk++){
+    var pp=payments[pkeys[pk]].payments;
+    for(var ppi=0;ppi<pp.length;ppi++){totalPaid+=pp[ppi].amount;payCount++;}
+  }
+
+  document.getElementById('result').className='result success';
+  document.getElementById('result').textContent='Mock data loaded successfully!';
+  document.getElementById('stats').innerHTML=
+    '<strong>'+companies.length+'</strong> companies loaded<br>'+
+    '<strong>'+reservations.length+'</strong> reservations (May–Sep 2026)<br>'+
+    '<strong>'+payCount+'</strong> payment entries<br>'+
+    'Total invoiced: <strong>'+Number(totalInv).toLocaleString()+'₮</strong><br>'+
+    'Total paid: <strong>'+Number(totalPaid).toLocaleString()+'₮</strong>';
+}
+
+function clearAllData(){
+  if(!confirm('Clear ALL reservation, payment, and company data from localStorage?')) return;
+  localStorage.removeItem('kz_reservations');
+  localStorage.removeItem('kz_payments');
+  localStorage.removeItem('kz_companies');
+  localStorage.removeItem('kz_cancellations');
+  localStorage.removeItem('kz_credit_transfers');
+  document.getElementById('result').className='result cleared';
+  document.getElementById('result').textContent='All data cleared from localStorage.';
+  document.getElementById('stats').innerHTML='';
+}
+</script>
+</body>
+</html>

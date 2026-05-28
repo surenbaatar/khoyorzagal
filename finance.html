@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khoyor Zagal — Finance Portal</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f0;color:#1a1a1a;font-size:14px;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+/* ─── LOGIN SCREEN ─── */
+.login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#f0fdfa 0%,#f5f5f0 50%,#ecfdf5 100%);display:flex;align-items:center;justify-content:center;z-index:500}
+.login-screen.hidden{display:none}
+.login-card{background:#fff;border:1px solid #e0dfd8;border-radius:16px;padding:40px 36px;width:380px;box-shadow:0 8px 40px rgba(0,0,0,.08)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo i{font-size:40px;color:#0F766E;display:block;margin-bottom:8px}
+.login-logo h1{font-size:20px;font-weight:700;color:#1a1a1a}
+.login-logo .camp{font-size:12px;color:#888;margin-top:2px}
+.login-logo .badge{display:inline-block;font-size:10px;padding:3px 10px;border-radius:12px;background:#E6F7F5;color:#0F766E;font-weight:600;margin-top:8px}
+.login-field{margin-bottom:16px}
+.login-field label{display:block;font-size:12px;font-weight:600;color:#666;margin-bottom:5px}
+.login-field input{width:100%;padding:10px 14px;font-size:14px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#1a1a1a;transition:all .15s}
+.login-field input:focus{outline:none;border-color:#0F766E;box-shadow:0 0 0 3px rgba(15,118,110,.12)}
+.login-btn{width:100%;padding:12px;font-size:14px;font-weight:600;border:none;border-radius:8px;background:#0F766E;color:#fff;cursor:pointer;transition:all .15s;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px}
+.login-btn:hover{background:#0D6860}
+.login-error{font-size:12px;color:#DC2626;text-align:center;margin-top:10px;display:none}
+.login-error.show{display:block}
+.login-hint{font-size:11px;color:#bbb;text-align:center;margin-top:16px}
+.login-manage{text-align:center;margin-top:14px}
+.login-manage button{font-size:11px;color:#0F766E;background:none;border:none;cursor:pointer;text-decoration:underline;padding:0}
+.login-manage button:hover{color:#0D6860}
+
+/* Manage users panel */
+.manage-panel{display:none;margin-top:16px;padding:14px;background:#fafaf7;border:1px solid #e0dfd8;border-radius:8px}
+.manage-panel.show{display:block}
+.manage-panel h3{font-size:12px;font-weight:700;color:#0F766E;margin-bottom:10px}
+.mu-list{max-height:120px;overflow-y:auto;margin-bottom:10px}
+.mu-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #eee;font-size:12px}
+.mu-row:last-child{border-bottom:none}
+.mu-row .mu-user{flex:1;font-weight:600}
+.mu-row .mu-del{width:20px;height:20px;border:none;background:none;color:#ccc;cursor:pointer;font-size:12px;border-radius:4px;display:flex;align-items:center;justify-content:center}
+.mu-row .mu-del:hover{color:#DC2626;background:#FEE2E2}
+.mu-add{display:flex;gap:6px}
+.mu-add input{flex:1;padding:5px 8px;font-size:12px;border:1px solid #ddd;border-radius:6px}
+.mu-add input:focus{outline:none;border-color:#0F766E}
+.mu-add button{padding:5px 10px;font-size:11px;font-weight:600;border:none;border-radius:6px;background:#0F766E;color:#fff;cursor:pointer;white-space:nowrap}
+
+/* ─── APP SHELL ─── */
+.app{display:none;flex-direction:column;height:100vh}
+.app.visible{display:flex}
+
+/* Top bar */
+.top-bar{background:#fff;border-bottom:1px solid #e0dfd8;padding:0 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:100;height:50px}
+.top-bar-left{display:flex;align-items:center;gap:16px;height:100%}
+.top-bar h1{font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px;color:#0F766E}
+.camp-badge{font-size:11px;padding:3px 10px;border-radius:20px;background:#EEEDFE;color:#534AB7;font-weight:500}
+
+/* Tabs in top bar */
+.main-tabs{display:flex;height:100%;gap:0}
+.main-tab{display:flex;align-items:center;gap:6px;padding:0 20px;font-size:13px;font-weight:600;color:#888;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all .15s;height:100%}
+.main-tab:hover{color:#0F766E;background:rgba(15,118,110,.03)}
+.main-tab.active{color:#0F766E;border-bottom-color:#0F766E}
+.main-tab i{font-size:16px}
+
+.top-bar-right{display:flex;align-items:center;gap:10px}
+.user-badge{font-size:12px;color:#666;display:flex;align-items:center;gap:5px;padding:4px 10px;background:#fafaf7;border-radius:6px;border:1px solid #eee}
+.user-badge i{font-size:13px;color:#0F766E}
+.nav-link{display:flex;align-items:center;gap:5px;font-size:13px;color:#534AB7;text-decoration:none;font-weight:500;padding:5px 12px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer;transition:all .15s}
+.nav-link:hover{background:#EEEDFE;border-color:#534AB7}
+.logout-btn{display:flex;align-items:center;gap:4px;font-size:12px;color:#999;border:1px solid #ddd;background:#fff;padding:5px 10px;border-radius:6px;cursor:pointer;transition:all .15s}
+.logout-btn:hover{color:#DC2626;border-color:#fca5a5;background:#FEE2E2}
+
+/* ─── TAB CONTENT ─── */
+.tab-content{flex:1;overflow:hidden;display:none}
+.tab-content.active{display:flex}
+
+/* ─── TWO-PANEL LAYOUT ─── */
+.panels{display:flex;flex:1;overflow:hidden}
+
+/* Left panel */
+.left-panel{width:420px;min-width:360px;max-width:500px;border-right:1px solid #e0dfd8;display:flex;flex-direction:column;background:#fff;flex-shrink:0}
+.lp-toolbar{padding:10px 16px;border-bottom:1px solid #e0dfd8;display:flex;flex-direction:column;gap:8px;background:#fafaf7}
+.lp-toolbar-row{display:flex;align-items:center;gap:8px}
+.lp-search-wrap{position:relative;flex:1}
+.lp-search-wrap i{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;color:#999;pointer-events:none}
+.lp-search{width:100%;padding:7px 12px 7px 32px;font-size:13px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#1a1a1a}
+.lp-search:focus{outline:none;border-color:#0F766E;box-shadow:0 0 0 2px rgba(15,118,110,.12)}
+.filter-btn{padding:5px 10px;font-size:11px;font-weight:600;border:1px solid #ddd;border-radius:6px;cursor:pointer;background:#fff;color:#666;transition:all .15s;white-space:nowrap}
+.filter-btn:hover{background:#f0efe8}
+.filter-btn.active{background:#0F766E;color:#fff;border-color:#0F766E}
+
+.lp-summary{display:flex;gap:12px;padding:0 4px}
+.lp-stat{font-size:11px;color:#888;display:flex;align-items:center;gap:4px}
+.lp-stat strong{color:#1a1a1a;font-weight:700}
+.lp-stat.green strong{color:#15803D}
+.lp-stat.orange strong{color:#B45309}
+
+.lp-list{flex:1;overflow-y:auto}
+.lp-list::-webkit-scrollbar{width:4px}
+.lp-list::-webkit-scrollbar-thumb{background:#ccc;border-radius:4px}
+
+/* Date group header */
+.date-group{padding:6px 16px;background:#fafaf7;border-bottom:1px solid #eee;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.4px;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:5}
+.date-group.today{background:#E6F7F5;color:#0F766E}
+.date-group .dg-count{font-size:10px;padding:1px 7px;border-radius:10px;background:#e0dfd8;color:#666;font-weight:600}
+.date-group.today .dg-count{background:#0F766E;color:#fff}
+
+/* Booking row */
+.bk-row{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid #f0efe8;cursor:pointer;transition:background .1s;gap:10px}
+.bk-row:hover{background:#f9faf8}
+.bk-row.selected{background:#E6F7F5;border-left:3px solid #0F766E;padding-left:13px}
+.bk-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.bk-info{flex:1;min-width:0}
+.bk-company{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk-meta{font-size:11px;color:#888;margin-top:2px;display:flex;gap:8px;flex-wrap:wrap}
+.bk-meta span{display:flex;align-items:center;gap:3px}
+.bk-right{text-align:right;flex-shrink:0}
+.bk-amount{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.bk-pct{font-size:10px;margin-top:3px;display:flex;align-items:center;gap:5px;justify-content:flex-end}
+.bk-pct-bar{width:40px;height:4px;background:#eee;border-radius:2px;overflow:hidden}
+.bk-pct-fill{height:100%;border-radius:2px}
+.bk-pct-text{font-weight:700;min-width:28px}
+.bk-badge{display:flex;align-items:center;gap:4px;margin-top:4px;justify-content:flex-end}
+
+.status-badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;display:inline-block;text-transform:uppercase;letter-spacing:.3px}
+.status-paid{background:#DCFCE7;color:#15803D}
+.status-partial{background:#FEF3C7;color:#B45309}
+.status-unpaid{background:#FEE2E2;color:#DC2626}
+.status-cancelled{background:#f0efe8;color:#888}
+.status-credit{background:#DBEAFE;color:#1D4ED8}
+
+/* Cancelled booking row */
+.bk-row.cancelled .bk-company{text-decoration:line-through;color:#999}
+.bk-row.cancelled .bk-amount{color:#999}
+.co-row.has-credit .co-name::after{content:'credit';font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;background:#DBEAFE;color:#1D4ED8;margin-left:6px;text-decoration:none;display:inline-block;vertical-align:1px}
+
+/* Credit transfer section */
+.credit-banner{padding:12px 14px;border-radius:8px;margin-bottom:14px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600}
+.credit-banner.available{background:#DBEAFE;color:#1D4ED8;border:1px solid #93C5FD}
+.credit-banner.received{background:#E6F7F5;color:#0F766E;border:1px solid #99F6E4}
+.credit-banner i{font-size:18px;flex-shrink:0}
+.credit-banner .cb-amount{font-size:16px;font-weight:700}
+
+.credit-form{background:#EFF6FF;border:1px solid #93C5FD;border-radius:8px;padding:14px;margin-top:12px}
+.credit-form .cf-title{font-size:12px;font-weight:600;color:#1D4ED8;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.credit-form select,.credit-form input,.credit-form textarea{width:100%;padding:7px 10px;font-size:13px;border:1px solid #BFDBFE;border-radius:6px;background:#fff;color:#1a1a1a;font-family:inherit;margin-bottom:8px}
+.credit-form select:focus,.credit-form input:focus,.credit-form textarea:focus{outline:none;border-color:#1D4ED8;box-shadow:0 0 0 2px rgba(29,78,216,.12)}
+.credit-form textarea{resize:vertical;min-height:40px}
+.credit-form label{font-size:11px;color:#666;display:block;margin-bottom:3px;font-weight:500}
+.cf-actions{display:flex;gap:8px;margin-top:10px}
+.cf-btn{padding:8px 16px;font-size:13px;font-weight:600;border:none;border-radius:6px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
+.cf-btn-transfer{background:#1D4ED8;color:#fff}
+.cf-btn-transfer:hover{background:#1E40AF}
+.cf-btn-cancel{background:#fff;color:#666;border:1px solid #ddd}
+
+/* Credit log entries */
+.credit-entry{display:flex;align-items:start;gap:10px;padding:10px 0;border-bottom:1px solid #f0efe8}
+.credit-entry:last-child{border-bottom:none}
+.credit-entry .ce-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.credit-entry .ce-icon.out{background:#DBEAFE;color:#1D4ED8}
+.credit-entry .ce-icon.in{background:#E6F7F5;color:#0F766E}
+.credit-entry .ce-details{flex:1;min-width:0}
+.credit-entry .ce-amount{font-size:14px;font-weight:700}
+.credit-entry .ce-amount.out{color:#1D4ED8}
+.credit-entry .ce-amount.in{color:#0F766E}
+.credit-entry .ce-desc{font-size:11px;color:#888;margin-top:2px}
+.credit-entry .ce-date{font-size:11px;color:#888;min-width:70px;flex-shrink:0}
+
+.lp-empty{text-align:center;padding:60px 20px;color:#bbb}
+.lp-empty i{font-size:40px;display:block;margin-bottom:10px;opacity:.3}
+
+/* Company row (Payments tab left panel) */
+.co-row{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid #f0efe8;cursor:pointer;transition:background .1s;gap:12px}
+.co-row:hover{background:#f9faf8}
+.co-row.selected{background:#E6F7F5;border-left:3px solid #0F766E;padding-left:13px}
+.co-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.co-info{flex:1;min-width:0}
+.co-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.co-meta{font-size:11px;color:#888;margin-top:3px;display:flex;gap:10px}
+.co-meta span{display:flex;align-items:center;gap:3px}
+.co-right{text-align:right;flex-shrink:0}
+.co-amount{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.co-pct{margin-top:4px;display:flex;align-items:center;gap:5px;justify-content:flex-end}
+.co-pct-bar{width:50px;height:4px;background:#eee;border-radius:2px;overflow:hidden}
+.co-pct-fill{height:100%;border-radius:2px}
+.co-pct-text{font-size:10px;font-weight:700;min-width:28px}
+.co-total{padding:12px 16px;border-top:2px solid #e0dfd8;background:#fafaf7;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.co-total .co-info{font-weight:700;font-size:13px;color:#666}
+.co-total .co-amount{font-size:15px}
+
+/* ─── RIGHT PANEL ─── */
+.right-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#f5f5f0}
+
+.rp-empty{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#bbb;gap:10px}
+.rp-empty i{font-size:56px;opacity:.25}
+.rp-empty p{font-size:14px}
+.rp-empty .hint{font-size:12px;color:#ccc}
+
+.rp-header{padding:16px 24px;background:#fff;border-bottom:1px solid #e0dfd8;flex-shrink:0}
+.rp-company{font-size:20px;font-weight:700;display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.rp-company .dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.rp-meta{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:#666}
+.rp-meta span{display:flex;align-items:center;gap:4px}
+.rp-stats{display:flex;gap:20px;flex-wrap:wrap;margin-top:8px}
+.rp-stat{text-align:center}
+.rp-stat .rs-label{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.3px;font-weight:600}
+.rp-stat .rs-value{font-size:18px;font-weight:700;margin-top:2px}
+.rs-value.teal{color:#0F766E}
+.rs-value.green{color:#15803D}
+.rs-value.orange{color:#B45309}
+
+.rp-body{flex:1;overflow-y:auto;padding:20px 24px}
+.rp-body::-webkit-scrollbar{width:4px}
+.rp-body::-webkit-scrollbar-thumb{background:#ccc;border-radius:4px}
+
+.rp-section{background:#fff;border:1px solid #e0dfd8;border-radius:10px;padding:16px 18px;margin-bottom:16px}
+.rp-section-title{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:6px}
+.rp-section-title i{font-size:14px;color:#0F766E}
+
+/* Invoice lines */
+.inv-line{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;padding:4px 0;color:#1a1a1a}
+.inv-line.sub{padding-left:16px;color:#999;font-size:11px}
+.inv-line.total{font-weight:600;border-top:1px solid #eee;padding-top:8px;margin-top:6px}
+.inv-line.grand{font-weight:700;font-size:16px;border-top:2px solid #1a1a1a;padding-top:10px;margin-top:10px}
+.inv-estimate{font-size:11px;color:#B45309;background:#FEF3C7;padding:6px 10px;border-radius:6px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+
+/* Payment summary bar */
+.pay-summary{display:flex;gap:16px;padding:12px 0;margin-bottom:8px;border-bottom:1px solid #eee}
+.pay-summary-item{text-align:center;flex:1}
+.psi-label{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.3px;font-weight:600}
+.psi-value{font-size:18px;font-weight:700;margin-top:2px}
+.pay-pct-bar{width:100%;height:6px;background:#eee;border-radius:3px;overflow:hidden;margin-top:8px}
+.pay-pct-fill{height:100%;border-radius:3px;transition:width .3s}
+
+/* Payment entries */
+.pay-entry{display:flex;align-items:start;gap:10px;padding:10px 0;border-bottom:1px solid #f0efe8;position:relative}
+.pay-entry:last-child{border-bottom:none}
+.pay-date{font-size:11px;color:#888;min-width:70px;flex-shrink:0}
+.pay-details{flex:1;min-width:0}
+.pay-amount{font-size:14px;font-weight:700;color:#15803D}
+.pay-ref{font-size:11px;color:#0F766E;font-weight:500;margin-top:2px}
+.pay-notes{font-size:11px;color:#999;margin-top:2px}
+.pay-balance{font-size:10px;color:#888;margin-top:3px;font-style:italic}
+.pay-delete{position:absolute;top:10px;right:0;width:24px;height:24px;border:none;background:none;color:#ccc;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;border-radius:4px;transition:all .15s}
+.pay-delete:hover{color:#DC2626;background:#FEE2E2}
+.pay-empty{color:#bbb;font-size:12px;text-align:center;padding:16px;font-style:italic}
+.pay-subtotal{display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid #eee;margin-top:4px;font-size:12px;font-weight:600}
+
+/* Payment form */
+.pay-form{background:#fafaf7;border:1px solid #e0dfd8;border-radius:8px;padding:14px;margin-top:12px}
+.pay-form .pf-title{font-size:12px;font-weight:600;color:#0F766E;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.pay-form .pf-row{display:flex;gap:8px;margin-bottom:8px}
+.pay-form .pf-row>div{flex:1}
+.pay-form label{font-size:11px;color:#666;display:block;margin-bottom:3px;font-weight:500}
+.pay-form input,.pay-form textarea{width:100%;padding:7px 10px;font-size:13px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#1a1a1a;font-family:inherit}
+.pay-form input:focus,.pay-form textarea:focus{outline:none;border-color:#0F766E;box-shadow:0 0 0 2px rgba(15,118,110,.12)}
+.pay-form textarea{resize:vertical;min-height:40px}
+.pf-actions{display:flex;gap:8px;margin-top:10px}
+.pf-btn{padding:8px 16px;font-size:13px;font-weight:600;border:none;border-radius:6px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
+.pf-btn-save{background:#0F766E;color:#fff}
+.pf-btn-save:hover{background:#0D6860}
+.pf-btn-cancel{background:#fff;color:#666;border:1px solid #ddd}
+.pf-btn-cancel:hover{background:#f5f5f0}
+
+.rp-footer{padding:12px 24px;border-top:1px solid #e0dfd8;background:#fff;display:flex;gap:8px;flex-shrink:0}
+.rp-footer .btn{flex:1;padding:9px;font-size:13px;font-weight:600;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s}
+.btn-teal{background:#0F766E;color:#fff}
+.btn-teal:hover{background:#0D6860}
+.btn-outline{background:#fff;color:#1a1a1a;border:1px solid #ddd}
+.btn-outline:hover{background:#f5f5f0}
+
+/* Booking card (payments tab) */
+.bk-card{background:#fff;border:1px solid #e0dfd8;border-radius:10px;margin-bottom:14px;overflow:hidden}
+.bk-card-header{display:flex;align-items:center;padding:12px 16px;gap:10px;border-bottom:1px solid #f0efe8;cursor:pointer;transition:background .1s}
+.bk-card-header:hover{background:#f9faf8}
+.bk-card-dates{font-size:13px;font-weight:600;flex:1}
+.bk-card-sub{font-size:11px;color:#888;margin-top:2px}
+.bk-card-right{text-align:right}
+.bk-card-amount{font-size:14px;font-weight:700}
+.bk-card-body{padding:0 16px 12px}
+.bk-card-body.collapsed{display:none}
+
+/* Responsive */
+@media(max-width:900px){.left-panel{width:320px;min-width:280px}}
+@media(max-width:700px){
+  .panels{flex-direction:column}
+  .left-panel{width:100%;max-width:none;height:50vh;border-right:none;border-bottom:1px solid #e0dfd8}
+  .right-panel{height:50vh}
+  .main-tab{padding:0 12px;font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ LOGIN SCREEN ═══════════════ -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <i class="ti ti-report-money"></i>
+      <h1>Finance Portal</h1>
+      <div class="camp">Khoyor Zagal — Integrated Travel Lodges</div>
+      <div class="badge">Authorized Personnel Only</div>
+    </div>
+    <div class="login-field">
+      <label>Username</label>
+      <input type="text" id="loginUser" placeholder="Enter username" autocomplete="off">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="Enter password">
+    </div>
+    <button class="login-btn" onclick="doLogin()"><i class="ti ti-lock-open"></i> Sign In</button>
+    <div class="login-error" id="loginError">Invalid username or password</div>
+    <div class="login-manage">
+      <button onclick="toggleManage()">Manage Users</button>
+    </div>
+    <div class="manage-panel" id="managePanel">
+      <h3><i class="ti ti-users" style="font-size:13px;vertical-align:-1px"></i> Finance Users</h3>
+      <div class="mu-list" id="muList"></div>
+      <div class="mu-add">
+        <input type="text" id="muNewUser" placeholder="Username">
+        <input type="password" id="muNewPass" placeholder="Password">
+        <button onclick="addUser()">Add</button>
+      </div>
+    </div>
+    <div class="login-hint">Use the booking system? <a href="index.html" style="color:#534AB7">Go to Booking</a></div>
+  </div>
+</div>
+
+<!-- ═══════════════ APP ═══════════════ -->
+<div class="app" id="app">
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <h1><i class="ti ti-report-money" style="font-size:20px"></i> Finance</h1>
+      <span class="camp-badge">Khoyor Zagal</span>
+      <div class="main-tabs">
+        <button class="main-tab active" data-tab="calendar" onclick="switchTab('calendar',this)"><i class="ti ti-calendar-event"></i> Calendar</button>
+        <button class="main-tab" data-tab="payments" onclick="switchTab('payments',this)"><i class="ti ti-users-group"></i> Payments</button>
+      </div>
+    </div>
+    <div class="top-bar-right">
+      <div class="user-badge" id="userBadge"><i class="ti ti-user-circle"></i> <span id="userName"></span></div>
+      <a class="nav-link" href="calendar.html"><i class="ti ti-calendar" style="font-size:14px"></i> Calendar</a>
+      <a class="nav-link" href="index.html"><i class="ti ti-arrow-left" style="font-size:14px"></i> Booking</a>
+      <button class="logout-btn" onclick="doLogout()"><i class="ti ti-logout"></i> Sign Out</button>
+    </div>
+  </div>
+
+  <!-- ═══ TAB 1: CALENDAR ═══ -->
+  <div class="tab-content active" id="tabCalendar">
+    <div class="panels">
+      <div class="left-panel">
+        <div class="lp-toolbar">
+          <div class="lp-toolbar-row">
+            <div class="lp-search-wrap"><i class="ti ti-search"></i><input class="lp-search" id="calSearch" type="text" placeholder="Search company..."></div>
+          </div>
+          <div class="lp-toolbar-row">
+            <button class="filter-btn active" data-f="all" onclick="setCalFilter('all',this)">All</button>
+            <button class="filter-btn" data-f="upcoming" onclick="setCalFilter('upcoming',this)">Upcoming</button>
+            <button class="filter-btn" data-f="current" onclick="setCalFilter('current',this)">Current</button>
+            <button class="filter-btn" data-f="past" onclick="setCalFilter('past',this)">Past</button>
+            <div style="width:1px;height:18px;background:#e0dfd8"></div>
+            <button class="filter-btn" data-f="unpaid" onclick="setCalFilter('unpaid',this)">Unpaid</button>
+            <button class="filter-btn" data-f="partial" onclick="setCalFilter('partial',this)">Partial</button>
+            <button class="filter-btn" data-f="cancelled" onclick="setCalFilter('cancelled',this)">Cancelled</button>
+          </div>
+          <div class="lp-toolbar-row lp-summary" id="calSummary"></div>
+        </div>
+        <div class="lp-list" id="calList"></div>
+      </div>
+      <div class="right-panel">
+        <div class="rp-empty" id="calEmpty"><i class="ti ti-file-invoice"></i><p>Select a booking to view details</p><span class="hint">Click any booking on the left to see invoice and payment info</span></div>
+        <div id="calDetail" style="display:none;flex-direction:column;height:100%">
+          <div class="rp-header" id="calHeader"></div>
+          <div class="rp-body" id="calBody"></div>
+          <div class="rp-footer">
+            <button class="btn btn-teal" onclick="downloadPDF()"><i class="ti ti-file-type-pdf"></i> Download Invoice</button>
+            <button class="btn btn-outline" onclick="openInBooking()"><i class="ti ti-external-link"></i> Open in Booking</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB 2: PAYMENTS ═══ -->
+  <div class="tab-content" id="tabPayments">
+    <div class="panels">
+      <div class="left-panel">
+        <div class="lp-toolbar">
+          <div class="lp-search-wrap"><i class="ti ti-search"></i><input class="lp-search" id="paySearch" type="text" placeholder="Search company..."></div>
+        </div>
+        <div class="lp-list" id="payList"></div>
+        <div class="co-total" id="payTotal"></div>
+      </div>
+      <div class="right-panel">
+        <div class="rp-empty" id="payEmpty"><i class="ti ti-users-group"></i><p>Select a company to view bookings & payments</p><span class="hint">Click any company on the left</span></div>
+        <div id="payDetail" style="display:none;flex-direction:column;height:100%">
+          <div class="rp-header" id="payHeader"></div>
+          <div class="rp-body" id="payBody"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="jspdf.umd.min.js"></script>
+<script src="invoice-pdf.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* ════════════════════════════════════════════════
+   LOGIN SYSTEM
+   ════════════════════════════════════════════════ */
+var USERS_KEY='kz_finance_users';
+var SESSION_KEY='kz_finance_session';
+
+function getUsers(){
+  try{var r=localStorage.getItem(USERS_KEY);return r?JSON.parse(r):[];}catch(e){return [];}
+}
+function saveUsers(u){localStorage.setItem(USERS_KEY,JSON.stringify(u))}
+
+// Seed default admin if no users exist
+if(getUsers().length===0){
+  saveUsers([{username:'admin',password:'admin123'},{username:'finance',password:'kz2026'}]);
+}
+
+function renderUserList(){
+  var users=getUsers();
+  var html='';
+  for(var i=0;i<users.length;i++){
+    html+='<div class="mu-row"><span class="mu-user"><i class="ti ti-user" style="font-size:12px;color:#0F766E"></i> '+esc(users[i].username)+'</span><button class="mu-del" onclick="delUser('+i+')" title="Delete"><i class="ti ti-trash"></i></button></div>';
+  }
+  if(users.length===0) html='<div style="font-size:11px;color:#bbb;text-align:center;padding:8px">No users. Add one below.</div>';
+  document.getElementById('muList').innerHTML=html;
+}
+
+window.toggleManage=function(){
+  var p=document.getElementById('managePanel');
+  p.classList.toggle('show');
+  if(p.classList.contains('show')) renderUserList();
+};
+
+window.addUser=function(){
+  var u=document.getElementById('muNewUser').value.trim();
+  var p=document.getElementById('muNewPass').value.trim();
+  if(!u||!p){alert('Enter both username and password.');return;}
+  var users=getUsers();
+  for(var i=0;i<users.length;i++){if(users[i].username.toLowerCase()===u.toLowerCase()){alert('Username already exists.');return;}}
+  users.push({username:u,password:p});
+  saveUsers(users);
+  document.getElementById('muNewUser').value='';
+  document.getElementById('muNewPass').value='';
+  renderUserList();
+};
+
+window.delUser=function(idx){
+  var users=getUsers();
+  if(users.length<=1){alert('Cannot delete the last user.');return;}
+  if(!confirm('Delete user "'+users[idx].username+'"?')) return;
+  users.splice(idx,1);
+  saveUsers(users);
+  renderUserList();
+};
+
+window.doLogin=function(){
+  var u=document.getElementById('loginUser').value.trim();
+  var p=document.getElementById('loginPass').value;
+  var users=getUsers();
+  var found=false;
+  for(var i=0;i<users.length;i++){
+    if(users[i].username.toLowerCase()===u.toLowerCase()&&users[i].password===p){found=users[i];break;}
+  }
+  if(!found){
+    document.getElementById('loginError').classList.add('show');
+    return;
+  }
+  document.getElementById('loginError').classList.remove('show');
+  localStorage.setItem(SESSION_KEY,JSON.stringify({username:found.username,ts:Date.now()}));
+  showApp(found.username);
+};
+
+window.doLogout=function(){
+  localStorage.removeItem(SESSION_KEY);
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('loginUser').value='';
+  document.getElementById('loginPass').value='';
+};
+
+function showApp(username){
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('app').classList.add('visible');
+  document.getElementById('userName').textContent=username;
+  initData();
+}
+
+// Check existing session
+function checkSession(){
+  try{
+    var s=JSON.parse(localStorage.getItem(SESSION_KEY));
+    if(s&&s.username){
+      // Session valid for 24h
+      if(Date.now()-s.ts<86400000){showApp(s.username);return;}
+    }
+  }catch(e){}
+}
+
+// Enter key on login
+document.getElementById('loginPass').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin()});
+document.getElementById('loginUser').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('loginPass').focus()});
+
+
+/* ════════════════════════════════════════════════
+   SHARED UTILITIES
+   ════════════════════════════════════════════════ */
+var BED_RATES={ensuite:190000,standard_group:65000,standard_fit:85000};
+var BED_SS={ensuite:90000,standard:60000};
+var FIT_THRESHOLD=5;
+var STAFF_MEAL={bed:45000,supplement:60000,breakfast:12000,lunch:29000,dinner:24000};
+
+var processedBookings=[];
+var companiesData=[];
+
+function fmt(n){if(n==null||isNaN(n))return '0₮';return Number(n).toLocaleString('en-US')+'₮'}
+function nightsBetween(a,b){if(!a||!b)return 1;return Math.max(1,Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000))}
+function fmtDate(d){if(!d)return '—';var p=d.split('-');var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return m[parseInt(p[1],10)-1]+' '+parseInt(p[2],10)}
+function fmtDateFull(d){if(!d)return '—';var p=d.split('-');var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return m[parseInt(p[1],10)-1]+' '+parseInt(p[2],10)+', '+p[0]}
+function gerType(n){n=Number(n);if((n>=1&&n<=28)||(n>=101&&n<=110))return n>=101?'new_ensuite':'ensuite';if(n>=29&&n<=50)return 'standard';return 'unknown'}
+function resKey(r){return (r.company||'')+'_'+(r.checkIn||'')+'_'+(r.checkOut||'')}
+function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function escAttr(s){return s.replace(/'/g,"\\'").replace(/"/g,'&quot;')}
+
+function loadReservations(){try{var r=localStorage.getItem('kz_reservations');return r?JSON.parse(r):[];}catch(e){return[];}}
+function loadPayments(){try{var r=localStorage.getItem('kz_payments');return r?JSON.parse(r):{};}catch(e){return{};}}
+function savePayments(d){localStorage.setItem('kz_payments',JSON.stringify(d))}
+function getPaymentsFor(r){var a=loadPayments(),k=resKey(r);return(a[k]&&a[k].payments)?a[k].payments:[]}
+function totalPaidFor(r){var p=getPaymentsFor(r),s=0;for(var i=0;i<p.length;i++)s+=Number(p[i].amount)||0;return s}
+
+/* ── Credit transfers ── */
+var CREDITS_KEY='kz_credit_transfers';
+function loadCredits(){try{var r=localStorage.getItem(CREDITS_KEY);return r?JSON.parse(r):[];}catch(e){return[];}}
+function saveCredits(c){localStorage.setItem(CREDITS_KEY,JSON.stringify(c))}
+function creditsFrom(key){return loadCredits().filter(function(c){return c.fromKey===key})}
+function creditsTo(key){return loadCredits().filter(function(c){return c.toKey===key})}
+function totalCreditOut(key){var c=creditsFrom(key),s=0;for(var i=0;i<c.length;i++)s+=Number(c[i].amount)||0;return s}
+function totalCreditIn(key){var c=creditsTo(key),s=0;for(var i=0;i<c.length;i++)s+=Number(c[i].amount)||0;return s}
+
+function calcInvoice(r){
+  if(r.invoiceTotal&&Number(r.invoiceTotal)>0)return{total:Number(r.invoiceTotal),estimated:false};
+  var nights=nightsBetween(r.checkIn,r.checkOut),tg=r.guests||0,isFIT=tg<FIT_THRESHOLD;
+  var stdRate=isFIT?BED_RATES.standard_fit:BED_RATES.standard_group,bt=0;
+  var gers=r.gers||[],singles=r.singles||[];
+  for(var i=0;i<gers.length;i++){
+    var g=gers[i],t=gerType(g.n),isE=(t==='ensuite'||t==='new_ensuite'),isS=singles.indexOf(g.n)>=0;
+    var rate=isE?BED_RATES.ensuite:stdRate;
+    bt+=isS?(rate+(isE?BED_SS.ensuite:BED_SS.standard))*nights:rate*(Number(g.occ)||2)*nights;
+  }
+  return{total:bt||0,estimated:true};
+}
+
+/* ════════════════════════════════════════════════
+   DATA PROCESSING
+   ════════════════════════════════════════════════ */
+function processAll(){
+  var res=loadReservations();
+  var today=todayStr();
+  processedBookings=[];
+  for(var i=0;i<res.length;i++){
+    var r=res[i],inv=calcInvoice(r),nights=nightsBetween(r.checkIn,r.checkOut);
+    var k=resKey(r);
+    var paid=totalPaidFor(r);
+    var creditIn=totalCreditIn(k);  // credits received from cancelled bookings
+    var creditOut=totalCreditOut(k); // credits transferred away (if this is cancelled)
+    var effectivePaid=paid+creditIn; // total applied to this booking
+    var tg=(Number(r.adults)||0)+(Number(r.children48)||0)+(Number(r.children03)||0);
+    if(tg===0)tg=Number(r.guests)||0;
+    var pct=inv.total>0?Math.min(100,Math.round(effectivePaid/inv.total*100)):0;
+    var ps='unpaid';if(pct>=100)ps='paid';else if(pct>0)ps='partial';
+    var cancelled=!!r.cancelled;
+    if(cancelled)ps='cancelled';
+    var timing='upcoming';
+    if(cancelled)timing='cancelled';
+    else if(r.checkOut&&r.checkOut<=today)timing='past';
+    else if(r.checkIn&&r.checkIn<=today&&r.checkOut&&r.checkOut>today)timing='current';
+    // For cancelled bookings: available credit = paid - creditOut
+    var availableCredit=cancelled?Math.max(0,paid-creditOut):0;
+    processedBookings.push({res:r,invoiceTotal:inv.total,estimated:inv.estimated,paid:paid,creditIn:creditIn,creditOut:creditOut,effectivePaid:effectivePaid,availableCredit:availableCredit,nights:nights,guests:tg,pct:pct,payStatus:ps,timing:timing,cancelled:cancelled});
+  }
+  processedBookings.sort(function(a,b){return a.res.checkIn<b.res.checkIn?-1:a.res.checkIn>b.res.checkIn?1:0});
+
+  // Companies
+  var map={};
+  for(var j=0;j<processedBookings.length;j++){
+    var b=processedBookings[j],name=b.res.company||'Unknown';
+    if(!map[name])map[name]={name:name,color:b.res.color||'#888',bookings:[],invoiced:0,paid:0,guestNights:0,bookingCount:0,hasCredit:false};
+    map[name].bookings.push(b);
+    if(!b.cancelled){map[name].invoiced+=b.invoiceTotal;map[name].paid+=b.effectivePaid;}
+    map[name].guestNights+=b.guests*b.nights;map[name].bookingCount++;
+    if(b.availableCredit>0)map[name].hasCredit=true;
+  }
+  companiesData=[];var keys=Object.keys(map);
+  for(var k=0;k<keys.length;k++)companiesData.push(map[keys[k]]);
+  companiesData.sort(function(a,b){return b.invoiced-a.invoiced});
+}
+
+
+/* ════════════════════════════════════════════════
+   TAB SWITCHING
+   ════════════════════════════════════════════════ */
+var currentTab='calendar';
+window.switchTab=function(tab,el){
+  currentTab=tab;
+  document.querySelectorAll('.main-tab').forEach(function(t){t.classList.remove('active')});
+  document.querySelectorAll('.tab-content').forEach(function(c){c.classList.remove('active')});
+  if(el)el.classList.add('active');
+  document.getElementById(tab==='calendar'?'tabCalendar':'tabPayments').classList.add('active');
+  if(tab==='payments')renderPayLeft();
+};
+
+
+/* ════════════════════════════════════════════════
+   CALENDAR TAB
+   ════════════════════════════════════════════════ */
+var calFilter='all';
+var calActiveKey=null;
+
+function calFiltered(){
+  var search=(document.getElementById('calSearch').value||'').toLowerCase();
+  return processedBookings.filter(function(b){
+    if(calFilter==='unpaid'&&b.payStatus!=='unpaid')return false;
+    if(calFilter==='partial'&&b.payStatus!=='partial')return false;
+    if(calFilter==='cancelled'&&!b.cancelled)return false;
+    if(calFilter==='upcoming'&&b.timing!=='upcoming')return false;
+    if(calFilter==='current'&&b.timing!=='current')return false;
+    if(calFilter==='past'&&b.timing!=='past')return false;
+    // By default (all/upcoming/current/past), hide cancelled unless specifically filtering for them
+    if(calFilter!=='all'&&calFilter!=='cancelled'&&b.cancelled)return false;
+    if(calFilter==='all'){}// show everything including cancelled
+    if(search){var h=((b.res.company||'')+(b.res.tripCode||'')+(b.res.guide||'')).toLowerCase();if(h.indexOf(search)===-1)return false;}
+    return true;
+  });
+}
+
+function renderCalLeft(){
+  var list=calFiltered(),today=todayStr();
+  var tInv=0,tPd=0;for(var s=0;s<list.length;s++){tInv+=list[s].invoiceTotal;tPd+=list[s].paid;}
+  var out=tInv-tPd;
+  document.getElementById('calSummary').innerHTML=
+    '<div class="lp-stat"><strong>'+list.length+'</strong> bookings</div>'+
+    '<div class="lp-stat">Invoiced: <strong>'+fmt(tInv)+'</strong></div>'+
+    '<div class="lp-stat green">Paid: <strong>'+fmt(tPd)+'</strong></div>'+
+    (out>0?'<div class="lp-stat orange">Due: <strong>'+fmt(out)+'</strong></div>':'');
+
+  if(list.length===0){document.getElementById('calList').innerHTML='<div class="lp-empty"><i class="ti ti-database-off"></i><p>No bookings match</p></div>';return;}
+
+  var groups={},order=[];
+  for(var i=0;i<list.length;i++){
+    var ci=list[i].res.checkIn||'unknown';
+    if(!groups[ci]){groups[ci]=[];order.push(ci);}
+    groups[ci].push(list[i]);
+  }
+  var html='';
+  var dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  for(var gi=0;gi<order.length;gi++){
+    var dk=order[gi],items=groups[dk],isT=dk===today;
+    var dn='';if(dk!=='unknown'){var dt=new Date(dk+'T00:00:00');dn=dayNames[dt.getDay()];}
+    html+='<div class="date-group'+(isT?' today':'')+'"><span>'+fmtDateFull(dk)+'</span>'+(dn?' <span style="font-weight:500">'+dn+'</span>':'')+'<span class="dg-count">'+items.length+'</span>'+(isT?'<span style="font-size:9px;font-weight:600;color:#0F766E;margin-left:auto">TODAY</span>':'')+'</div>';
+    for(var j=0;j<items.length;j++){
+      var b=items[j],r=b.res,key=resKey(r),sel=calActiveKey===key;
+      var sc=b.cancelled?'status-cancelled':b.payStatus==='paid'?'status-paid':b.payStatus==='partial'?'status-partial':'status-unpaid';
+      var sl=b.cancelled?'Cancelled':b.payStatus==='paid'?'Paid':b.payStatus==='partial'?'Partial':'Unpaid';
+      var pc=b.cancelled?'#888':b.pct>=100?'#15803D':b.pct>0?'#B45309':'#DC2626';
+      var gc=(r.gers||[]).length;
+      var rowCls='bk-row'+(sel?' selected':'')+(b.cancelled?' cancelled':'');
+      html+='<div class="'+rowCls+'" onclick="calSelect(\''+escAttr(key)+'\')">';
+      html+='<span class="bk-dot" style="background:'+(b.cancelled?'#ccc':(r.color||'#888'))+'"></span>';
+      html+='<div class="bk-info"><div class="bk-company">'+esc(r.company||'Unknown')+'</div>';
+      html+='<div class="bk-meta"><span><i class="ti ti-calendar-event" style="font-size:12px"></i> '+fmtDate(r.checkIn)+' → '+fmtDate(r.checkOut)+'</span><span><i class="ti ti-moon" style="font-size:12px"></i> '+b.nights+'n</span><span><i class="ti ti-users" style="font-size:12px"></i> '+b.guests+'</span>'+(gc?'<span><i class="ti ti-tent" style="font-size:12px"></i> '+gc+'</span>':'')+'</div></div>';
+      html+='<div class="bk-right"><div class="bk-amount">'+(b.estimated?'~':'')+fmt(b.invoiceTotal)+'</div>';
+      if(!b.cancelled){html+='<div class="bk-pct"><div class="bk-pct-bar"><div class="bk-pct-fill" style="width:'+b.pct+'%;background:'+pc+'"></div></div><span class="bk-pct-text" style="color:'+pc+'">'+b.pct+'%</span></div>';}
+      html+='<div class="bk-badge"><span class="status-badge '+sc+'">'+sl+'</span>';
+      if(b.availableCredit>0)html+=' <span class="status-badge status-credit">Credit '+fmt(b.availableCredit)+'</span>';
+      if(b.creditIn>0)html+=' <span class="status-badge status-credit"><i class="ti ti-arrow-down-left" style="font-size:9px"></i> +'+fmt(b.creditIn)+'</span>';
+      html+='</div></div></div>';
+    }
+  }
+  document.getElementById('calList').innerHTML=html;
+}
+
+window.calSelect=function(key){calActiveKey=key;renderCalLeft();renderCalRight()};
+
+function findByKey(key){for(var i=0;i<processedBookings.length;i++){if(resKey(processedBookings[i].res)===key)return processedBookings[i];}return null}
+
+function renderCalRight(){
+  var em=document.getElementById('calEmpty'),dt=document.getElementById('calDetail');
+  if(!calActiveKey){em.style.display='flex';dt.style.display='none';return;}
+  var b=findByKey(calActiveKey);
+  if(!b){em.style.display='flex';dt.style.display='none';return;}
+  em.style.display='none';dt.style.display='flex';
+  var r=b.res;
+
+  // Header
+  var h='<div class="rp-company"><span class="dot" style="background:'+(r.color||'#888')+'"></span>'+esc(r.company||'Unknown')+'</div>';
+  h+='<div class="rp-meta">';
+  h+='<span><i class="ti ti-calendar-event"></i> '+fmtDateFull(r.checkIn)+' → '+fmtDateFull(r.checkOut)+' ('+b.nights+'n)</span>';
+  h+='<span><i class="ti ti-users"></i> '+b.guests+' guest'+(b.guests!==1?'s':'')+'</span>';
+  if(r.guide)h+='<span><i class="ti ti-user"></i> '+esc(r.guide)+'</span>';
+  if(r.tripCode)h+='<span><i class="ti ti-hash"></i> '+esc(r.tripCode)+'</span>';
+  h+='</div>';
+  document.getElementById('calHeader').innerHTML=h;
+
+  // Body
+  var html='';
+  var key=resKey(r);
+
+  // Cancelled banner + credit transfer
+  if(b.cancelled){
+    html+='<div class="rp-section" style="background:#f9f9f6;border-color:#ddd">';
+    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><i class="ti ti-ban" style="font-size:20px;color:#DC2626"></i><span style="font-size:15px;font-weight:700;color:#DC2626">Booking Cancelled</span></div>';
+    if(r.cancelledAt) html+='<div style="font-size:11px;color:#888;margin-bottom:8px">Cancelled on '+fmtDateFull(r.cancelledAt.split('T')[0])+'</div>';
+    html+='<div style="display:flex;gap:16px;margin-top:8px">';
+    html+='<div><div style="font-size:10px;color:#888;text-transform:uppercase;font-weight:600">Payments Made</div><div style="font-size:18px;font-weight:700;color:#15803D">'+fmt(b.paid)+'</div></div>';
+    html+='<div><div style="font-size:10px;color:#888;text-transform:uppercase;font-weight:600">Transferred Out</div><div style="font-size:18px;font-weight:700;color:#1D4ED8">'+fmt(b.creditOut)+'</div></div>';
+    html+='<div><div style="font-size:10px;color:#888;text-transform:uppercase;font-weight:600">Available Credit</div><div style="font-size:18px;font-weight:700;color:'+(b.availableCredit>0?'#B45309':'#888')+'">'+fmt(b.availableCredit)+'</div></div>';
+    html+='</div>';
+    html+='</div>';
+
+    // Credit transfer history for this cancelled booking
+    var crOut=creditsFrom(key);
+    if(crOut.length>0){
+      html+='<div class="rp-section"><div class="rp-section-title"><i class="ti ti-transfer-out"></i> Credit Transfers</div>';
+      for(var ci=0;ci<crOut.length;ci++){
+        var cr=crOut[ci];
+        html+='<div class="credit-entry"><div class="ce-icon out"><i class="ti ti-arrow-up-right"></i></div>';
+        html+='<div class="ce-details"><div class="ce-amount out">'+fmt(cr.amount)+'</div>';
+        html+='<div class="ce-desc">Transferred to: '+esc(cr.toLabel||cr.toKey)+'</div>';
+        if(cr.notes)html+='<div class="ce-desc">'+esc(cr.notes)+'</div>';
+        html+='<div class="ce-desc">By: '+esc(cr.by||'—')+'</div></div>';
+        html+='<div class="ce-date">'+fmtDateFull(cr.date)+'</div></div>';
+      }
+      html+='</div>';
+    }
+
+    // Transfer credit form (only if credit available)
+    if(b.availableCredit>0){
+      html+='<div class="rp-section"><div class="rp-section-title"><i class="ti ti-transfer-in"></i> Transfer Credit</div>';
+      html+=buildCreditTransferForm(r,b);
+      html+='</div>';
+    }
+  } else {
+    // Normal booking — payment summary
+    var balance=b.invoiceTotal-b.effectivePaid,pc=b.pct>=100?'#15803D':b.pct>0?'#B45309':'#DC2626';
+    html+='<div class="rp-section"><div class="pay-summary">';
+    html+='<div class="pay-summary-item"><div class="psi-label">Invoiced</div><div class="psi-value teal">'+fmt(b.invoiceTotal)+'</div></div>';
+    html+='<div class="pay-summary-item"><div class="psi-label">Paid</div><div class="psi-value green">'+fmt(b.effectivePaid)+'</div></div>';
+    html+='<div class="pay-summary-item"><div class="psi-label">Remaining</div><div class="psi-value '+(balance>0?'orange':'green')+'">'+fmt(Math.max(0,balance))+'</div></div>';
+    html+='</div><div class="pay-pct-bar"><div class="pay-pct-fill" style="width:'+b.pct+'%;background:'+pc+'"></div></div>';
+    html+='<div style="text-align:center;font-size:12px;font-weight:700;color:'+pc+';margin-top:6px">'+b.pct+'% collected</div></div>';
+
+    // Credit received banner
+    if(b.creditIn>0){
+      html+='<div class="credit-banner received"><i class="ti ti-arrow-down-left"></i><div><div style="font-size:11px">Credit received from cancelled booking</div><div class="cb-amount">'+fmt(b.creditIn)+'</div></div></div>';
+      var crIn=creditsTo(key);
+      for(var cj=0;cj<crIn.length;cj++){
+        var cri=crIn[cj];
+        html+='<div style="font-size:11px;color:#0F766E;padding:2px 0 6px 28px">From: '+esc(cri.fromLabel||cri.fromKey)+' — '+fmt(cri.amount);
+        if(cri.notes)html+=' — '+esc(cri.notes);
+        html+='</div>';
+      }
+    }
+  }
+
+  // Invoice breakdown (show for all bookings)
+  html+='<div class="rp-section"><div class="rp-section-title"><i class="ti ti-file-invoice"></i> Invoice Breakdown</div>';
+  if(b.estimated)html+='<div class="inv-estimate"><i class="ti ti-info-circle"></i> Estimated from ger allocation.</div>';
+  html+=buildInvBreakdown(r,b)+'</div>';
+
+  // Payment ledger (show for all bookings, but no add-payment for cancelled)
+  html+='<div class="rp-section"><div class="rp-section-title"><i class="ti ti-credit-card"></i> Payment Ledger</div>';
+  html+=buildPayLedger(r,b)+'</div>';
+
+  document.getElementById('calBody').innerHTML=html;
+}
+
+function buildInvBreakdown(r,b){
+  var html='',nights=b.nights,gers=r.gers||[],staffGers=r.staffGers||[];
+  if(gers.length>0){
+    html+='<div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Accommodation</div>';
+    var tg=r.guests||0,isFIT=tg<FIT_THRESHOLD,stdR=isFIT?BED_RATES.standard_fit:BED_RATES.standard_group;
+    var singles=r.singles||[],eC=0,sC=0,bt=0;
+    for(var i=0;i<gers.length;i++){
+      var g=gers[i],t=gerType(g.n),isE=(t==='ensuite'||t==='new_ensuite'),isS=singles.indexOf(g.n)>=0;
+      var rate=isE?BED_RATES.ensuite:stdR,lt;
+      if(isS)lt=(rate+(isE?BED_SS.ensuite:BED_SS.standard))*nights;else lt=rate*(Number(g.occ)||2)*nights;
+      bt+=lt;if(isE)eC++;else sC++;
+      html+='<div class="inv-line sub"><span>Ger #'+g.n+' ('+(isE?'Deluxe':'Standard')+(isS?' SS':'')+((!isE&&!isS)?(isFIT?' FIT':' Group'):'')+') x '+nights+'n</span><span>'+fmt(lt)+'</span></div>';
+    }
+    html+='<div class="inv-line total"><span>Accommodation ('+(eC+sC)+' ger'+(eC+sC!==1?'s':'')+')</span><span>'+fmt(bt)+'</span></div>';
+  }
+  if(staffGers.length>0){
+    html+='<div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px">Staff</div>';
+    var st=0;
+    for(var j=0;j<staffGers.length;j++){var sg=staffGers[j],so=Number(sg.occ)||0,slt=STAFF_MEAL.bed*so*nights;st+=slt;
+    html+='<div class="inv-line sub"><span>Staff #'+sg.n+(sg.label?' ('+esc(sg.label)+')':'')+' x '+so+'pax x '+nights+'n</span><span>'+fmt(slt)+'</span></div>';}
+    html+='<div class="inv-line total"><span>Staff subtotal</span><span>'+fmt(st)+'</span></div>';
+  }
+  if(!b.estimated&&r.invoiceTotal)html+='<div class="inv-line grand"><span>Grand Total</span><span>'+fmt(b.invoiceTotal)+'</span></div>';
+  else if(gers.length>0)html+='<div class="inv-line grand"><span>Estimated Total</span><span>~'+fmt(b.invoiceTotal)+'</span></div>';
+  else html+='<div style="color:#bbb;font-size:12px;padding:10px 0;text-align:center">No ger data for invoice calculation.</div>';
+  return html;
+}
+
+function buildPayLedger(r,b){
+  var html='',payments=getPaymentsFor(r),k=resKey(r);
+  if(payments.length===0){html+='<div class="pay-empty">No payments recorded yet</div>';}
+  else{var run=b.invoiceTotal;for(var i=0;i<payments.length;i++){var p=payments[i];run-=Number(p.amount)||0;
+    html+='<div class="pay-entry"><div class="pay-date">'+fmtDateFull(p.date)+'</div><div class="pay-details"><div class="pay-amount">'+fmt(p.amount)+'</div>';
+    if(p.bankRef)html+='<div class="pay-ref"><i class="ti ti-building-bank" style="font-size:11px"></i> '+esc(p.bankRef)+'</div>';
+    if(p.notes)html+='<div class="pay-notes">'+esc(p.notes)+'</div>';
+    html+='<div class="pay-balance">Balance: '+fmt(Math.max(0,run))+'</div></div>';
+    html+='<button class="pay-delete" title="Delete" onclick="delPayment(\''+escAttr(k)+'\','+i+')"><i class="ti ti-trash"></i></button></div>';}}
+  // Only show add-payment form for active (non-cancelled) bookings
+  if(!b.cancelled){
+    html+='<div id="calPayFormWrap" style="display:none"><div class="pay-form"><div class="pf-title"><i class="ti ti-plus-circle"></i> New Payment</div>';
+    html+='<div class="pf-row"><div><label>Date</label><input type="date" id="calPfDate" value="'+todayStr()+'"></div><div><label>Amount (₮)</label><input type="number" id="calPfAmt" placeholder="0"></div></div>';
+    html+='<div class="pf-row"><div><label>Bank Reference</label><input type="text" id="calPfRef" placeholder="e.g. GL-12345"></div></div>';
+    html+='<div><label>Notes</label><textarea id="calPfNotes" placeholder="e.g. Deposit 50%"></textarea></div>';
+    html+='<div class="pf-actions"><button class="pf-btn pf-btn-save" onclick="calSavePay()"><i class="ti ti-check"></i> Save</button><button class="pf-btn pf-btn-cancel" onclick="calHidePay()">Cancel</button></div></div></div>';
+    html+='<button class="pf-btn pf-btn-save" style="width:100%;margin-top:12px;padding:10px;font-size:13px;justify-content:center" id="calBtnAdd" onclick="calShowPay()"><i class="ti ti-plus"></i> Add Payment</button>';
+  }
+  return html;
+}
+
+/* ── Credit transfer form builder ── */
+function buildCreditTransferForm(r,b){
+  var html='';
+  var company=r.company||'';
+  // Find active (non-cancelled) bookings from same company
+  var targets=processedBookings.filter(function(ob){return !ob.cancelled&&(ob.res.company||'')===company});
+  if(targets.length===0){
+    html+='<div style="font-size:12px;color:#888;text-align:center;padding:12px">No active bookings for '+esc(company)+' to transfer credit to.</div>';
+    return html;
+  }
+  html+='<div class="credit-form">';
+  html+='<div class="cf-title"><i class="ti ti-arrow-right-circle"></i> Transfer credit to another '+esc(company)+' booking</div>';
+  html+='<label>Destination Booking</label>';
+  html+='<select id="ctDest">';
+  for(var i=0;i<targets.length;i++){
+    var t=targets[i],tr=t.res;
+    var label=fmtDate(tr.checkIn)+' → '+fmtDate(tr.checkOut)+' ('+t.nights+'n, '+t.guests+'pax)';
+    if(tr.tripCode) label+=' #'+tr.tripCode;
+    var remaining=t.invoiceTotal-t.effectivePaid;
+    if(remaining>0) label+=' — due: '+fmt(remaining);
+    html+='<option value="'+esc(resKey(tr))+'">'+esc(label)+'</option>';
+  }
+  html+='</select>';
+  html+='<div style="display:flex;gap:8px"><div style="flex:1"><label>Amount (₮)</label><input type="number" id="ctAmount" value="'+b.availableCredit+'" max="'+b.availableCredit+'" placeholder="0"></div>';
+  html+='<div style="flex:1"><label>Date</label><input type="date" id="ctDate" value="'+todayStr()+'"></div></div>';
+  html+='<label>Notes</label><textarea id="ctNotes" placeholder="e.g. Credit from cancelled trip '+esc(r.tripCode||'')+'"></textarea>';
+  html+='<div class="cf-actions"><button class="cf-btn cf-btn-transfer" onclick="execCreditTransfer()"><i class="ti ti-transfer-out"></i> Transfer Credit</button><button class="cf-btn cf-btn-cancel" onclick="renderCalRight()">Cancel</button></div>';
+  html+='</div>';
+  return html;
+}
+
+window.calShowPay=function(){document.getElementById('calPayFormWrap').style.display='block';document.getElementById('calBtnAdd').style.display='none';var a=document.getElementById('calPfAmt');if(a)setTimeout(function(){a.focus()},50)};
+window.calHidePay=function(){document.getElementById('calPayFormWrap').style.display='none';document.getElementById('calBtnAdd').style.display=''};
+
+window.calSavePay=function(){
+  if(!calActiveKey)return;var b=findByKey(calActiveKey);if(!b)return;
+  var k=resKey(b.res),date=document.getElementById('calPfDate').value,amt=Number(document.getElementById('calPfAmt').value);
+  var ref=document.getElementById('calPfRef').value.trim(),notes=document.getElementById('calPfNotes').value.trim();
+  if(!amt||amt<=0){alert('Enter a valid amount.');return;}if(!date){alert('Select a date.');return;}
+  var all=loadPayments();if(!all[k])all[k]={payments:[]};
+  all[k].payments.push({date:date,amount:amt,bankRef:ref,notes:notes});
+  savePayments(all);refreshAll();
+};
+
+window.delPayment=function(key,idx){
+  if(!confirm('Delete this payment?'))return;
+  var all=loadPayments();if(all[key]&&all[key].payments){all[key].payments.splice(idx,1);if(all[key].payments.length===0)delete all[key];savePayments(all);}
+  refreshAll();
+};
+
+window.setCalFilter=function(f,el){
+  calFilter=f;
+  document.querySelectorAll('#tabCalendar .filter-btn').forEach(function(b){b.classList.remove('active')});
+  if(el)el.classList.add('active');renderCalLeft();
+};
+document.getElementById('calSearch').addEventListener('input',function(){renderCalLeft()});
+
+/* ── Execute credit transfer ── */
+window.execCreditTransfer=function(){
+  if(!calActiveKey)return;
+  var b=findByKey(calActiveKey);if(!b||!b.cancelled)return;
+  var destKey=document.getElementById('ctDest').value;
+  var amount=Number(document.getElementById('ctAmount').value);
+  var date=document.getElementById('ctDate').value;
+  var notes=document.getElementById('ctNotes').value.trim();
+  if(!amount||amount<=0){alert('Enter a valid transfer amount.');return;}
+  if(amount>b.availableCredit){alert('Amount exceeds available credit ('+fmt(b.availableCredit)+').');return;}
+  if(!destKey){alert('Select a destination booking.');return;}
+  if(!date){alert('Select a date.');return;}
+  // Build labels for the log
+  var destB=findByKey(destKey);
+  var fromLabel=(b.res.company||'')+' '+fmtDate(b.res.checkIn)+' → '+fmtDate(b.res.checkOut);
+  var toLabel=destB?(destB.res.company||'')+' '+fmtDate(destB.res.checkIn)+' → '+fmtDate(destB.res.checkOut):destKey;
+  var session=JSON.parse(localStorage.getItem(SESSION_KEY)||'{}');
+  var credits=loadCredits();
+  credits.push({
+    id:Date.now(),
+    fromKey:calActiveKey,
+    toKey:destKey,
+    fromLabel:fromLabel,
+    toLabel:toLabel,
+    amount:amount,
+    date:date,
+    notes:notes,
+    by:session.username||'unknown',
+    createdAt:new Date().toISOString()
+  });
+  saveCredits(credits);
+  refreshAll();
+};
+
+
+/* ════════════════════════════════════════════════
+   PAYMENTS TAB
+   ════════════════════════════════════════════════ */
+var payActiveCompany=null;
+
+function renderPayLeft(){
+  var search=(document.getElementById('paySearch').value||'').toLowerCase();
+  var list=companiesData.filter(function(c){return !search||c.name.toLowerCase().indexOf(search)>=0});
+  var wrap=document.getElementById('payList');
+
+  if(list.length===0){wrap.innerHTML='<div class="lp-empty"><i class="ti ti-users-group"></i><p>No companies found</p></div>';document.getElementById('payTotal').innerHTML='';return;}
+
+  var html='',tI=0,tP=0;
+  for(var i=0;i<list.length;i++){
+    var c=list[i];tI+=c.invoiced;tP+=c.paid;
+    var pct=c.invoiced>0?Math.round(c.paid/c.invoiced*100):0;
+    var pc=pct>=100?'#15803D':pct>0?'#B45309':'#DC2626';
+    var sel=payActiveCompany===c.name;
+    html+='<div class="co-row'+(sel?' selected':'')+'" onclick="paySelect(\''+esc(c.name).replace(/'/g,"\\'")+'\')">';
+    html+='<span class="co-dot" style="background:'+c.color+'"></span>';
+    html+='<div class="co-info"><div class="co-name">'+esc(c.name)+'</div>';
+    html+='<div class="co-meta"><span><i class="ti ti-calendar" style="font-size:11px"></i> '+c.bookingCount+' booking'+(c.bookingCount!==1?'s':'')+'</span><span><i class="ti ti-moon" style="font-size:11px"></i> '+c.guestNights+' gn</span></div></div>';
+    html+='<div class="co-right"><div class="co-amount">'+fmt(c.invoiced)+'</div>';
+    html+='<div class="co-pct"><div class="co-pct-bar"><div class="co-pct-fill" style="width:'+pct+'%;background:'+pc+'"></div></div><span class="co-pct-text" style="color:'+pc+'">'+pct+'%</span></div></div></div>';
+  }
+  wrap.innerHTML=html;
+
+  var tO=tI-tP,tp=tI>0?Math.round(tP/tI*100):0,tc=tp>=100?'#15803D':tp>0?'#B45309':'#DC2626';
+  document.getElementById('payTotal').innerHTML='<div class="co-info">'+list.length+' client'+(list.length!==1?'s':'')+'</div><div class="co-right"><div class="co-amount">'+fmt(tI)+'</div><div class="co-pct"><div class="co-pct-bar"><div class="co-pct-fill" style="width:'+tp+'%;background:'+tc+'"></div></div><span class="co-pct-text" style="color:'+tc+'">'+tp+'%</span></div></div>';
+}
+
+window.paySelect=function(name){payActiveCompany=name;renderPayLeft();renderPayRight()};
+
+function findCompany(name){for(var i=0;i<companiesData.length;i++){if(companiesData[i].name===name)return companiesData[i];}return null}
+
+function renderPayRight(){
+  var em=document.getElementById('payEmpty'),dt=document.getElementById('payDetail');
+  if(!payActiveCompany){em.style.display='flex';dt.style.display='none';return;}
+  var co=findCompany(payActiveCompany);
+  if(!co){em.style.display='flex';dt.style.display='none';return;}
+  em.style.display='none';dt.style.display='flex';
+
+  var out=co.invoiced-co.paid,pct=co.invoiced>0?Math.round(co.paid/co.invoiced*100):0;
+  var h='<div class="rp-company"><span class="dot" style="background:'+co.color+'"></span>'+esc(co.name)+'</div>';
+  h+='<div class="rp-stats">';
+  h+='<div class="rp-stat"><div class="rs-label">Bookings</div><div class="rs-value">'+co.bookingCount+'</div></div>';
+  h+='<div class="rp-stat"><div class="rs-label">Guest-Nights</div><div class="rs-value">'+co.guestNights.toLocaleString()+'</div></div>';
+  h+='<div class="rp-stat"><div class="rs-label">Invoiced</div><div class="rs-value teal">'+fmt(co.invoiced)+'</div></div>';
+  h+='<div class="rp-stat"><div class="rs-label">Paid</div><div class="rs-value green">'+fmt(co.paid)+'</div></div>';
+  h+='<div class="rp-stat"><div class="rs-label">Outstanding</div><div class="rs-value '+(out>0?'orange':'green')+'">'+fmt(Math.max(0,out))+'</div></div>';
+  h+='<div class="rp-stat"><div class="rs-label">Collection</div><div class="rs-value" style="color:'+(pct>=100?'#15803D':pct>0?'#B45309':'#DC2626')+'">'+pct+'%</div></div>';
+  h+='</div>';
+  document.getElementById('payHeader').innerHTML=h;
+
+  var bks=co.bookings.slice().sort(function(a,b){return a.res.checkIn>b.res.checkIn?-1:a.res.checkIn<b.res.checkIn?1:0});
+  var html='';
+  for(var i=0;i<bks.length;i++){
+    var bk=bks[i],r=bk.res;
+    var sc=bk.cancelled?'status-cancelled':bk.payStatus==='paid'?'status-paid':bk.payStatus==='partial'?'status-partial':'status-unpaid';
+    var sl=bk.cancelled?'Cancelled':bk.payStatus==='paid'?'Paid':bk.payStatus==='partial'?'Partial':'Unpaid';
+    var bal=bk.invoiceTotal-bk.effectivePaid,gc=(r.gers||[]).length;
+    html+='<div class="bk-card"'+(bk.cancelled?' style="opacity:.7"':'')+'><div class="bk-card-header" onclick="toggleCard(this)">';
+    html+='<div style="flex:1"><div class="bk-card-dates"'+(bk.cancelled?' style="text-decoration:line-through;color:#999"':'')+'><i class="ti ti-calendar-event" style="font-size:13px;color:'+(bk.cancelled?'#999':'#0F766E')+';vertical-align:-1px"></i> '+fmtDateFull(r.checkIn)+' → '+fmtDateFull(r.checkOut)+'</div>';
+    html+='<div class="bk-card-sub">'+bk.nights+'n · '+bk.guests+' guest'+(bk.guests!==1?'s':'');
+    if(gc)html+=' · '+gc+' ger'+(gc!==1?'s':'');if(r.tripCode)html+=' · #'+esc(r.tripCode);if(r.guide)html+=' · '+esc(r.guide);
+    html+='</div></div><div class="bk-card-right"><div class="bk-card-amount">'+(bk.estimated?'~':'')+fmt(bk.invoiceTotal)+'</div><div style="margin-top:3px"><span class="status-badge '+sc+'">'+sl+'</span>';
+    if(bk.availableCredit>0)html+=' <span class="status-badge status-credit">Credit '+fmt(bk.availableCredit)+'</span>';
+    if(bk.creditIn>0)html+=' <span class="status-badge" style="background:#E6F7F5;color:#0F766E">+'+fmt(bk.creditIn)+' credit</span>';
+    html+='</div></div></div>';
+    html+='<div class="bk-card-body">';
+    // Show credit transfers
+    if(bk.cancelled&&bk.creditOut>0){
+      var crOut=creditsFrom(resKey(r));
+      for(var ci=0;ci<crOut.length;ci++){var cr=crOut[ci];
+        html+='<div class="credit-entry"><div class="ce-icon out"><i class="ti ti-arrow-up-right"></i></div><div class="ce-details"><div class="ce-amount out">'+fmt(cr.amount)+' transferred</div><div class="ce-desc">To: '+esc(cr.toLabel)+'</div></div><div class="ce-date">'+fmtDateFull(cr.date)+'</div></div>';}
+    }
+    if(bk.creditIn>0){
+      var crIn=creditsTo(resKey(r));
+      for(var cj=0;cj<crIn.length;cj++){var cri=crIn[cj];
+        html+='<div class="credit-entry"><div class="ce-icon in"><i class="ti ti-arrow-down-left"></i></div><div class="ce-details"><div class="ce-amount in">'+fmt(cri.amount)+' credit received</div><div class="ce-desc">From: '+esc(cri.fromLabel)+'</div></div><div class="ce-date">'+fmtDateFull(cri.date)+'</div></div>';}
+    }
+    var payments=getPaymentsFor(r);
+    if(payments.length===0&&!bk.creditOut&&!bk.creditIn){html+='<div class="pay-empty">No payments recorded</div>';}
+    else if(payments.length>0){for(var j=0;j<payments.length;j++){var p=payments[j];
+      html+='<div class="pay-entry"><div class="pay-date">'+fmtDateFull(p.date)+'</div><div class="pay-details"><div class="pay-amount">'+fmt(p.amount)+'</div>';
+      if(p.bankRef)html+='<div class="pay-ref"><i class="ti ti-building-bank" style="font-size:11px"></i> '+esc(p.bankRef)+'</div>';
+      if(p.notes)html+='<div class="pay-notes">'+esc(p.notes)+'</div>';
+      html+='</div></div>';}}
+    html+='<div class="pay-subtotal"><span>Paid: <span style="color:#15803D">'+fmt(bk.effectivePaid)+'</span>'+(bk.creditIn>0?' <span style="font-size:10px;color:#0F766E">(incl. '+fmt(bk.creditIn)+' credit)</span>':'')+'</span>';
+    if(!bk.cancelled){html+='<span>Remaining: <span style="color:'+(bal>0?'#B45309':'#15803D')+'">'+fmt(Math.max(0,bal))+'</span></span>';}
+    else if(bk.availableCredit>0){html+='<span>Available credit: <span style="color:#1D4ED8">'+fmt(bk.availableCredit)+'</span></span>';}
+    html+='</div></div></div>';
+  }
+  if(bks.length===0)html='<div style="text-align:center;padding:40px;color:#bbb"><i class="ti ti-calendar-off" style="font-size:32px;display:block;margin-bottom:8px;opacity:.3"></i>No bookings</div>';
+  document.getElementById('payBody').innerHTML=html;
+}
+
+window.toggleCard=function(h){var b=h.nextElementSibling;if(b)b.classList.toggle('collapsed')};
+document.getElementById('paySearch').addEventListener('input',function(){renderPayLeft()});
+
+
+/* ════════════════════════════════════════════════
+   ACTIONS
+   ════════════════════════════════════════════════ */
+window.downloadPDF=function(){
+  if(!calActiveKey)return;var b=findByKey(calActiveKey);if(!b)return;
+  if(typeof generateInvoicePDF==='function')generateInvoicePDF(b.res);else alert('PDF not available.');
+};
+window.openInBooking=function(){
+  if(!calActiveKey)return;var b=findByKey(calActiveKey);if(!b)return;
+  var url='index.html';if(b.res.id)url+='?edit='+encodeURIComponent(b.res.id);window.location.href=url;
+};
+
+/* ════════════════════════════════════════════════
+   REFRESH
+   ════════════════════════════════════════════════ */
+function refreshAll(){
+  processAll();
+  renderCalLeft();renderCalRight();
+  if(currentTab==='payments'){renderPayLeft();renderPayRight();}
+}
+
+function initData(){
+  processAll();
+  renderCalLeft();renderCalRight();
+  renderPayLeft();
+}
+
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    if(currentTab==='calendar'){calActiveKey=null;renderCalLeft();renderCalRight();}
+    else{payActiveCompany=null;renderPayLeft();renderPayRight();}
+  }
+});
+
+window.addEventListener('storage',function(e){
+  if(e.key==='kz_reservations'||e.key==='kz_payments'||e.key==='kz_credit_transfers')refreshAll();
+});
+
+/* ── Boot ── */
+checkSession();
+})();
+</script>
+</body>
+</html>

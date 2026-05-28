@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khoyor Zagal — Occupancy Calendar</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f0;color:#1a1a1a;font-size:14px}
+
+.top-bar{background:#fff;border-bottom:1px solid #e0dfd8;padding:10px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.top-bar h1{font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px}
+.camp-badge{font-size:11px;padding:3px 10px;border-radius:20px;background:#EEEDFE;color:#534AB7;font-weight:500}
+.top-bar-right{display:flex;align-items:center;gap:10px}
+.nav-link{display:flex;align-items:center;gap:5px;font-size:13px;color:#534AB7;text-decoration:none;font-weight:500;padding:5px 12px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer;transition:all .15s}
+.nav-link:hover{background:#EEEDFE;border-color:#534AB7}
+
+.controls{background:#fff;border-bottom:1px solid #e0dfd8;padding:10px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:sticky;top:49px;z-index:99}
+.ctrl-group{display:flex;align-items:center;gap:6px}
+.ctrl-label{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.4px}
+.ctrl-input{padding:5px 10px;font-size:13px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#1a1a1a}
+.ctrl-input:focus{outline:none;border-color:#534AB7;box-shadow:0 0 0 2px rgba(83,74,183,.12)}
+.ctrl-btn{padding:5px 12px;font-size:12px;font-weight:600;border:1px solid #ddd;border-radius:6px;cursor:pointer;background:#fff;color:#1a1a1a;transition:all .15s}
+.ctrl-btn:hover{background:#f0efe8}
+.ctrl-btn.active{background:#534AB7;color:#fff;border-color:#534AB7}
+.ctrl-sep{width:1px;height:24px;background:#e0dfd8}
+
+/* Summary */
+.summary-bar{background:#fff;border-bottom:1px solid #e0dfd8;padding:8px 24px;display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.sum-card{background:#fafaf7;border-radius:8px;padding:6px 10px;text-align:center}
+.sum-card .sv{font-size:16px;font-weight:700;color:#1a1a1a}
+.sum-card .sl{font-size:10px;color:#999;margin-top:1px}
+.sum-card.hl .sv{color:#534AB7}
+
+/* ═══════════════════════════════════════
+   MAIN CALENDAR — Dates vertical, bookings horizontal
+   ═══════════════════════════════════════ */
+.cal-wrap{padding:16px 24px;overflow-y:auto;max-height:calc(100vh - 210px)}
+
+/* Each day row */
+.day-row{display:flex;align-items:stretch;border-bottom:1px solid #eee;min-height:48px;transition:background .1s}
+.day-row:hover{background:rgba(83,74,183,.02)}
+.day-row.weekend{background:#fafaf7}
+.day-row.weekend:hover{background:#f5f4ed}
+.day-row.today{background:#EEEDFE}
+.day-row.today:hover{background:#e5e3fc}
+.day-row.month-start{border-top:2px solid #e0dfd8;margin-top:8px;padding-top:2px}
+
+/* Date label (left) — clickable to open day in booking view */
+.day-date{min-width:120px;width:120px;padding:8px 12px;display:flex;flex-direction:column;justify-content:center;border-right:2px solid #e0dfd8;flex-shrink:0;cursor:pointer;transition:background .15s;border-radius:6px 0 0 6px}
+.day-date:hover{background:rgba(83,74,183,.06)}
+.day-date:hover .dd-num{color:#534AB7}
+.day-date:hover .dd-day{color:#534AB7}
+.day-date .dd-day{font-size:10px;color:#999;text-transform:uppercase;font-weight:500;letter-spacing:.3px;transition:color .15s}
+.day-date .dd-num{font-size:20px;font-weight:700;color:#1a1a1a;line-height:1.1;transition:color .15s}
+.day-date .dd-month{font-size:10px;color:#bbb;font-weight:500}
+.day-date .dd-link{font-size:8px;color:#534AB7;opacity:0;transition:opacity .15s;margin-top:1px;font-weight:500}
+.day-date:hover .dd-link{opacity:1}
+.day-row.today .dd-num{color:#534AB7}
+.day-row.today .dd-day{color:#534AB7}
+
+/* Day content — names above, occupancy bar below */
+.day-content{flex:1;display:flex;flex-direction:column;justify-content:center;padding:4px 10px;min-width:0;gap:3px}
+
+/* Company name tags row */
+.day-names{display:flex;flex-wrap:wrap;gap:3px;align-items:center}
+.name-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;color:#fff;cursor:pointer;transition:all .15s;position:relative;white-space:nowrap}
+.name-tag:hover{opacity:.85;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.name-tag .tag-dot{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.5);flex-shrink:0}
+.name-tag .tag-gers{font-size:9px;opacity:.8;font-weight:500}
+.name-tag .tag-arr{font-size:8px;padding:0px 4px;border-radius:3px;background:rgba(255,255,255,.3);font-weight:600;margin-left:2px}
+.day-names-empty{font-size:10px;color:#ccc;font-style:italic;padding:2px 0}
+
+/* Payment badges on name tags */
+.seg-pay{font-size:7px;font-weight:700;padding:1px 4px;border-radius:3px;white-space:nowrap;position:absolute;top:-3px;right:-3px;line-height:1.2;pointer-events:none;z-index:2;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.seg-pay.pay-paid{background:#15803D;color:#fff}
+.seg-pay.pay-partial{background:#D97706;color:#fff}
+.seg-pay.pay-unpaid{background:#DC2626;color:#fff}
+
+/* Occupancy bar row */
+.day-occ-bar{display:flex;align-items:center;gap:6px}
+.occ-label{font-size:8px;font-weight:600;text-transform:uppercase;flex-shrink:0;width:16px}
+.occ-label.ens{color:#6C5CE7}
+.occ-label.std{color:#D4851E}
+.occ-track{flex:1;height:6px;background:#eee;border-radius:3px;overflow:hidden}
+.occ-fill{height:100%;border-radius:3px;transition:width .3s}
+.fill-ens{background:#6C5CE7}
+.fill-std{background:#D4851E}
+.occ-pct{font-size:10px;font-weight:700;min-width:30px;text-align:right}
+.occ-count{font-size:8px;color:#999;min-width:32px}
+.occ-low{color:#0F6E56}
+.occ-mid{color:#BA7517}
+.occ-high{color:#A32D2D}
+
+/* Column headers */
+.cal-header{display:flex;align-items:center;padding:6px 0;border-bottom:2px solid #e0dfd8;margin-bottom:4px;font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px}
+.cal-header .hd-date{min-width:120px;width:120px;padding-left:12px;border-right:2px solid #e0dfd8}
+.cal-header .hd-bookings{flex:1;padding-left:10px}
+
+/* Legend */
+.legend-bar{background:#fff;border-top:1px solid #e0dfd8;padding:6px 24px;display:flex;align-items:center;gap:14px;font-size:11px;color:#888;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:5px}
+.legend-dot{width:14px;height:10px;border-radius:3px}
+
+/* Tooltip */
+.tooltip{display:none;position:fixed;background:#1a1a1a;color:#fff;padding:10px 14px;border-radius:8px;font-size:12px;line-height:1.5;max-width:280px;z-index:200;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+.tooltip.show{display:block}
+.tt-company{font-weight:600;font-size:13px;margin-bottom:4px}
+.tt-detail{color:#bbb;font-size:11px}
+
+/* Detail panel */
+.panel-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.3);z-index:150;opacity:0;pointer-events:none;transition:opacity .25s}
+.panel-overlay.open{opacity:1;pointer-events:auto}
+.detail-panel{position:fixed;top:0;right:-460px;width:460px;height:100vh;background:#fff;z-index:151;box-shadow:-4px 0 24px rgba(0,0,0,.12);transition:right .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
+.detail-panel.open{right:0}
+.dp-header{padding:14px 18px;border-bottom:1px solid #e0dfd8;display:flex;align-items:start;justify-content:space-between;flex-shrink:0}
+.dp-company{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.dp-company .co-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.dp-meta{display:flex;flex-wrap:wrap;gap:6px;font-size:11px;color:#666}
+.dp-meta span{display:flex;align-items:center;gap:3px}
+.dp-close{width:30px;height:30px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;color:#888;flex-shrink:0;transition:all .15s}
+.dp-close:hover{background:#f5f5f0;color:#1a1a1a}
+.dp-body{flex:1;overflow-y:auto;padding:14px 18px}
+.dp-body::-webkit-scrollbar{width:4px}
+.dp-body::-webkit-scrollbar-thumb{background:#ccc;border-radius:4px}
+.dp-section{margin-bottom:16px}
+.dp-section-title{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:6px}
+.dp-section-title i{font-size:13px;color:#534AB7}
+.dp-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0}
+.dp-row.sub{padding-left:14px;color:#999;font-size:11px}
+.dp-row.total{font-weight:600;border-top:1px solid #eee;padding-top:6px;margin-top:4px}
+.dp-ger-grid{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.dp-ger{font-size:10px;padding:3px 8px;border-radius:4px;font-weight:600;color:#fff}
+.dp-ger.ens{background:#6C5CE7}
+.dp-ger.std{background:#D4851E}
+.dp-ger.staff{background:#888}
+.dp-pay-status{padding:10px 12px;border-radius:8px;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.dp-pay-status.paid{background:#DCFCE7;color:#15803D}
+.dp-pay-status.partial{background:#FEF3C7;color:#B45309}
+.dp-pay-status.unpaid{background:#FEE2E2;color:#DC2626}
+.dp-pay-status .pay-pct{font-size:20px;font-weight:700}
+.dp-pay-status .pay-label{font-size:12px}
+.dp-pay-bar{width:100%;height:6px;background:#eee;border-radius:3px;overflow:hidden;margin-top:6px}
+.dp-pay-fill{height:100%;border-radius:3px}
+.dp-pay-entry{padding:6px 0;border-bottom:1px solid #f0efe8;font-size:12px}
+.dp-pay-entry:last-child{border-bottom:none}
+.dp-pay-amount{font-weight:700;color:#15803D}
+.dp-pay-ref{font-size:10px;color:#0F766E;margin-top:1px}
+.dp-pay-notes{font-size:10px;color:#999;margin-top:1px}
+.dp-footer{padding:10px 18px;border-top:1px solid #e0dfd8;display:flex;gap:8px;flex-shrink:0}
+.dp-footer .dp-btn{flex:1;padding:8px;font-size:12px;font-weight:600;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;text-decoration:none}
+.dp-btn-primary{background:#534AB7;color:#fff}
+.dp-btn-primary:hover{background:#3C3489}
+.dp-btn-outline{background:#fff;color:#1a1a1a;border:1px solid #ddd}
+.dp-btn-outline:hover{background:#f5f5f0}
+
+.fab{position:fixed;bottom:50px;right:24px;background:#534AB7;color:#fff;padding:10px 18px;border-radius:24px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(83,74,183,.3);display:flex;align-items:center;gap:6px;z-index:50;text-decoration:none;transition:all .15s}
+.fab:hover{background:#3C3489}
+
+/* ═══════════════════════════════════════
+   PRINT
+   ═══════════════════════════════════════ */
+@media print{
+  @page{size:A4 portrait;margin:12mm 10mm}
+  body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .top-bar{position:static;border:none;padding:4px 0}
+  .top-bar-right .nav-link,.fab,.tooltip{display:none !important}
+  .controls{position:static;padding:4px 0;border:none}
+  .ctrl-btn,.ctrl-sep,.ctrl-label{display:none}
+  .ctrl-input{border:none;padding:0;font-size:11px}
+  .summary-bar{position:static;border:none;padding:4px 0;grid-template-columns:repeat(6,1fr);gap:4px}
+  .sum-card{padding:3px 6px}
+  .sum-card .sv{font-size:13px}
+  .sum-card .sl{font-size:8px}
+  .cal-wrap{max-height:none !important;overflow:visible !important;padding:8px 0}
+  .day-row{min-height:32px;page-break-inside:avoid}
+  .day-date{min-width:90px;width:90px;padding:4px 8px}
+  .day-date .dd-num{font-size:16px}
+  .day-date .dd-day,.day-date .dd-month{font-size:8px}
+  .day-content{padding:2px 6px;gap:2px}
+  .name-tag{font-size:9px;padding:1px 5px}
+  .day-occ-bar{gap:3px}
+  .occ-track{height:4px}
+  .occ-pct{font-size:8px}
+  .occ-count{font-size:7px}
+  .occ-label{font-size:7px}
+  .legend-bar{position:static;border:none;padding:4px 0;font-size:9px}
+  .print-title{display:block !important;text-align:center;font-size:14px;font-weight:700;margin-bottom:2px}
+  .print-sub{display:block !important;text-align:center;font-size:10px;color:#888;margin-bottom:6px}
+}
+.print-title,.print-sub{display:none}
+
+/* Search overlay */
+.search-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;align-items:flex-start;justify-content:center;padding-top:8vh}
+.search-overlay.show{display:flex}
+.search-modal{background:#fff;border-radius:12px;width:min(620px,90vw);max-height:80vh;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25);display:flex;flex-direction:column}
+.search-input-wrap{padding:16px 20px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px}
+.search-input-wrap i{font-size:18px;color:#534AB7}
+.search-input{flex:1;border:none;outline:none;font-size:15px;color:#1a1a1a;background:transparent}
+.search-input::placeholder{color:#bbb}
+.search-input-wrap .search-clear{border:none;background:none;cursor:pointer;font-size:16px;color:#999;padding:2px 6px;border-radius:4px}
+.search-input-wrap .search-clear:hover{background:#f0efe8;color:#333}
+.search-results{overflow-y:auto;padding:12px 20px;flex:1}
+.search-results .sr-empty{text-align:center;padding:32px 16px;color:#bbb;font-size:13px}
+.search-results .sr-empty i{font-size:28px;display:block;margin-bottom:8px}
+.search-results .sr-count{font-size:11px;color:#999;margin-bottom:10px;font-weight:500}
+.sr-item{padding:10px 12px;border:1px solid #eee;border-radius:8px;margin-bottom:6px;background:#fafaf7;cursor:pointer;transition:all .15s}
+.sr-item:hover{background:#EEEDFE;border-color:#534AB7}
+.sr-item:last-child{margin-bottom:0}
+.sr-item .sr-company{font-size:13px;font-weight:600;color:#1a1a1a;display:flex;align-items:center;gap:6px}
+.sr-item .sr-company .sr-color{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
+.sr-item .sr-meta{font-size:11px;color:#888;margin-top:3px;line-height:1.5}
+.sr-item .sr-gers{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
+.sr-item .sr-ger-tag{font-size:9px;padding:2px 6px;border-radius:4px;background:#EEEDFE;color:#534AB7;font-weight:600}
+.sr-item .sr-match{background:#FEF3C7;padding:0 2px;border-radius:2px}
+.sr-item .sr-timing{font-size:9px;font-weight:600;padding:2px 7px;border-radius:10px;margin-left:auto;flex-shrink:0}
+.sr-timing.past{background:#f0efe8;color:#888}
+.sr-timing.current{background:#DCFCE7;color:#15803D}
+.sr-timing.upcoming{background:#DBEAFE;color:#1D4ED8}
+.sr-group-label{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.4px;padding:8px 0 4px;display:flex;align-items:center;gap:6px}
+.sr-group-label i{font-size:13px}
+</style>
+</head>
+<body>
+
+<div class="print-title">Khoyor Zagal — Occupancy Calendar</div>
+<div class="print-sub" id="printSub"></div>
+
+<div class="top-bar">
+  <h1><i class="ti ti-calendar-event" style="font-size:20px;color:#534AB7"></i> Occupancy Calendar <span class="camp-badge">Khoyor Zagal</span></h1>
+  <div class="top-bar-right">
+    <button class="nav-link" onclick="openSearch()" style="color:#534AB7"><i class="ti ti-search" style="font-size:14px"></i> Search</button>
+    <button class="nav-link" onclick="window.print()"><i class="ti ti-printer" style="font-size:14px"></i> Print</button>
+    <a class="nav-link" href="contacts.html"><i class="ti ti-address-book" style="font-size:14px"></i> Contacts</a>
+    <a class="nav-link" href="finance.html" style="color:#0F766E"><i class="ti ti-report-money" style="font-size:14px"></i> Finance</a>
+    <a class="nav-link" href="index.html"><i class="ti ti-arrow-left" style="font-size:14px"></i> Booking view</a>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="ctrl-group">
+    <span class="ctrl-label">From</span>
+    <input type="date" class="ctrl-input" id="rangeFrom">
+  </div>
+  <div class="ctrl-group">
+    <span class="ctrl-label">To</span>
+    <input type="date" class="ctrl-input" id="rangeTo">
+  </div>
+  <div class="ctrl-sep"></div>
+  <div class="ctrl-group" id="quickBtns">
+    <button class="ctrl-btn" onclick="setRange('week',this)">This week</button>
+    <button class="ctrl-btn active" onclick="setRange('2week',this)">2 weeks</button>
+    <button class="ctrl-btn" onclick="setRange('month',this)">This month</button>
+    <button class="ctrl-btn" onclick="setRange('season',this)">Full season</button>
+  </div>
+</div>
+
+<div class="summary-bar" style="grid-template-columns:repeat(6,1fr)">
+  <div class="sum-card"><div class="sv">38 <span style="font-size:11px;color:#6C5CE7">En</span> · 22 <span style="font-size:11px;color:#D4851E">St</span></div><div class="sl">Total guest gers (60)</div></div>
+  <div class="sum-card hl"><div class="sv" id="sumAvg">—</div><div class="sl">Avg. occupancy</div></div>
+  <div class="sum-card"><div class="sv" id="sumAvgEns">—</div><div class="sl" style="color:#6C5CE7">Avg. ensuite</div></div>
+  <div class="sum-card"><div class="sv" id="sumAvgStd">—</div><div class="sl" style="color:#D4851E">Avg. standard</div></div>
+  <div class="sum-card"><div class="sv" id="sumBk">0</div><div class="sl">Active bookings</div></div>
+  <div class="sum-card"><div class="sv" id="sumDays">0</div><div class="sl">Days shown</div></div>
+</div>
+
+<div class="cal-wrap" id="calWrap">
+  <div class="cal-header">
+    <div class="hd-date">Date</div>
+    <div class="hd-bookings"><i class="ti ti-tent" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i> Bookings & Occupancy — <span style="color:#6C5CE7">Ensuite (38)</span> · <span style="color:#D4851E">Standard (22)</span></div>
+  </div>
+  <div id="calBody"></div>
+</div>
+
+<div class="legend-bar" id="legendBar"></div>
+<div class="tooltip" id="tooltip"></div>
+
+<!-- Detail Panel -->
+<!-- Search overlay -->
+<div class="search-overlay" id="searchOverlay" onclick="if(event.target===this)closeSearch()">
+  <div class="search-modal">
+    <div class="search-input-wrap">
+      <i class="ti ti-search"></i>
+      <input class="search-input" id="searchInput" type="text" placeholder="Search by company name, trip code, guide..." autocomplete="off">
+      <button class="search-clear" id="searchClear" onclick="clearSearch()" style="display:none">×</button>
+    </div>
+    <div class="search-results" id="searchResults">
+      <div class="sr-empty"><i class="ti ti-search"></i>Type a company name to see their bookings</div>
+    </div>
+  </div>
+</div>
+
+<div class="panel-overlay" id="panelOverlay" onclick="closePanel()"></div>
+<div class="detail-panel" id="detailPanel">
+  <div class="dp-header">
+    <div>
+      <div class="dp-company" id="dpCompany"></div>
+      <div class="dp-meta" id="dpMeta"></div>
+    </div>
+    <button class="dp-close" onclick="closePanel()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="dp-body" id="dpBody"></div>
+  <div class="dp-footer" id="dpFooter"></div>
+</div>
+
+<a class="fab" href="index.html"><i class="ti ti-plus" style="font-size:16px"></i> New booking</a>
+
+<script>
+const GERS=[
+  {n:1,beds:2,type:'ensuite'},{n:2,beds:2,type:'ensuite'},{n:3,beds:2,type:'ensuite'},{n:4,beds:2,type:'ensuite'},
+  {n:5,beds:2,type:'ensuite',dbl:true},{n:6,beds:2,type:'ensuite'},{n:7,beds:3,type:'ensuite'},{n:8,beds:2,type:'ensuite'},
+  {n:9,beds:2,type:'ensuite'},{n:10,beds:2,type:'ensuite'},{n:11,beds:2,type:'ensuite'},{n:12,beds:2,type:'ensuite'},
+  {n:13,beds:2,type:'ensuite'},{n:14,beds:2,type:'ensuite'},{n:15,beds:2,type:'ensuite'},{n:16,beds:2,type:'ensuite'},
+  {n:17,beds:2,type:'ensuite'},{n:18,beds:2,type:'ensuite'},{n:19,beds:3,type:'ensuite'},{n:20,beds:3,type:'ensuite'},
+  {n:21,beds:2,type:'ensuite'},{n:22,beds:2,type:'ensuite'},{n:23,beds:2,type:'ensuite'},{n:24,beds:3,type:'ensuite'},
+  {n:25,beds:2,type:'ensuite'},{n:26,beds:2,type:'ensuite'},{n:27,beds:3,type:'ensuite'},{n:28,beds:3,type:'ensuite'},
+  {n:101,beds:2,type:'new_ensuite'},{n:102,beds:2,type:'new_ensuite'},{n:103,beds:2,type:'new_ensuite'},{n:104,beds:2,type:'new_ensuite'},
+  {n:105,beds:2,type:'new_ensuite'},{n:106,beds:2,type:'new_ensuite'},{n:107,beds:2,type:'new_ensuite'},{n:108,beds:2,type:'new_ensuite'},
+  {n:109,beds:2,type:'new_ensuite'},{n:110,beds:2,type:'new_ensuite'},
+  {n:29,beds:2,type:'standard'},{n:30,beds:2,type:'standard'},{n:31,beds:2,type:'standard'},{n:32,beds:2,type:'standard'},
+  {n:33,beds:2,type:'standard'},{n:34,beds:2,type:'standard'},{n:35,beds:2,type:'standard'},
+  {n:36,beds:3,type:'standard'},{n:37,beds:3,type:'standard'},{n:38,beds:4,type:'standard'},{n:39,beds:4,type:'standard'},
+  {n:40,beds:3,type:'standard'},{n:41,beds:4,type:'standard'},{n:42,beds:4,type:'standard'},
+  {n:43,beds:3,type:'standard'},{n:44,beds:3,type:'standard'},{n:45,beds:3,type:'standard'},{n:46,beds:3,type:'standard'},
+  {n:47,beds:3,type:'standard'},{n:48,beds:3,type:'standard'},{n:49,beds:3,type:'standard'},{n:50,beds:3,type:'standard'}
+];
+const TOTAL=60;
+const ENSUITE_NUMS=new Set(GERS.filter(g=>g.type==='ensuite'||g.type==='new_ensuite').map(g=>g.n));
+const STANDARD_NUMS=new Set(GERS.filter(g=>g.type==='standard').map(g=>g.n));
+const TOTAL_ENS=ENSUITE_NUMS.size; // 38
+const TOTAL_STD=STANDARD_NUMS.size; // 22
+
+const BOOKINGS=[
+  {id:1,company:'Juulchin Tourism',color:'#E63946',guests:6,guide:'Batbold',checkIn:'2026-06-10',checkOut:'2026-06-14',
+    gers:[{n:1,occ:2},{n:2,occ:2},{n:3,occ:2}],staffGers:[{n:50,occ:2,label:'Guide + Driver'}]},
+  {id:2,company:'Discovery Mongolia',color:'#2563EB',guests:7,guide:'Oyunaa',checkIn:'2026-06-12',checkOut:'2026-06-16',
+    gers:[{n:10,occ:2},{n:11,occ:2},{n:19,occ:3}],staffGers:[{n:49,occ:2,label:'Guide + Driver'}]},
+  {id:3,company:'Nomadic Journeys',color:'#16A34A',guests:14,guide:'Munkh',checkIn:'2026-06-15',checkOut:'2026-06-18',
+    gers:[{n:4,occ:2},{n:5,occ:2},{n:6,occ:2},{n:8,occ:2},{n:9,occ:2},{n:12,occ:2},{n:13,occ:2}],staffGers:[{n:48,occ:2,label:'Guide + Driver'}]},
+  {id:4,company:'Sunpath Mongolia',color:'#1a1a1a',guests:8,guide:'Erdene',checkIn:'2026-06-17',checkOut:'2026-06-21',
+    gers:[{n:1,occ:2},{n:2,occ:2},{n:3,occ:2},{n:14,occ:2}],staffGers:[{n:50,occ:2,label:'Guide + Driver'}]},
+  {id:5,company:'Wind Horse',color:'#7C3AED',guests:20,guide:'Tsogoo',checkIn:'2026-06-20',checkOut:'2026-06-24',
+    gers:[{n:4,occ:2},{n:5,occ:2},{n:6,occ:2},{n:7,occ:3},{n:8,occ:2},{n:9,occ:2},{n:15,occ:2},{n:16,occ:2},{n:19,occ:3}],staffGers:[{n:49,occ:2,label:'2 Guides'},{n:48,occ:1,label:'Driver'}]},
+  {id:6,company:'Juulchin Tourism',color:'#E63946',guests:10,guide:'Ganbaatar',checkIn:'2026-06-22',checkOut:'2026-06-26',
+    gers:[{n:1,occ:2},{n:2,occ:2},{n:3,occ:2},{n:10,occ:2},{n:11,occ:2}],staffGers:[{n:50,occ:2,label:'Guide + Driver'}]},
+  {id:7,company:'Discovery Mongolia',color:'#2563EB',guests:4,guide:'Sarnai',checkIn:'2026-06-25',checkOut:'2026-06-28',
+    gers:[{n:20,occ:2},{n:24,occ:2}],staffGers:[{n:49,occ:1,label:'Guide'}]},
+  {id:8,company:'Nomadic Journeys',color:'#16A34A',guests:12,guide:'Naran',checkIn:'2026-06-14',checkOut:'2026-06-17',
+    gers:[{n:101,occ:2},{n:102,occ:2},{n:103,occ:2},{n:104,occ:2},{n:105,occ:2},{n:106,occ:2}],staffGers:[{n:47,occ:2,label:'Guide + Driver'}]},
+  {id:9,company:'Sunpath Mongolia',color:'#1a1a1a',guests:6,guide:'Bold',checkIn:'2026-06-26',checkOut:'2026-06-30',
+    gers:[{n:107,occ:2},{n:108,occ:2},{n:109,occ:2}],staffGers:[{n:48,occ:1,label:'Driver'}]},
+  {id:10,company:'Wind Horse',color:'#7C3AED',guests:16,guide:'Baatar',checkIn:'2026-06-08',checkOut:'2026-06-12',
+    gers:[{n:14,occ:2},{n:15,occ:2},{n:16,occ:2},{n:17,occ:2},{n:18,occ:2},{n:21,occ:2},{n:22,occ:2},{n:23,occ:2}],staffGers:[{n:47,occ:3,label:'2 Guides + Driver'}]},
+  {id:11,company:'Juulchin Tourism',color:'#E63946',guests:8,guide:'Bat',checkIn:'2026-06-13',checkOut:'2026-06-16',
+    gers:[{n:29,occ:2},{n:30,occ:2},{n:31,occ:2},{n:32,occ:2}],staffGers:[]},
+  {id:12,company:'Sunpath Mongolia',color:'#1a1a1a',guests:6,guide:'Dulam',checkIn:'2026-06-19',checkOut:'2026-06-22',
+    gers:[{n:33,occ:2},{n:34,occ:2},{n:35,occ:2}],staffGers:[]}
+];
+
+// Load reservations from localStorage (shared with booking page)
+(function(){
+  try{
+    const saved=JSON.parse(localStorage.getItem('kz_reservations')||'[]');
+    let nextId=100;
+    saved.forEach(r=>{
+      BOOKINGS.push({
+        id:nextId++,
+        company:r.company,
+        color:r.color||'#999',
+        guests:r.guests||0,
+        guide:r.guide||'',
+        checkIn:r.checkIn,
+        checkOut:r.checkOut,
+        gers:(r.gers||[]).map(g=>typeof g==='object'?g:{n:g,occ:2}),
+        staffGers:r.staffGers||[],
+        reserved:true
+      });
+    });
+  }catch(e){}
+})();
+
+// Helpers
+function pd(s){return new Date(s+'T00:00:00')}
+function fd(d){return d.toISOString().split('T')[0]}
+function addD(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r}
+function diffD(a,b){return Math.round((b-a)/86400000)}
+function isWe(d){const w=d.getDay();return w===0||w===6}
+function same(a,b){return fd(a)===fd(b)}
+
+const TODAY=new Date();TODAY.setHours(0,0,0,0);
+const DN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MF=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+let rangeFrom=new Date(TODAY),rangeTo=addD(TODAY,13);
+document.getElementById('rangeFrom').value=fd(rangeFrom);
+document.getElementById('rangeTo').value=fd(rangeTo);
+document.getElementById('rangeFrom').addEventListener('change',function(){rangeFrom=pd(this.value);clearQ();render()});
+document.getElementById('rangeTo').addEventListener('change',function(){rangeTo=pd(this.value);clearQ();render()});
+
+function clearQ(){document.querySelectorAll('#quickBtns .ctrl-btn').forEach(b=>b.classList.remove('active'))}
+function setRange(p,btn){
+  clearQ();btn.classList.add('active');
+  if(p==='week'){const w=TODAY.getDay();const m=addD(TODAY,-((w+6)%7));rangeFrom=m;rangeTo=addD(m,6)}
+  else if(p==='2week'){rangeFrom=new Date(TODAY);rangeTo=addD(TODAY,13)}
+  else if(p==='month'){rangeFrom=new Date(TODAY.getFullYear(),TODAY.getMonth(),1);rangeTo=new Date(TODAY.getFullYear(),TODAY.getMonth()+1,0)}
+  else if(p==='season'){rangeFrom=pd('2026-06-01');rangeTo=pd('2026-09-30')}
+  document.getElementById('rangeFrom').value=fd(rangeFrom);
+  document.getElementById('rangeTo').value=fd(rangeTo);
+  render();
+}
+
+function getDates(){
+  const d=[];let c=new Date(rangeFrom);while(c<=rangeTo){d.push(new Date(c));c.setDate(c.getDate()+1)}return d;
+}
+
+// Get bookings active on a given date, split by ger type
+function dayBookings(date){
+  const ens=[],std=[];
+  BOOKINGS.forEach(bk=>{
+    const ci=pd(bk.checkIn),co=pd(bk.checkOut);
+    if(date>=ci&&date<co){
+      const isArrival=same(date,ci);
+      const isLastNight=same(date,addD(co,-1));
+      const ensGers=bk.gers.filter(g=>ENSUITE_NUMS.has(g.n));
+      const stdGers=bk.gers.filter(g=>STANDARD_NUMS.has(g.n));
+      if(ensGers.length) ens.push({bk,gerCount:ensGers.length,totalGers:bk.gers.length,isArrival,isLastNight});
+      if(stdGers.length) std.push({bk,gerCount:stdGers.length,totalGers:bk.gers.length,isArrival,isLastNight});
+    }
+  });
+  ens.sort((a,b)=>b.gerCount-a.gerCount);
+  std.sort((a,b)=>b.gerCount-a.gerCount);
+  return {ens,std};
+}
+
+// Build company name tags for a day
+function renderNameTags(allItems){
+  // Dedupe by booking id (same booking may appear in both ens + std)
+  const seen=new Set();
+  const unique=[];
+  allItems.forEach(b=>{
+    if(!seen.has(b.bk.id)){seen.add(b.bk.id);unique.push(b)}
+  });
+  if(unique.length===0) return `<div class="day-names-empty">— no bookings —</div>`;
+  let h='';
+  unique.forEach(b=>{
+    const bk=b.bk;
+    const ensG=bk.gers.filter(g=>ENSUITE_NUMS.has(g.n)).length;
+    const stdG=bk.gers.filter(g=>STANDARD_NUMS.has(g.n)).length;
+    let gerInfo=[];
+    if(ensG) gerInfo.push(ensG+'E');
+    if(stdG) gerInfo.push(stdG+'S');
+    let arr='';
+    if(b.isArrival) arr=`<span class="tag-arr">IN</span>`;
+    else if(b.isLastNight) arr=`<span class="tag-arr">OUT</span>`;
+    // Payment badge
+    const ps=getPayStatus(bk);
+    let payBadge='';
+    if(ps.status==='paid') payBadge=`<span class="seg-pay pay-paid">✓</span>`;
+    else if(ps.status==='partial') payBadge=`<span class="seg-pay pay-partial">${ps.pct}%</span>`;
+    else if(ps.invoice>0) payBadge=`<span class="seg-pay pay-unpaid">$</span>`;
+    h+=`<span class="name-tag" style="background:${bk.color}" onclick="openPanel(${bk.id})" onmouseenter="showTT(event,${bk.id})" onmouseleave="hideTT()">`;
+    h+=`${bk.company} <span class="tag-gers">${gerInfo.join('·')}</span>`;
+    if(arr) h+=arr;
+    if(payBadge) h+=payBadge;
+    h+=`</span>`;
+  });
+  return h;
+}
+
+// Build occupancy bar line
+function renderOccBar(count,cap,label,cls){
+  const pct=Math.round(count/cap*100);
+  const cc=pct>=80?'high':pct>=50?'mid':'low';
+  return `<div class="day-occ-bar">`
+    +`<span class="occ-label ${cls}">${label}</span>`
+    +`<div class="occ-track"><div class="occ-fill fill-${cls}" style="width:${pct}%"></div></div>`
+    +`<span class="occ-pct occ-${cc}">${pct}%</span>`
+    +`<span class="occ-count">${count}/${cap}</span>`
+    +`</div>`;
+}
+
+// ── Render ──
+function render(){
+  const dates=getDates();
+  let html='';
+  let lastMonth=-1;
+
+  dates.forEach(date=>{
+    const we=isWe(date);
+    const td=same(date,TODAY);
+    const ms=date.getDate()===1||date.getMonth()!==lastMonth;
+    lastMonth=date.getMonth();
+
+    const {ens,std}=dayBookings(date);
+    const ensCount=ens.reduce((s,b)=>s+b.gerCount,0);
+    const stdCount=std.reduce((s,b)=>s+b.gerCount,0);
+
+    let rc='day-row';
+    if(we)rc+=' weekend';
+    if(td)rc+=' today';
+    if(ms)rc+=' month-start';
+
+    html+=`<div class="${rc}">`;
+
+    // Date label
+    const dateStr=fd(date);
+    html+=`<div class="day-date" onclick="openDay('${dateStr}')" title="Open ${dateStr} in booking view">`;
+    html+=`<div class="dd-day">${DN[date.getDay()]}</div>`;
+    html+=`<div class="dd-num">${date.getDate()}</div>`;
+    if(ms||date.getDate()<=1) html+=`<div class="dd-month">${MF[date.getMonth()]}</div>`;
+    else html+=`<div class="dd-month">${MN[date.getMonth()]}</div>`;
+    html+=`<div class="dd-link"><i class="ti ti-external-link" style="font-size:9px;vertical-align:0"></i> open day</div>`;
+    html+=`</div>`;
+
+    // Content: names above, occupancy bars below
+    const allItems=[...ens,...std];
+    html+=`<div class="day-content">`;
+    html+=`<div class="day-names">${renderNameTags(allItems)}</div>`;
+    html+=renderOccBar(ensCount,TOTAL_ENS,'En','ens');
+    html+=renderOccBar(stdCount,TOTAL_STD,'St','std');
+    html+=`</div>`;
+
+    html+=`</div>`;
+  });
+
+  document.getElementById('calBody').innerHTML=html;
+  updateSummary(dates);
+  updateLegend();
+  document.getElementById('printSub').textContent=fd(rangeFrom)+' to '+fd(rangeTo)+' — Printed '+new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+}
+
+function updateSummary(dates){
+  let sumEns=0,sumStd=0,sumTotal=0;
+  dates.forEach(d=>{
+    const {ens,std}=dayBookings(d);
+    const e=ens.reduce((s,b)=>s+b.gerCount,0);
+    const s=std.reduce((s,b)=>s+b.gerCount,0);
+    sumEns+=e;sumStd+=s;sumTotal+=e+s;
+  });
+  const n=dates.length||1;
+  const avg=Math.round(sumTotal/n/TOTAL*100);
+  const avgEns=Math.round(sumEns/n/TOTAL_ENS*100);
+  const avgStd=Math.round(sumStd/n/TOTAL_STD*100);
+  const active=new Set();
+  BOOKINGS.forEach(bk=>{if(pd(bk.checkIn)<=rangeTo&&pd(bk.checkOut)>=rangeFrom)active.add(bk.id)});
+  document.getElementById('sumAvg').textContent=avg+'%';
+  document.getElementById('sumAvgEns').textContent=avgEns+'%';
+  document.getElementById('sumAvgStd').textContent=avgStd+'%';
+  document.getElementById('sumBk').textContent=active.size;
+  document.getElementById('sumDays').textContent=dates.length;
+}
+
+function updateLegend(){
+  const co=new Map();
+  BOOKINGS.forEach(bk=>{if(pd(bk.checkIn)<=rangeTo&&pd(bk.checkOut)>=rangeFrom)co.set(bk.company,bk.color)});
+  let h='<span style="font-weight:600;color:#666">Companies:</span>';
+  co.forEach((c,n)=>{h+=`<div class="legend-item"><div class="legend-dot" style="background:${c}"></div>${n}</div>`});
+  h+=`<div class="legend-item" style="margin-left:auto;font-size:10px;color:#bbb"><i class="ti ti-info-circle" style="font-size:12px;margin-right:3px"></i>Hover for details · Click to drill down</div>`;
+  document.getElementById('legendBar').innerHTML=h;
+}
+
+// ── Click date → open booking view for that day ──
+function openDay(dateStr){
+  // Navigate to booking prototype with check-in set to this date, check-out = next day
+  const co=addD(pd(dateStr),1);
+  window.location.href='index.html?checkIn='+dateStr+'&checkOut='+fd(co);
+}
+
+// Tooltip
+const tt=document.getElementById('tooltip');
+function showTT(e,id){
+  const bk=BOOKINGS.find(b=>b.id===id);if(!bk)return;
+  const n=diffD(pd(bk.checkIn),pd(bk.checkOut));
+  const gn=bk.gers.map(g=>'#'+g.n).join(', ');
+  const sf=(bk.staffGers||[]).map(g=>'#'+g.n+' ('+g.label+')').join(', ');
+  let h=`<div class="tt-company" style="color:${bk.color}">${bk.company}</div>`;
+  h+=`<div class="tt-detail">${bk.checkIn} → ${bk.checkOut} · ${n} night${n>1?'s':''}</div>`;
+  h+=`<div class="tt-detail">${bk.guests} guests · ${bk.gers.length} gers · Guide: ${bk.guide}</div>`;
+  h+=`<div class="tt-detail" style="margin-top:4px;color:#ddd;font-size:10px">Gers: ${gn}</div>`;
+  if(sf)h+=`<div class="tt-detail" style="color:#5DCAA5;font-size:10px">Staff: ${sf}</div>`;
+  tt.innerHTML=h;tt.classList.add('show');posTT(e);
+}
+function posTT(e){
+  tt.style.left=Math.min(e.clientX+14,window.innerWidth-300)+'px';
+  tt.style.top=Math.min(e.clientY+14,window.innerHeight-140)+'px';
+}
+document.addEventListener('mousemove',function(e){if(tt.classList.contains('show'))posTT(e)});
+function hideTT(){tt.classList.remove('show')}
+
+// ── Payment data ──
+function resKey(bk){
+  return (bk.company||'')+'_'+(bk.checkIn||'')+'_'+(bk.checkOut||'');
+}
+function loadPayments(){
+  try{return JSON.parse(localStorage.getItem('kz_payments')||'{}');}catch(e){return {};}
+}
+function getPayStatus(bk){
+  const all=loadPayments();
+  const k=resKey(bk);
+  const pays=(all[k]&&all[k].payments)?all[k].payments:[];
+  let paid=0;
+  pays.forEach(p=>paid+=Number(p.amount)||0);
+  // Estimate invoice total same way as finance
+  let inv=0;
+  if(bk.invoiceTotal&&Number(bk.invoiceTotal)>0){inv=Number(bk.invoiceTotal)}
+  else{
+    const nights=diffD(pd(bk.checkIn),pd(bk.checkOut));
+    const totalGuests=bk.guests||0;
+    const isFIT=totalGuests<5;
+    const stdRate=isFIT?85000:65000;
+    const ensRate=190000;
+    const ensSS=90000, stdSS=60000;
+    const singles=bk.singles||[];
+    (bk.gers||[]).forEach(g=>{
+      const isEns=ENSUITE_NUMS.has(g.n)||(g.n>=101&&g.n<=110);
+      const isSingle=singles.includes(g.n);
+      if(isSingle){
+        inv+=(isEns?(ensRate+ensSS):(stdRate+stdSS))*nights;
+      }else{
+        inv+=(isEns?ensRate:stdRate)*(g.occ||2)*nights;
+      }
+    });
+  }
+  const pct=inv>0?Math.min(Math.round(paid/inv*100),100):0;
+  let status='unpaid';
+  if(pct>=100)status='paid';else if(pct>0)status='partial';
+  return {paid,invoice:inv,pct,status,payments:pays};
+}
+
+// ── Detail panel ──
+let activePanel=null;
+function openPanel(id){
+  const bk=BOOKINGS.find(b=>b.id===id);if(!bk)return;
+  activePanel=bk;
+  const ps=getPayStatus(bk);
+  const nights=diffD(pd(bk.checkIn),pd(bk.checkOut));
+
+  // Header
+  document.getElementById('dpCompany').innerHTML=`<div class="co-dot" style="background:${bk.color}"></div>${bk.company}`;
+  let meta=`<span><i class="ti ti-calendar"></i>${bk.checkIn} → ${bk.checkOut} (${nights}N)</span>`;
+  meta+=`<span><i class="ti ti-users"></i>${bk.guests} guests</span>`;
+  meta+=`<span><i class="ti ti-tent"></i>${bk.gers.length} gers</span>`;
+  if(bk.guide)meta+=`<span><i class="ti ti-compass"></i>${bk.guide}</span>`;
+  document.getElementById('dpMeta').innerHTML=meta;
+
+  // Body
+  let body='';
+
+  // Payment status
+  body+=`<div class="dp-pay-status ${ps.status}">`;
+  body+=`<div><div class="pay-pct">${ps.pct}%</div><div class="pay-label">${ps.status==='paid'?'Fully Paid':ps.status==='partial'?'Partially Paid':'Unpaid'}</div></div>`;
+  body+=`<div style="flex:1">`;
+  body+=`<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span>Paid: ₮${ps.paid.toLocaleString()}</span><span>Invoice: ₮${ps.invoice.toLocaleString()}</span></div>`;
+  body+=`<div class="dp-pay-bar"><div class="dp-pay-fill" style="width:${ps.pct}%;background:${ps.status==='paid'?'#15803D':ps.status==='partial'?'#D97706':'#DC2626'}"></div></div>`;
+  if(ps.invoice>ps.paid){body+=`<div style="font-size:10px;margin-top:2px;text-align:right">Outstanding: ₮${(ps.invoice-ps.paid).toLocaleString()}</div>`}
+  body+=`</div></div>`;
+
+  // Ger allocation
+  body+=`<div class="dp-section"><div class="dp-section-title"><i class="ti ti-tent"></i> Ger Allocation</div>`;
+  body+=`<div class="dp-ger-grid">`;
+  (bk.gers||[]).forEach(g=>{
+    const cls=ENSUITE_NUMS.has(g.n)?'ens':'std';
+    body+=`<div class="dp-ger ${cls}">#${g.n} <span style="opacity:.7;font-weight:400">×${g.occ||2}</span></div>`;
+  });
+  (bk.staffGers||[]).forEach(g=>{
+    body+=`<div class="dp-ger staff">#${g.n} <span style="opacity:.7;font-weight:400">${g.label||'Staff'}</span></div>`;
+  });
+  body+=`</div></div>`;
+
+  // Payment entries
+  if(ps.payments.length>0){
+    body+=`<div class="dp-section"><div class="dp-section-title"><i class="ti ti-cash"></i> Payment Records</div>`;
+    ps.payments.forEach(p=>{
+      body+=`<div class="dp-pay-entry">`;
+      body+=`<div style="display:flex;justify-content:space-between"><span class="dp-pay-amount">₮${Number(p.amount).toLocaleString()}</span><span style="color:#999">${p.date||''}</span></div>`;
+      if(p.bankRef)body+=`<div class="dp-pay-ref"><i class="ti ti-building-bank" style="font-size:11px"></i> ${p.bankRef}</div>`;
+      if(p.notes)body+=`<div class="dp-pay-notes">${p.notes}</div>`;
+      body+=`</div>`;
+    });
+    body+=`</div>`;
+  }else{
+    body+=`<div class="dp-section"><div class="dp-section-title"><i class="ti ti-cash"></i> Payment Records</div>`;
+    body+=`<div style="font-size:12px;color:#999;padding:8px 0">No payments recorded yet. Finance team can add payments in the Finance portal.</div></div>`;
+  }
+
+  // Booking details
+  body+=`<div class="dp-section"><div class="dp-section-title"><i class="ti ti-file-text"></i> Booking Details</div>`;
+  body+=`<div class="dp-row"><span>Company</span><span>${bk.company}</span></div>`;
+  body+=`<div class="dp-row"><span>Guests</span><span>${bk.guests}</span></div>`;
+  body+=`<div class="dp-row"><span>Nights</span><span>${nights}</span></div>`;
+  body+=`<div class="dp-row"><span>Guide</span><span>${bk.guide||'—'}</span></div>`;
+  body+=`<div class="dp-row"><span>Guest gers</span><span>${bk.gers.length} (${bk.gers.filter(g=>ENSUITE_NUMS.has(g.n)).length} ensuite, ${bk.gers.filter(g=>STANDARD_NUMS.has(g.n)).length} standard)</span></div>`;
+  if(bk.staffGers&&bk.staffGers.length)body+=`<div class="dp-row"><span>Staff gers</span><span>${bk.staffGers.length}</span></div>`;
+  body+=`</div>`;
+
+  document.getElementById('dpBody').innerHTML=body;
+
+  // Footer
+  let fh=`<a class="dp-btn dp-btn-primary" href="finance.html"><i class="ti ti-report-money"></i> Open in Finance</a>`;
+  fh+=`<a class="dp-btn dp-btn-outline" href="index.html?checkIn=${bk.checkIn}&checkOut=${bk.checkOut}"><i class="ti ti-edit"></i> Edit Booking</a>`;
+  document.getElementById('dpFooter').innerHTML=fh;
+
+  // Show
+  document.getElementById('panelOverlay').classList.add('open');
+  document.getElementById('detailPanel').classList.add('open');
+}
+function closePanel(){
+  document.getElementById('panelOverlay').classList.remove('open');
+  document.getElementById('detailPanel').classList.remove('open');
+  activePanel=null;
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&activePanel)closePanel()});
+
+// Listen for cross-tab payment updates
+window.addEventListener('storage',function(e){
+  if(e.key==='kz_payments'||e.key==='kz_reservations') render();
+});
+
+render();
+
+// ─── Search ───
+function openSearch(){
+  document.getElementById('searchOverlay').classList.add('show');
+  var inp=document.getElementById('searchInput');
+  inp.value='';
+  document.getElementById('searchClear').style.display='none';
+  document.getElementById('searchResults').innerHTML='<div class="sr-empty"><i class="ti ti-search"></i>Type a company name to see their bookings</div>';
+  setTimeout(function(){inp.focus()},100);
+}
+function closeSearch(){
+  document.getElementById('searchOverlay').classList.remove('show');
+}
+function clearSearch(){
+  var inp=document.getElementById('searchInput');
+  inp.value='';inp.focus();
+  document.getElementById('searchClear').style.display='none';
+  document.getElementById('searchResults').innerHTML='<div class="sr-empty"><i class="ti ti-search"></i>Type a company name to see their bookings</div>';
+}
+function hlMatch(text,query){
+  if(!query) return text;
+  var esc=query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return text.replace(new RegExp('('+esc+')','gi'),'<span class="sr-match">$1</span>');
+}
+function runSearch(query){
+  var res=document.getElementById('searchResults');
+  var q=query.trim().toLowerCase();
+  if(!q){
+    res.innerHTML='<div class="sr-empty"><i class="ti ti-search"></i>Type a company name to see their bookings</div>';
+    document.getElementById('searchClear').style.display='none';
+    return;
+  }
+  document.getElementById('searchClear').style.display='';
+  var matches=BOOKINGS.filter(function(b){
+    return (b.company||'').toLowerCase().indexOf(q)>=0||
+           (b.tripCode||'').toLowerCase().indexOf(q)>=0||
+           (b.guide||'').toLowerCase().indexOf(q)>=0||
+           (b.contact||'').toLowerCase().indexOf(q)>=0;
+  });
+  if(!matches.length){
+    res.innerHTML='<div class="sr-empty"><i class="ti ti-mood-empty"></i>No bookings found for "'+query.replace(/</g,'&lt;')+'"</div>';
+    return;
+  }
+  var today=new Date();today.setHours(0,0,0,0);
+  var sorted=matches.slice().sort(function(a,b){return new Date(a.checkIn+'T00:00:00')-new Date(b.checkIn+'T00:00:00')});
+  var upcoming=[],current=[],past=[];
+  sorted.forEach(function(r){
+    var ci=new Date(r.checkIn+'T00:00:00'),co=new Date(r.checkOut+'T00:00:00');
+    if(co<=today) past.push(r);
+    else if(ci<=today&&co>today) current.push(r);
+    else upcoming.push(r);
+  });
+  var totalNights=0,totalGuests=0;
+  sorted.forEach(function(r){
+    totalNights+=Math.max(1,diffD(pd(r.checkIn),pd(r.checkOut)));
+    totalGuests+=(r.guests||0);
+  });
+  var html='<div class="sr-count">'+matches.length+' booking'+(matches.length!==1?'s':'')+' found · '+totalGuests+' total guests · '+totalNights+' total nights</div>';
+  function renderGroup(label,icon,items,cls){
+    if(!items.length) return;
+    html+='<div class="sr-group-label"><i class="ti ti-'+icon+'"></i> '+label+' ('+items.length+')</div>';
+    items.forEach(function(r){
+      var nights=diffD(pd(r.checkIn),pd(r.checkOut));
+      var gerCount=r.gerNums?r.gerNums.length:(r.gers?r.gers.length:0);
+      html+='<div class="sr-item" onclick="searchSelect(\''+r.id+'\')">';
+      html+='<div class="sr-company"><span class="sr-color" style="background:'+(r.color||'#534AB7')+'"></span>'+hlMatch(r.company||'Unknown',query);
+      html+='<span class="sr-timing '+cls+'">'+label.split(' ')[0]+'</span></div>';
+      html+='<div class="sr-meta">';
+      html+=r.checkIn+' → '+r.checkOut+' · '+nights+' night'+(nights!==1?'s':'')+' · '+(r.guests||0)+' guest'+((r.guests||0)!==1?'s':'')+' · '+gerCount+' ger'+(gerCount!==1?'s':'');
+      if(r.tripCode) html+='<br>Trip: '+hlMatch(r.tripCode,query);
+      if(r.guide) html+=' · Guide: '+hlMatch(r.guide,query);
+      if(r.contact) html+=' · Contact: '+hlMatch(r.contact,query);
+      if(r.total) html+='<br>Total: <b>'+r.total+'</b>';
+      html+='</div>';
+      var gNums=r.gerNums||(r.gers||[]).map(function(g){return typeof g==='object'?g.n:g});
+      if(gNums&&gNums.length){
+        html+='<div class="sr-gers">';
+        gNums.forEach(function(n){html+='<span class="sr-ger-tag">#'+n+'</span>'});
+        html+='</div>';
+      }
+      html+='</div>';
+    });
+  }
+  renderGroup('Current','circle-check',current,'current');
+  renderGroup('Upcoming','calendar-event',upcoming,'upcoming');
+  renderGroup('Past','history',past,'past');
+  res.innerHTML=html;
+}
+function searchSelect(id){
+  closeSearch();
+  openPanel(id);
+}
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&document.getElementById('searchOverlay').classList.contains('show')){closeSearch();e.stopPropagation();}
+  if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();openSearch();}
+});
+(function(){
+  var inp=document.getElementById('searchInput');
+  if(inp){var t;inp.addEventListener('input',function(){clearTimeout(t);t=setTimeout(function(){runSearch(inp.value)},150)});}
+})();
+</script>
+</body>
+</html>
