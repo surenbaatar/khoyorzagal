@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khoyor Zagal — Admin Panel</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f0;color:#1a1a1a;font-size:14px;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+/* ─── LOGIN ─── */
+.login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#FEF3C7 0%,#f5f5f0 50%,#fffbeb 100%);display:flex;align-items:center;justify-content:center;z-index:500}
+.login-screen.hidden{display:none}
+.login-card{background:#fff;border:1px solid #e0dfd8;border-radius:16px;padding:40px 36px;width:380px;box-shadow:0 8px 40px rgba(0,0,0,.08)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo i{font-size:40px;color:#B45309;display:block;margin-bottom:8px}
+.login-logo h1{font-size:20px;font-weight:700}
+.login-logo .camp{font-size:12px;color:#888;margin-top:2px}
+.login-logo .badge{display:inline-block;font-size:10px;padding:3px 10px;border-radius:12px;background:#FEF3C7;color:#B45309;font-weight:600;margin-top:8px}
+.login-field{margin-bottom:16px}
+.login-field label{display:block;font-size:12px;font-weight:600;color:#666;margin-bottom:5px}
+.login-field input{width:100%;padding:10px 14px;font-size:14px;border:1px solid #ddd;border-radius:8px;background:#fff;transition:all .15s}
+.login-field input:focus{outline:none;border-color:#B45309;box-shadow:0 0 0 3px rgba(180,83,9,.12)}
+.login-btn{width:100%;padding:12px;font-size:14px;font-weight:600;border:none;border-radius:8px;background:#B45309;color:#fff;cursor:pointer;transition:all .15s;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px}
+.login-btn:hover{background:#A16207}
+.login-error{font-size:12px;color:#DC2626;text-align:center;margin-top:10px;display:none}
+.login-error.show{display:block}
+.login-back{text-align:center;margin-top:14px}
+.login-back a{font-size:11px;color:#B45309;text-decoration:none}
+.login-back a:hover{text-decoration:underline}
+
+/* ─── APP ─── */
+.app{display:none;flex-direction:column;height:100vh}
+.app.visible{display:flex}
+.top-bar{background:#fff;border-bottom:1px solid #e0dfd8;padding:0 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;height:50px}
+.top-bar-left{display:flex;align-items:center;gap:16px;height:100%}
+.top-bar h1{font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px;color:#B45309}
+.camp-badge{font-size:11px;padding:3px 10px;border-radius:20px;background:#FEF3C7;color:#B45309;font-weight:500}
+.top-bar-right{display:flex;align-items:center;gap:10px}
+.user-badge{font-size:12px;color:#666;display:flex;align-items:center;gap:5px;padding:4px 10px;background:#fafaf7;border-radius:6px;border:1px solid #eee}
+.user-badge i{font-size:13px;color:#B45309}
+.nav-link{display:flex;align-items:center;gap:5px;font-size:13px;color:#534AB7;text-decoration:none;font-weight:500;padding:5px 12px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer;transition:all .15s}
+.nav-link:hover{background:#EEEDFE;border-color:#534AB7}
+.logout-btn{display:flex;align-items:center;gap:4px;font-size:12px;color:#999;border:1px solid #ddd;background:#fff;padding:5px 10px;border-radius:6px;cursor:pointer;transition:all .15s}
+.logout-btn:hover{color:#DC2626;border-color:#fca5a5;background:#FEE2E2}
+
+/* ─── SIDEBAR + CONTENT ─── */
+.admin-body{display:flex;flex:1;overflow:hidden}
+.sidebar{width:220px;background:#fff;border-right:1px solid #e0dfd8;padding:16px 0;overflow-y:auto;flex-shrink:0}
+.sidebar-section{font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;padding:12px 20px 6px}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:13px;color:#666;cursor:pointer;transition:all .1s;border-left:3px solid transparent}
+.sidebar-item:hover{background:#fafaf7;color:#1a1a1a}
+.sidebar-item.active{background:#FEF3C7;color:#B45309;border-left-color:#B45309;font-weight:600}
+.sidebar-item i{font-size:16px;width:20px;text-align:center}
+.main-content{flex:1;overflow-y:auto;padding:24px 32px}
+.main-content h2{font-size:18px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.main-content .subtitle{font-size:13px;color:#888;margin-bottom:20px}
+
+/* ─── CARDS & TABLES ─── */
+.card{background:#fff;border:1px solid #e0dfd8;border-radius:12px;padding:20px;margin-bottom:16px}
+.card h3{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.card h3 i{color:#B45309}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.stat-card{background:#fff;border:1px solid #e0dfd8;border-radius:10px;padding:16px;text-align:center}
+.stat-card .num{font-size:28px;font-weight:700;color:#1a1a1a}
+.stat-card .lbl{font-size:11px;color:#888;margin-top:4px}
+table.admin-table{width:100%;border-collapse:collapse;font-size:13px}
+table.admin-table th{text-align:left;padding:8px 12px;background:#fafaf7;border-bottom:1px solid #e0dfd8;font-weight:600;color:#666;font-size:11px;text-transform:uppercase;letter-spacing:.3px}
+table.admin-table td{padding:8px 12px;border-bottom:1px solid #f0efe8}
+table.admin-table tr:hover{background:#fafaf7}
+.role-badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;text-transform:uppercase}
+.role-badge.admin{background:#FEF3C7;color:#B45309}
+.role-badge.booking{background:#EEEDFE;color:#534AB7}
+.role-badge.finance{background:#E6F7F5;color:#0F766E}
+.role-badge.camp{background:#D1FAE5;color:#059669}
+.btn{padding:6px 14px;font-size:12px;font-weight:600;border:none;border-radius:6px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:4px}
+.btn-primary{background:#B45309;color:#fff}
+.btn-primary:hover{background:#A16207}
+.btn-danger{background:#FEE2E2;color:#DC2626}
+.btn-danger:hover{background:#FECACA}
+.btn-secondary{background:#fff;color:#666;border:1px solid #ddd}
+.btn-secondary:hover{background:#f5f5f0}
+.btn-success{background:#DCFCE7;color:#15803D}
+.btn-success:hover{background:#BBF7D0}
+.form-row{display:flex;gap:8px;margin-top:12px;align-items:flex-end}
+.form-row input,.form-row select{padding:7px 12px;font-size:13px;border:1px solid #ddd;border-radius:6px;background:#fff}
+.form-row input:focus,.form-row select:focus{outline:none;border-color:#B45309}
+.form-row label{font-size:11px;font-weight:600;color:#666;display:block;margin-bottom:3px}
+.form-group{display:flex;flex-direction:column}
+.toast{position:fixed;bottom:20px;right:20px;padding:12px 20px;background:#1a1a1a;color:#fff;border-radius:8px;font-size:13px;font-weight:500;opacity:0;transition:opacity .3s;z-index:999;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <i class="ti ti-settings"></i>
+      <h1>Admin Panel</h1>
+      <div class="camp">Khoyor Zagal</div>
+      <div class="badge">Administrator Access</div>
+    </div>
+    <div class="login-field"><label>Username</label><input type="text" id="loginUser" placeholder="Enter username" autocomplete="username"></div>
+    <div class="login-field"><label>Password</label><input type="password" id="loginPass" placeholder="Enter password" autocomplete="current-password"></div>
+    <button class="login-btn" onclick="doAdminLogin()"><i class="ti ti-lock-open"></i> Sign In</button>
+    <div class="login-error" id="loginError">Admin access required</div>
+    <div class="login-back"><a href="index.html"><i class="ti ti-arrow-left" style="font-size:11px"></i> Back to Portal</a></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <h1><i class="ti ti-settings" style="font-size:20px"></i> Admin</h1>
+      <span class="camp-badge">Khoyor Zagal</span>
+    </div>
+    <div class="top-bar-right">
+      <div class="user-badge"><i class="ti ti-user-circle"></i> <span id="userName"></span></div>
+      <a class="nav-link" href="index.html"><i class="ti ti-home" style="font-size:14px"></i> Portal</a>
+      <button class="logout-btn" onclick="doAdminLogout()"><i class="ti ti-logout"></i> Sign Out</button>
+    </div>
+  </div>
+
+  <div class="admin-body">
+    <div class="sidebar">
+      <div class="sidebar-section">Overview</div>
+      <div class="sidebar-item active" onclick="showSection('dashboard',this)"><i class="ti ti-dashboard"></i> Dashboard</div>
+
+      <div class="sidebar-section">Management</div>
+      <div class="sidebar-item" onclick="showSection('users',this)"><i class="ti ti-users"></i> Users</div>
+      <div class="sidebar-item" onclick="showSection('companies',this)"><i class="ti ti-building"></i> Companies</div>
+      <div class="sidebar-item" onclick="showSection('bookings',this)"><i class="ti ti-calendar-event"></i> All Bookings</div>
+      <div class="sidebar-item" onclick="showSection('payments',this)"><i class="ti ti-cash"></i> All Payments</div>
+
+      <div class="sidebar-section">Tools</div>
+      <div class="sidebar-item" onclick="showSection('mockdata',this)"><i class="ti ti-database"></i> Mock Data</div>
+      <div class="sidebar-item" onclick="showSection('backup',this)"><i class="ti ti-download"></i> Backup / Restore</div>
+    </div>
+
+    <div class="main-content" id="mainContent"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── AUTH ───
+var USERS_KEY='kz_users';
+var SESSION_KEY='kz_admin_session';
+
+function getUsers(){try{return JSON.parse(localStorage.getItem(USERS_KEY)||'[]')}catch(e){return[]}}
+function saveUsers(u){localStorage.setItem(USERS_KEY,JSON.stringify(u))}
+
+if(getUsers().length===0){
+  saveUsers([
+    {username:'admin',password:'admin123',role:'admin'},
+    {username:'booking',password:'kz2026',role:'booking'},
+    {username:'finance',password:'kz2026',role:'finance'},
+    {username:'camp',password:'kz2026',role:'camp'}
+  ]);
+}
+
+function doAdminLogin(){
+  var u=document.getElementById('loginUser').value.trim();
+  var p=document.getElementById('loginPass').value;
+  var users=getUsers();
+  var found=null;
+  for(var i=0;i<users.length;i++){
+    if(users[i].username.toLowerCase()===u.toLowerCase()&&users[i].password===p){found=users[i];break;}
+  }
+  if(!found||found.role!=='admin'){
+    document.getElementById('loginError').classList.add('show');
+    return;
+  }
+  document.getElementById('loginError').classList.remove('show');
+  localStorage.setItem(SESSION_KEY,JSON.stringify({username:found.username,role:found.role,ts:Date.now()}));
+  showApp(found.username);
+}
+
+function doAdminLogout(){
+  localStorage.removeItem(SESSION_KEY);
+  location.reload();
+}
+
+function showApp(username){
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('app').classList.add('visible');
+  document.getElementById('userName').textContent=username;
+  showSection('dashboard',document.querySelector('.sidebar-item.active'));
+}
+
+(function(){
+  try{
+    var s=JSON.parse(localStorage.getItem(SESSION_KEY));
+    if(s&&s.username&&s.role==='admin'&&(Date.now()-s.ts<86400000)){showApp(s.username);}
+  }catch(e){}
+})();
+
+document.getElementById('loginPass').addEventListener('keydown',function(e){if(e.key==='Enter')doAdminLogin()});
+document.getElementById('loginUser').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('loginPass').focus()});
+
+// ─── HELPERS ───
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function fmt(n){return (n||0).toLocaleString()+'₮'}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2500)}
+
+function getReservations(){try{return JSON.parse(localStorage.getItem('kz_reservations')||'[]')}catch(e){return[]}}
+function getCompanies(){try{return JSON.parse(localStorage.getItem('kz_companies')||'[]')}catch(e){return[]}}
+function getPayments(){try{return JSON.parse(localStorage.getItem('kz_payments')||'{}')}catch(e){return{}}}
+
+// ─── SECTIONS ───
+function showSection(name,el){
+  document.querySelectorAll('.sidebar-item').forEach(function(s){s.classList.remove('active')});
+  if(el)el.classList.add('active');
+  var mc=document.getElementById('mainContent');
+  var fn={dashboard:renderDashboard,users:renderUsers,companies:renderCompanies,bookings:renderBookings,payments:renderPayments,mockdata:renderMockData,backup:renderBackup};
+  if(fn[name])fn[name](mc);
+}
+
+// ─── DASHBOARD ───
+function renderDashboard(mc){
+  var res=getReservations();
+  var co=getCompanies();
+  var pay=getPayments();
+  var users=getUsers();
+  var active=res.filter(function(r){return!r.cancelled}).length;
+  var cancelled=res.filter(function(r){return r.cancelled}).length;
+  var totalInv=0,totalPaid=0;
+  res.forEach(function(r){totalInv+=(r.invoiceTotal||0)});
+  Object.keys(pay).forEach(function(k){
+    var entries=pay[k];
+    if(Array.isArray(entries))entries.forEach(function(e){totalPaid+=(e.amount||0)});
+  });
+
+  mc.innerHTML='<h2><i class="ti ti-dashboard" style="color:#B45309"></i> Dashboard</h2><div class="subtitle">System overview at a glance</div>'+
+    '<div class="stat-grid">'+
+    '<div class="stat-card"><div class="num">'+active+'</div><div class="lbl">Active Bookings</div></div>'+
+    '<div class="stat-card"><div class="num">'+cancelled+'</div><div class="lbl">Cancelled</div></div>'+
+    '<div class="stat-card"><div class="num">'+co.length+'</div><div class="lbl">Companies</div></div>'+
+    '<div class="stat-card"><div class="num">'+users.length+'</div><div class="lbl">Users</div></div>'+
+    '<div class="stat-card"><div class="num">'+fmt(totalInv)+'</div><div class="lbl">Total Invoiced</div></div>'+
+    '<div class="stat-card"><div class="num">'+fmt(totalPaid)+'</div><div class="lbl">Total Collected</div></div>'+
+    '</div>'+
+    '<div class="card"><h3><i class="ti ti-info-circle"></i> Quick Info</h3>'+
+    '<div style="font-size:13px;color:#666;line-height:1.8">'+
+    '<strong>Gers:</strong> 60 total — 38 Deluxe (#1-28, #101-110) + 22 Standard (#29-50)<br>'+
+    '<strong>Data stored in:</strong> Browser localStorage (per-device)<br>'+
+    '<strong>Default accounts:</strong> admin/admin123, booking/kz2026, finance/kz2026'+
+    '</div></div>';
+}
+
+// ─── USERS ───
+function renderUsers(mc){
+  var users=getUsers();
+  var html='<h2><i class="ti ti-users" style="color:#B45309"></i> User Management</h2><div class="subtitle">Create, edit, and delete user accounts</div>';
+  html+='<div class="card"><h3><i class="ti ti-list"></i> All Users ('+users.length+')</h3>';
+  html+='<table class="admin-table"><thead><tr><th>Username</th><th>Role</th><th>Actions</th></tr></thead><tbody>';
+  users.forEach(function(u,i){
+    html+='<tr><td><strong>'+esc(u.username)+'</strong></td>';
+    html+='<td><span class="role-badge '+u.role+'">'+u.role+'</span></td>';
+    html+='<td><button class="btn btn-secondary" onclick="editUserPrompt('+i+')"><i class="ti ti-pencil"></i></button> ';
+    html+='<button class="btn btn-danger" onclick="deleteUser('+i+')"><i class="ti ti-trash"></i></button></td></tr>';
+  });
+  html+='</tbody></table></div>';
+
+  html+='<div class="card"><h3><i class="ti ti-user-plus"></i> Add New User</h3>';
+  html+='<div class="form-row">';
+  html+='<div class="form-group"><label>Username</label><input type="text" id="newUser" placeholder="Username"></div>';
+  html+='<div class="form-group"><label>Password</label><input type="password" id="newPass" placeholder="Password"></div>';
+  html+='<div class="form-group"><label>Role</label><select id="newRole"><option value="booking">Booking</option><option value="finance">Finance</option><option value="camp">Camp</option><option value="admin">Admin</option></select></div>';
+  html+='<button class="btn btn-primary" onclick="addNewUser()" style="margin-bottom:1px"><i class="ti ti-plus"></i> Add</button>';
+  html+='</div></div>';
+  mc.innerHTML=html;
+}
+
+window.addNewUser=function(){
+  var u=document.getElementById('newUser').value.trim();
+  var p=document.getElementById('newPass').value.trim();
+  var r=document.getElementById('newRole').value;
+  if(!u||!p){alert('Enter both username and password.');return;}
+  var users=getUsers();
+  for(var i=0;i<users.length;i++){if(users[i].username.toLowerCase()===u.toLowerCase()){alert('Username already exists.');return;}}
+  users.push({username:u,password:p,role:r});
+  saveUsers(users);
+  toast('User "'+u+'" created');
+  renderUsers(document.getElementById('mainContent'));
+};
+
+window.deleteUser=function(idx){
+  var users=getUsers();
+  var adminCount=users.filter(function(u){return u.role==='admin'}).length;
+  if(users[idx].role==='admin'&&adminCount<=1){alert('Cannot delete the last admin.');return;}
+  if(!confirm('Delete user "'+users[idx].username+'"?'))return;
+  users.splice(idx,1);
+  saveUsers(users);
+  toast('User deleted');
+  renderUsers(document.getElementById('mainContent'));
+};
+
+window.editUserPrompt=function(idx){
+  var users=getUsers();
+  var u=users[idx];
+  var newPass=prompt('New password for "'+u.username+'" (leave blank to keep current):','');
+  if(newPass===null)return;
+  var newRole=prompt('Role for "'+u.username+'" (admin/booking/finance):',u.role);
+  if(newRole===null)return;
+  if(!['admin','booking','finance','camp'].includes(newRole)){alert('Invalid role.');return;}
+  if(newPass)users[idx].password=newPass;
+  users[idx].role=newRole;
+  saveUsers(users);
+  toast('User "'+u.username+'" updated');
+  renderUsers(document.getElementById('mainContent'));
+};
+
+// ─── COMPANIES ───
+function renderCompanies(mc){
+  var co=getCompanies();
+  var html='<h2><i class="ti ti-building" style="color:#B45309"></i> Companies</h2><div class="subtitle">All registered companies and their contract rates</div>';
+  html+='<div class="card"><table class="admin-table"><thead><tr><th></th><th>Company</th><th>Ensuite Rate</th><th>Std Group</th><th>Std FIT</th></tr></thead><tbody>';
+  if(co.length===0) html+='<tr><td colspan="5" style="text-align:center;color:#ccc;padding:24px">No companies registered. Add them via the Contacts page in the Booking system.</td></tr>';
+  co.forEach(function(c){
+    var r=c.rates&&c.rates.bed?c.rates.bed:{};
+    html+='<tr><td><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:'+(c.color||'#ccc')+'"></span></td>';
+    html+='<td><strong>'+esc(c.name)+'</strong></td>';
+    html+='<td>'+fmt(r.ensuite_rate||0)+'</td>';
+    html+='<td>'+fmt(r.standard_group||0)+'</td>';
+    html+='<td>'+fmt(r.standard_fit||0)+'</td></tr>';
+  });
+  html+='</tbody></table></div>';
+  mc.innerHTML=html;
+}
+
+// ─── BOOKINGS ───
+function renderBookings(mc){
+  var res=getReservations();
+  var html='<h2><i class="ti ti-calendar-event" style="color:#B45309"></i> All Bookings ('+res.length+')</h2><div class="subtitle">Complete booking list across all companies</div>';
+  html+='<div class="card" style="overflow-x:auto"><table class="admin-table"><thead><tr><th>ID</th><th>Company</th><th>Check-In</th><th>Check-Out</th><th>Pax</th><th>Gers</th><th>Invoice</th><th>Status</th></tr></thead><tbody>';
+  if(res.length===0) html+='<tr><td colspan="8" style="text-align:center;color:#ccc;padding:24px">No bookings yet</td></tr>';
+  res.sort(function(a,b){return(a.checkIn||'').localeCompare(b.checkIn||'')});
+  res.forEach(function(r){
+    var status=r.cancelled?'<span style="color:#DC2626;font-weight:600">Cancelled</span>':'<span style="color:#15803D;font-weight:600">Active</span>';
+    html+='<tr'+(r.cancelled?' style="opacity:.5"':'')+'>';
+    html+='<td><code style="font-size:11px">'+(r.id||'—')+'</code></td>';
+    html+='<td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(r.color||'#ccc')+';margin-right:4px;vertical-align:middle"></span>'+esc(r.company||'')+'</td>';
+    html+='<td>'+esc(r.checkIn||'')+'</td><td>'+esc(r.checkOut||'')+'</td>';
+    html+='<td>'+(r.guests||r.adults||0)+'</td>';
+    html+='<td>'+(r.gerNums||[]).join(', ')+'</td>';
+    html+='<td>'+fmt(r.invoiceTotal)+'</td>';
+    html+='<td>'+status+'</td></tr>';
+  });
+  html+='</tbody></table></div>';
+  mc.innerHTML=html;
+}
+
+// ─── PAYMENTS ───
+function renderPayments(mc){
+  var pay=getPayments();
+  var keys=Object.keys(pay);
+  var totalEntries=0;
+  keys.forEach(function(k){if(Array.isArray(pay[k]))totalEntries+=pay[k].length});
+  var html='<h2><i class="ti ti-cash" style="color:#B45309"></i> All Payments ('+totalEntries+' entries)</h2><div class="subtitle">Payment records across all bookings</div>';
+  html+='<div class="card" style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Booking Key</th><th>Date</th><th>Amount</th><th>Method</th><th>Note</th></tr></thead><tbody>';
+  if(totalEntries===0) html+='<tr><td colspan="5" style="text-align:center;color:#ccc;padding:24px">No payments recorded</td></tr>';
+  keys.forEach(function(k){
+    var entries=pay[k];
+    if(!Array.isArray(entries))return;
+    entries.forEach(function(e){
+      html+='<tr><td style="font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(k)+'">'+esc(k)+'</td>';
+      html+='<td>'+(e.date||'—')+'</td>';
+      html+='<td style="font-weight:600">'+fmt(e.amount)+'</td>';
+      html+='<td>'+(e.method||'—')+'</td>';
+      html+='<td style="font-size:12px;color:#888">'+(e.note||'')+'</td></tr>';
+    });
+  });
+  html+='</tbody></table></div>';
+  mc.innerHTML=html;
+}
+
+// ─── MOCK DATA ───
+function renderMockData(mc){
+  var html='<h2><i class="ti ti-database" style="color:#B45309"></i> Mock Data</h2><div class="subtitle">Load or clear test data for development</div>';
+  html+='<div class="card">';
+  html+='<p style="font-size:13px;color:#666;margin-bottom:16px">Load sample data (10 companies, 33 reservations, payments) or clear all data. This will affect <strong>all portals</strong> (Booking, Finance).</p>';
+  html+='<div style="display:flex;gap:8px">';
+  html+='<a href="mockdata.html" class="btn btn-primary" style="text-decoration:none"><i class="ti ti-database-import"></i> Open Mock Data Loader</a>';
+  html+='<button class="btn btn-danger" onclick="clearAllDataAdmin()"><i class="ti ti-trash"></i> Clear All Data</button>';
+  html+='</div></div>';
+  mc.innerHTML=html;
+}
+
+window.clearAllDataAdmin=function(){
+  if(!confirm('This will delete ALL reservations, payments, companies, cancellations, and credit transfers. Are you sure?'))return;
+  if(!confirm('FINAL WARNING: This cannot be undone. Proceed?'))return;
+  ['kz_reservations','kz_payments','kz_companies','kz_cancellations','kz_credit_transfers'].forEach(function(k){localStorage.removeItem(k)});
+  toast('All data cleared');
+  renderMockData(document.getElementById('mainContent'));
+};
+
+// ─── BACKUP / RESTORE ───
+function renderBackup(mc){
+  var html='<h2><i class="ti ti-download" style="color:#B45309"></i> Backup & Restore</h2><div class="subtitle">Export or import all system data as a JSON file</div>';
+
+  html+='<div class="card"><h3><i class="ti ti-file-download"></i> Export Backup</h3>';
+  html+='<p style="font-size:13px;color:#666;margin-bottom:12px">Download all data (reservations, payments, companies, users, credit transfers) as a single JSON file.</p>';
+  html+='<button class="btn btn-primary" onclick="exportBackup()"><i class="ti ti-download"></i> Download Backup</button></div>';
+
+  html+='<div class="card"><h3><i class="ti ti-file-upload"></i> Restore from Backup</h3>';
+  html+='<p style="font-size:13px;color:#666;margin-bottom:12px">Upload a previously exported JSON backup file. <strong style="color:#DC2626">This will overwrite all current data.</strong></p>';
+  html+='<input type="file" id="restoreFile" accept=".json" style="font-size:13px;margin-bottom:8px"><br>';
+  html+='<button class="btn btn-danger" onclick="importBackup()"><i class="ti ti-upload"></i> Restore Backup</button></div>';
+
+  html+='<div class="card"><h3><i class="ti ti-transfer"></i> Transfer Data to Another Device</h3>';
+  html+='<p style="font-size:13px;color:#666;line-height:1.7">Since data is stored in browser localStorage (per-device), to share data between devices:<br>';
+  html+='1. Export a backup on device A<br>';
+  html+='2. Send the JSON file to device B (email, USB, etc.)<br>';
+  html+='3. Import the backup on device B</p></div>';
+  mc.innerHTML=html;
+}
+
+window.exportBackup=function(){
+  var data={
+    exportDate:new Date().toISOString(),
+    version:'1.0',
+    kz_reservations:JSON.parse(localStorage.getItem('kz_reservations')||'[]'),
+    kz_payments:JSON.parse(localStorage.getItem('kz_payments')||'{}'),
+    kz_companies:JSON.parse(localStorage.getItem('kz_companies')||'[]'),
+    kz_users:JSON.parse(localStorage.getItem('kz_users')||'[]'),
+    kz_cancellations:JSON.parse(localStorage.getItem('kz_cancellations')||'[]'),
+    kz_credit_transfers:JSON.parse(localStorage.getItem('kz_credit_transfers')||'[]')
+  };
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='kz_backup_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Backup downloaded');
+};
+
+window.importBackup=function(){
+  var input=document.getElementById('restoreFile');
+  if(!input.files||!input.files[0]){alert('Select a backup file first.');return;}
+  if(!confirm('This will OVERWRITE all current data. Are you sure?'))return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var data=JSON.parse(e.target.result);
+      if(!data.kz_reservations&&!data.kz_companies){alert('Invalid backup file.');return;}
+      if(data.kz_reservations)localStorage.setItem('kz_reservations',JSON.stringify(data.kz_reservations));
+      if(data.kz_payments)localStorage.setItem('kz_payments',JSON.stringify(data.kz_payments));
+      if(data.kz_companies)localStorage.setItem('kz_companies',JSON.stringify(data.kz_companies));
+      if(data.kz_users)localStorage.setItem('kz_users',JSON.stringify(data.kz_users));
+      if(data.kz_cancellations)localStorage.setItem('kz_cancellations',JSON.stringify(data.kz_cancellations));
+      if(data.kz_credit_transfers)localStorage.setItem('kz_credit_transfers',JSON.stringify(data.kz_credit_transfers));
+      toast('Backup restored successfully!');
+      setTimeout(function(){location.reload()},1000);
+    }catch(err){alert('Error reading backup file: '+err.message);}
+  };
+  reader.readAsText(input.files[0]);
+};
+</script>
+</body>
+</html>

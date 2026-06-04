@@ -304,27 +304,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     </div>
     <div class="login-field">
       <label>Username</label>
-      <input type="text" id="loginUser" placeholder="Enter username" autocomplete="off">
+      <input type="text" id="loginUser" placeholder="Enter username" autocomplete="username">
     </div>
     <div class="login-field">
       <label>Password</label>
-      <input type="password" id="loginPass" placeholder="Enter password">
+      <input type="password" id="loginPass" placeholder="Enter password" autocomplete="current-password">
     </div>
     <button class="login-btn" onclick="doLogin()"><i class="ti ti-lock-open"></i> Sign In</button>
     <div class="login-error" id="loginError">Invalid username or password</div>
-    <div class="login-manage">
-      <button onclick="toggleManage()">Manage Users</button>
+    <div class="login-back" style="text-align:center;margin-top:14px">
+      <a href="index.html" style="font-size:11px;color:#0F766E;text-decoration:none"><i class="ti ti-arrow-left" style="font-size:11px"></i> Back to Portal</a>
     </div>
-    <div class="manage-panel" id="managePanel">
-      <h3><i class="ti ti-users" style="font-size:13px;vertical-align:-1px"></i> Finance Users</h3>
-      <div class="mu-list" id="muList"></div>
-      <div class="mu-add">
-        <input type="text" id="muNewUser" placeholder="Username">
-        <input type="password" id="muNewPass" placeholder="Password">
-        <button onclick="addUser()">Add</button>
-      </div>
-    </div>
-    <div class="login-hint">Use the booking system? <a href="index.html" style="color:#534AB7">Go to Booking</a></div>
   </div>
 </div>
 
@@ -341,8 +331,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     </div>
     <div class="top-bar-right">
       <div class="user-badge" id="userBadge"><i class="ti ti-user-circle"></i> <span id="userName"></span></div>
-      <a class="nav-link" href="calendar.html"><i class="ti ti-calendar" style="font-size:14px"></i> Calendar</a>
-      <a class="nav-link" href="index.html"><i class="ti ti-arrow-left" style="font-size:14px"></i> Booking</a>
+      <a class="nav-link" href="index.html"><i class="ti ti-home" style="font-size:14px"></i> Portal</a>
       <button class="logout-btn" onclick="doLogout()"><i class="ti ti-logout"></i> Sign Out</button>
     </div>
   </div>
@@ -413,71 +402,35 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 /* ════════════════════════════════════════════════
    LOGIN SYSTEM
    ════════════════════════════════════════════════ */
-var USERS_KEY='kz_finance_users';
+var USERS_KEY='kz_users';
 var SESSION_KEY='kz_finance_session';
 
-function getUsers(){
-  try{var r=localStorage.getItem(USERS_KEY);return r?JSON.parse(r):[];}catch(e){return [];}
-}
-function saveUsers(u){localStorage.setItem(USERS_KEY,JSON.stringify(u))}
+function getUsers(){try{return JSON.parse(localStorage.getItem(USERS_KEY)||'[]')}catch(e){return[]}}
 
-// Seed default admin if no users exist
+// Seed defaults if no users exist
 if(getUsers().length===0){
-  saveUsers([{username:'admin',password:'admin123'},{username:'finance',password:'kz2026'}]);
+  localStorage.setItem(USERS_KEY,JSON.stringify([
+    {username:'admin',password:'admin123',role:'admin'},
+    {username:'booking',password:'kz2026',role:'booking'},
+    {username:'finance',password:'kz2026',role:'finance'},
+    {username:'camp',password:'kz2026',role:'camp'}
+  ]));
 }
-
-function renderUserList(){
-  var users=getUsers();
-  var html='';
-  for(var i=0;i<users.length;i++){
-    html+='<div class="mu-row"><span class="mu-user"><i class="ti ti-user" style="font-size:12px;color:#0F766E"></i> '+esc(users[i].username)+'</span><button class="mu-del" onclick="delUser('+i+')" title="Delete"><i class="ti ti-trash"></i></button></div>';
-  }
-  if(users.length===0) html='<div style="font-size:11px;color:#bbb;text-align:center;padding:8px">No users. Add one below.</div>';
-  document.getElementById('muList').innerHTML=html;
-}
-
-window.toggleManage=function(){
-  var p=document.getElementById('managePanel');
-  p.classList.toggle('show');
-  if(p.classList.contains('show')) renderUserList();
-};
-
-window.addUser=function(){
-  var u=document.getElementById('muNewUser').value.trim();
-  var p=document.getElementById('muNewPass').value.trim();
-  if(!u||!p){alert('Enter both username and password.');return;}
-  var users=getUsers();
-  for(var i=0;i<users.length;i++){if(users[i].username.toLowerCase()===u.toLowerCase()){alert('Username already exists.');return;}}
-  users.push({username:u,password:p});
-  saveUsers(users);
-  document.getElementById('muNewUser').value='';
-  document.getElementById('muNewPass').value='';
-  renderUserList();
-};
-
-window.delUser=function(idx){
-  var users=getUsers();
-  if(users.length<=1){alert('Cannot delete the last user.');return;}
-  if(!confirm('Delete user "'+users[idx].username+'"?')) return;
-  users.splice(idx,1);
-  saveUsers(users);
-  renderUserList();
-};
 
 window.doLogin=function(){
   var u=document.getElementById('loginUser').value.trim();
   var p=document.getElementById('loginPass').value;
   var users=getUsers();
-  var found=false;
+  var found=null;
   for(var i=0;i<users.length;i++){
     if(users[i].username.toLowerCase()===u.toLowerCase()&&users[i].password===p){found=users[i];break;}
   }
-  if(!found){
+  if(!found||(found.role!=='finance'&&found.role!=='admin')){
     document.getElementById('loginError').classList.add('show');
     return;
   }
   document.getElementById('loginError').classList.remove('show');
-  localStorage.setItem(SESSION_KEY,JSON.stringify({username:found.username,ts:Date.now()}));
+  localStorage.setItem(SESSION_KEY,JSON.stringify({username:found.username,role:found.role,ts:Date.now()}));
   showApp(found.username);
 };
 
@@ -501,7 +454,6 @@ function checkSession(){
   try{
     var s=JSON.parse(localStorage.getItem(SESSION_KEY));
     if(s&&s.username){
-      // Session valid for 24h
       if(Date.now()-s.ts<86400000){showApp(s.username);return;}
     }
   }catch(e){}
@@ -547,6 +499,22 @@ function creditsFrom(key){return loadCredits().filter(function(c){return c.fromK
 function creditsTo(key){return loadCredits().filter(function(c){return c.toKey===key})}
 function totalCreditOut(key){var c=creditsFrom(key),s=0;for(var i=0;i<c.length;i++)s+=Number(c[i].amount)||0;return s}
 function totalCreditIn(key){var c=creditsTo(key),s=0;for(var i=0;i<c.length;i++)s+=Number(c[i].amount)||0;return s}
+
+/* ── Trip status & adjustments ── */
+function getTripStatus(key){try{var d=JSON.parse(localStorage.getItem('kz_trip_status')||'{}');return d[key]||null}catch(e){return null}}
+function getTripAdjustments(key){try{var d=JSON.parse(localStorage.getItem('kz_trip_adjustments')||'{}');return d[key]||[]}catch(e){return[]}}
+
+window.financeFinalize=function(key){
+  var notes=prompt('Finalization notes (optional):','');
+  if(notes===null)return;
+  try{
+    var statuses=JSON.parse(localStorage.getItem('kz_trip_status')||'{}');
+    var sess=JSON.parse(localStorage.getItem('kz_finance_session')||'{}');
+    statuses[key]={status:'finalized',finalizedBy:sess.username||'finance',finalizedAt:new Date().toISOString(),finalizedRole:'finance',notes:notes};
+    localStorage.setItem('kz_trip_status',JSON.stringify(statuses));
+    renderCalRight();
+  }catch(e){alert('Error: '+e.message)}
+}
 
 function calcInvoice(r){
   if(r.invoiceTotal&&Number(r.invoiceTotal)>0)return{total:Number(r.invoiceTotal),estimated:false};
@@ -773,6 +741,45 @@ function renderCalRight(){
     }
   }
 
+  // Trip status + camp adjustments
+  if(!b.cancelled){
+    var tripSt=getTripStatus(key);
+    var tripAdj=getTripAdjustments(key);
+    var totalCharges=0,totalDeductions=0;
+    tripAdj.forEach(function(a){if(a.type==='charge')totalCharges+=a.amount;else totalDeductions+=a.amount});
+    var adjustedTotal=(b.invoiceTotal||0)+totalCharges-totalDeductions;
+
+    // Trip status badge
+    html+='<div class="rp-section"><div class="rp-section-title"><i class="ti ti-clipboard-check"></i> Trip Status</div>';
+    if(tripSt&&tripSt.status==='finalized'){
+      html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;background:#EEEDFE;color:#534AB7">FINALIZED</span>';
+      html+='<span style="font-size:11px;color:#888">by '+esc(tripSt.finalizedBy||'—')+' ('+esc(tripSt.finalizedRole||'')+') on '+fmtDateFull((tripSt.finalizedAt||'').split('T')[0])+'</span></div>';
+      if(tripSt.notes)html+='<div style="font-size:12px;color:#666;margin-bottom:8px;padding:6px 10px;background:#fafaf7;border-radius:6px;border-left:3px solid #534AB7">'+esc(tripSt.notes)+'</div>';
+    } else {
+      html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;background:#FEF3C7;color:#B45309">PENDING</span>';
+      html+='<span style="font-size:11px;color:#888">Trip not yet finalized by camp manager</span></div>';
+      html+='<div style="margin-top:8px"><button class="pay-btn" style="background:#534AB7" onclick="financeFinalize(\''+esc(key)+'\')"><i class="ti ti-check"></i> Finalize Trip (Finance)</button></div>';
+    }
+    html+='</div>';
+
+    // Camp adjustments
+    if(tripAdj.length>0){
+      html+='<div class="rp-section"><div class="rp-section-title"><i class="ti ti-adjustments-alt"></i> Camp Adjustments</div>';
+      for(var ai=0;ai<tripAdj.length;ai++){
+        var adj=tripAdj[ai];
+        var isCharge=adj.type==='charge';
+        html+='<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f0efe8;font-size:12px">';
+        html+='<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:'+(isCharge?'#15803D':'#DC2626')+'"></span>';
+        html+='<span style="flex:1">'+esc(adj.description)+'</span>';
+        html+='<span style="font-weight:700;color:'+(isCharge?'#15803D':'#DC2626')+'">'+(isCharge?'+':'-')+fmt(adj.amount)+'</span></div>';
+      }
+      html+='<div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:2px solid #e0dfd8;font-size:13px">';
+      html+='<span style="font-weight:700">Adjusted Total</span>';
+      html+='<span style="font-weight:700;font-size:15px">'+fmt(adjustedTotal)+'</span></div>';
+      html+='</div>';
+    }
+  }
+
   // Invoice breakdown (show for all bookings)
   html+='<div class="rp-section"><div class="rp-section-title"><i class="ti ti-file-invoice"></i> Invoice Breakdown</div>';
   if(b.estimated)html+='<div class="inv-estimate"><i class="ti ti-info-circle"></i> Estimated from ger allocation.</div>';
@@ -994,6 +1001,9 @@ function renderPayRight(){
     html+='</div></div><div class="bk-card-right"><div class="bk-card-amount">'+(bk.estimated?'~':'')+fmt(bk.invoiceTotal)+'</div><div style="margin-top:3px"><span class="status-badge '+sc+'">'+sl+'</span>';
     if(bk.availableCredit>0)html+=' <span class="status-badge status-credit">Credit '+fmt(bk.availableCredit)+'</span>';
     if(bk.creditIn>0)html+=' <span class="status-badge" style="background:#E6F7F5;color:#0F766E">+'+fmt(bk.creditIn)+' credit</span>';
+    var _ts=!bk.cancelled?getTripStatus(resKey(r)):null;
+    if(_ts&&_ts.status==='finalized')html+=' <span class="status-badge" style="background:#EEEDFE;color:#534AB7">Finalized</span>';
+    else if(!bk.cancelled&&new Date(r.checkOut+'T00:00:00')<=new Date())html+=' <span class="status-badge" style="background:#FEF3C7;color:#B45309">Trip Pending</span>';
     html+='</div></div></div>';
     html+='<div class="bk-card-body">';
     // Show credit transfers
