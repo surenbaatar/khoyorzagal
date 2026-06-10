@@ -9,13 +9,13 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f0;color:#1a1a1a;font-size:14px;height:100vh;overflow:hidden;display:flex;flex-direction:column}
 
-/* ─── LOGIN SCREEN ─── */
+/* ─── LOGIN ─── */
 .login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#D1FAE5 0%,#f5f5f0 100%);display:flex;align-items:center;justify-content:center;z-index:500}
 .login-screen.hidden{display:none}
 .login-card{background:#fff;border:1px solid #e0dfd8;border-radius:16px;padding:40px 36px;width:380px;box-shadow:0 8px 40px rgba(0,0,0,.08)}
 .login-logo{text-align:center;margin-bottom:28px}
 .login-logo i{font-size:40px;color:#059669;display:block;margin-bottom:8px}
-.login-logo h1{font-size:20px;font-weight:700;color:#1a1a1a}
+.login-logo h1{font-size:20px;font-weight:700}
 .login-logo .camp{font-size:12px;color:#888;margin-top:2px}
 .login-logo .badge{display:inline-block;font-size:10px;padding:3px 10px;border-radius:12px;background:#D1FAE5;color:#059669;font-weight:600;margin-top:8px}
 .login-field{margin-bottom:16px}
@@ -29,15 +29,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .login-hint{font-size:11px;color:#bbb;text-align:center;margin-top:16px}
 .login-back{text-align:center;margin-top:14px}
 .login-back a{font-size:11px;color:#059669;text-decoration:none}
-.login-back a:hover{text-decoration:underline}
 
-/* ─── APP SHELL ─── */
+/* ─── APP ─── */
 .app{display:none;flex-direction:column;height:100vh}
 .app.visible{display:flex}
-
-/* Top bar */
 .top-bar{background:#fff;border-bottom:1px solid #e0dfd8;padding:0 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:100;height:50px}
-.top-bar-left{display:flex;align-items:center;gap:16px;height:100%}
+.top-bar-left{display:flex;align-items:center;gap:16px}
 .top-bar h1{font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px;color:#059669}
 .camp-badge{font-size:11px;padding:3px 10px;border-radius:20px;background:#D1FAE5;color:#059669;font-weight:500}
 .top-bar-right{display:flex;align-items:center;gap:10px}
@@ -48,11 +45,50 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .logout-btn{display:flex;align-items:center;gap:4px;font-size:12px;color:#999;border:1px solid #ddd;background:#fff;padding:5px 10px;border-radius:6px;cursor:pointer;transition:all .15s}
 .logout-btn:hover{color:#DC2626;border-color:#fca5a5;background:#FEE2E2}
 
-/* ─── TWO-PANEL LAYOUT ─── */
+/* ─── THREE-PANEL LAYOUT ─── */
 .panels{display:flex;flex:1;overflow:hidden}
 
-/* Left panel */
-.left-panel{width:420px;min-width:360px;max-width:500px;border-right:1px solid #e0dfd8;display:flex;flex-direction:column;background:#fff;flex-shrink:0}
+/* Calendar sidebar */
+.cal-sidebar{width:260px;min-width:240px;border-right:1px solid #e0dfd8;display:flex;flex-direction:column;background:#fff;flex-shrink:0;overflow-y:auto}
+.cal-sidebar::-webkit-scrollbar{width:4px}
+.cal-sidebar::-webkit-scrollbar-thumb{background:#ccc;border-radius:4px}
+.mini-cal{padding:14px 12px 10px}
+.mini-cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.mini-cal-nav .mc-title{font-size:14px;font-weight:700;color:#1a1a1a;cursor:pointer}
+.mini-cal-nav button{width:28px;height:28px;border:1px solid #e0dfd8;border-radius:6px;background:#fff;color:#888;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s}
+.mini-cal-nav button:hover{background:#D1FAE5;color:#059669;border-color:#059669}
+.mc-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.mc-grid .mc-dow{font-size:10px;font-weight:700;color:#999;padding:4px 0;text-transform:uppercase}
+.mc-day{position:relative;font-size:12px;padding:5px 2px;border-radius:6px;cursor:pointer;transition:all .12s;color:#1a1a1a;line-height:1}
+.mc-day:hover{background:#D1FAE5}
+.mc-day.empty{cursor:default}.mc-day.empty:hover{background:transparent}
+.mc-day.today{font-weight:700;color:#059669;background:#ecfdf5}
+.mc-day.selected{background:#059669;color:#fff;font-weight:700}
+.mc-day.selected:hover{background:#047857}
+.mc-day.other-month{color:#ccc}
+.mc-day .mc-dots{display:flex;gap:2px;justify-content:center;margin-top:2px;height:4px}
+.mc-day .mc-dot{width:4px;height:4px;border-radius:50%}
+.mc-day.selected .mc-dot{opacity:.7}
+
+.sidebar-stats{padding:0 14px 14px}
+.sidebar-stat-card{background:#fafaf7;border:1px solid #eee;border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.sidebar-stat-card .ssc-label{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.3px}
+.sidebar-stat-card .ssc-value{font-size:18px;font-weight:700;margin-top:2px}
+.sidebar-stat-card .ssc-sub{font-size:11px;color:#888;margin-top:2px}
+.sidebar-stat-row{display:flex;gap:8px}
+.sidebar-stat-row .sidebar-stat-card{flex:1}
+
+.sidebar-date-info{padding:0 14px 14px}
+.sdi-title{font-size:11px;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.sdi-item{font-size:12px;padding:6px 8px;border-radius:6px;border:1px solid #eee;margin-bottom:4px;cursor:pointer;transition:all .12s;display:flex;align-items:center;gap:8px}
+.sdi-item:hover{background:#D1FAE5;border-color:#059669}
+.sdi-item.active{background:#D1FAE5;border-color:#059669}
+.sdi-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sdi-name{flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sdi-badge{flex-shrink:0}
+
+/* Middle panel */
+.mid-panel{width:380px;min-width:320px;max-width:440px;border-right:1px solid #e0dfd8;display:flex;flex-direction:column;background:#fff;flex-shrink:0}
 .lp-toolbar{padding:10px 16px;border-bottom:1px solid #e0dfd8;display:flex;flex-direction:column;gap:8px;background:#fafaf7}
 .lp-toolbar-row{display:flex;align-items:center;gap:8px}
 .lp-search-wrap{position:relative;flex:1}
@@ -62,16 +98,51 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .filter-btn{padding:5px 10px;font-size:11px;font-weight:600;border:1px solid #ddd;border-radius:6px;cursor:pointer;background:#fff;color:#666;transition:all .15s;white-space:nowrap}
 .filter-btn:hover{background:#f0efe8}
 .filter-btn.active{background:#059669;color:#fff;border-color:#059669}
-
 .lp-summary{display:flex;gap:12px;padding:0 4px}
 .lp-stat{font-size:11px;color:#888;display:flex;align-items:center;gap:4px}
 .lp-stat strong{color:#1a1a1a;font-weight:700}
 .lp-stat.green strong{color:#15803D}
 .lp-stat.orange strong{color:#B45309}
+.date-filter-bar{display:flex;align-items:center;gap:8px}
+.date-filter-bar span{font-size:11px;color:#059669;font-weight:600;display:flex;align-items:center;gap:4px}
+.date-filter-bar button{font-size:10px;padding:2px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;color:#888;cursor:pointer}
 
 .lp-list{flex:1;overflow-y:auto}
 .lp-list::-webkit-scrollbar{width:4px}
 .lp-list::-webkit-scrollbar-thumb{background:#ccc;border-radius:4px}
+
+/* Walk-in services section */
+.walkin-section{border-top:2px solid #e0dfd8;padding:12px 16px;flex-shrink:0;background:#fafaf7}
+.walkin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.walkin-title{font-size:11px;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:.3px;display:flex;align-items:center;gap:6px}
+.walkin-add-btn{font-size:11px;padding:4px 10px;border:1px solid #059669;border-radius:6px;background:#fff;color:#059669;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:4px;transition:all .15s}
+.walkin-add-btn:hover{background:#D1FAE5}
+.walkin-items{max-height:120px;overflow-y:auto}
+.walkin-items::-webkit-scrollbar{width:3px}
+.walkin-items::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px}
+.walkin-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #eee;font-size:12px}
+.walkin-item:last-child{border-bottom:none}
+.walkin-item .wi-desc{flex:1;font-weight:500}
+.walkin-item .wi-qty{color:#059669;font-weight:700;min-width:30px;text-align:center}
+.walkin-item .wi-amt{font-weight:700;color:#1a1a1a;min-width:80px;text-align:right}
+.walkin-item .wi-del{width:20px;height:20px;border:none;background:none;color:#ccc;cursor:pointer;font-size:12px;border-radius:4px;display:flex;align-items:center;justify-content:center}
+.walkin-item .wi-del:hover{color:#DC2626;background:#FEE2E2}
+.walkin-empty{font-size:11px;color:#bbb;text-align:center;padding:8px;font-style:italic}
+.walkin-total{display:flex;justify-content:space-between;padding:6px 0 0;border-top:1px solid #ddd;margin-top:4px;font-size:12px;font-weight:700}
+
+/* Walk-in form */
+.walkin-form{margin-top:8px;background:#fff;border:1px solid #e0dfd8;border-radius:8px;padding:10px;display:none}
+.walkin-form.show{display:block}
+.walkin-form label{font-size:10px;color:#666;display:block;margin-bottom:2px;font-weight:600}
+.walkin-form select,.walkin-form input{width:100%;padding:6px 8px;font-size:12px;border:1px solid #ddd;border-radius:5px;margin-bottom:6px;background:#fff;color:#1a1a1a}
+.walkin-form select:focus,.walkin-form input:focus{outline:none;border-color:#059669}
+.wf-row{display:flex;gap:6px}
+.wf-row>div{flex:1}
+.wf-actions{display:flex;gap:6px;margin-top:4px}
+.wf-btn{padding:6px 12px;font-size:11px;font-weight:600;border:none;border-radius:5px;cursor:pointer;display:flex;align-items:center;gap:4px}
+.wf-save{background:#059669;color:#fff}
+.wf-save:hover{background:#047857}
+.wf-cancel{background:#fff;color:#666;border:1px solid #ddd}
 
 /* Booking row */
 .bk-row{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid #f0efe8;cursor:pointer;transition:background .1s;gap:10px}
@@ -86,25 +157,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .bk-meta span{display:flex;align-items:center;gap:3px}
 .bk-right{text-align:right;flex-shrink:0}
 .bk-badges{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
-
 .status-badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;display:inline-block;text-transform:uppercase;letter-spacing:.3px}
 .status-inhouse{background:#DCFCE7;color:#15803D}
 .status-upcoming{background:#DBEAFE;color:#1D4ED8}
 .status-checkedout{background:#FEF3C7;color:#B45309}
 .status-finalized{background:#EDE9FE;color:#7C3AED}
 .status-cancelled{background:#f0efe8;color:#888}
-
-.lp-empty{text-align:center;padding:60px 20px;color:#bbb}
-.lp-empty i{font-size:40px;display:block;margin-bottom:10px;opacity:.3}
+.lp-empty{text-align:center;padding:40px 20px;color:#bbb}
+.lp-empty i{font-size:32px;display:block;margin-bottom:8px;opacity:.3}
 
 /* ─── RIGHT PANEL ─── */
 .right-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#f5f5f0}
-
 .rp-empty{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#bbb;gap:10px}
 .rp-empty i{font-size:56px;opacity:.25}
 .rp-empty p{font-size:14px}
 .rp-empty .hint{font-size:12px;color:#ccc}
-
 .rp-header{padding:16px 24px;background:#fff;border-bottom:1px solid #e0dfd8;flex-shrink:0}
 .rp-company{font-size:20px;font-weight:700;display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .rp-company .dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
@@ -114,25 +181,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .rp-stat{text-align:center}
 .rp-stat .rs-label{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.3px;font-weight:600}
 .rp-stat .rs-value{font-size:18px;font-weight:700;margin-top:2px}
-.rs-value.emerald{color:#059669}
-.rs-value.green{color:#15803D}
-.rs-value.orange{color:#B45309}
-.rs-value.red{color:#DC2626}
-
+.rs-value.emerald{color:#059669}.rs-value.green{color:#15803D}.rs-value.orange{color:#B45309}.rs-value.red{color:#DC2626}
 .rp-body{flex:1;overflow-y:auto;padding:20px 24px}
 .rp-body::-webkit-scrollbar{width:4px}
 .rp-body::-webkit-scrollbar-thumb{background:#ccc;border-radius:4px}
-
 .rp-section{background:#fff;border:1px solid #e0dfd8;border-radius:10px;padding:16px 18px;margin-bottom:16px}
 .rp-section-title{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:6px}
 .rp-section-title i{font-size:14px;color:#059669}
-
-/* Trip summary lines */
-.trip-line{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;padding:4px 0;color:#1a1a1a}
+.trip-line{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;padding:4px 0}
 .trip-line .tl-label{color:#888;font-size:12px}
 .trip-line .tl-value{font-weight:600}
 
-/* Adjustments table */
+/* Adjustments */
 .adj-table{width:100%;border-collapse:collapse;font-size:13px}
 .adj-table th{text-align:left;font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.3px;padding:6px 8px;border-bottom:2px solid #eee}
 .adj-table td{padding:8px;border-bottom:1px solid #f0efe8;vertical-align:middle}
@@ -141,39 +201,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .adj-charge{background:#DCFCE7;color:#15803D}
 .adj-deduction{background:#FEE2E2;color:#DC2626}
 .adj-amount{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
-.adj-amount.charge{color:#15803D}
-.adj-amount.deduction{color:#DC2626}
+.adj-amount.charge{color:#15803D}.adj-amount.deduction{color:#DC2626}
 .adj-delete{width:24px;height:24px;border:none;background:none;color:#ccc;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;border-radius:4px;transition:all .15s}
 .adj-delete:hover{color:#DC2626;background:#FEE2E2}
 .adj-empty{color:#bbb;font-size:12px;text-align:center;padding:16px;font-style:italic}
-
-/* Add adjustment form */
 .adj-actions{display:flex;gap:8px;margin-top:12px}
 .adj-btn{padding:8px 16px;font-size:13px;font-weight:600;border:none;border-radius:6px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
-.adj-btn-charge{background:#059669;color:#fff}
-.adj-btn-charge:hover{background:#047857}
-.adj-btn-deduct{background:#DC2626;color:#fff}
-.adj-btn-deduct:hover{background:#B91C1C}
+.adj-btn-charge{background:#059669;color:#fff}.adj-btn-charge:hover{background:#047857}
+.adj-btn-deduct{background:#DC2626;color:#fff}.adj-btn-deduct:hover{background:#B91C1C}
 
 .adj-form{background:#fafaf7;border:1px solid #e0dfd8;border-radius:8px;padding:14px;margin-top:12px;display:none}
 .adj-form.show{display:block}
 .adj-form-title{font-size:12px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-.adj-form-title.charge{color:#059669}
-.adj-form-title.deduction{color:#DC2626}
+.adj-form-title.charge{color:#059669}.adj-form-title.deduction{color:#DC2626}
 .adj-form label{font-size:11px;color:#666;display:block;margin-bottom:3px;font-weight:500}
 .adj-form select,.adj-form input,.adj-form textarea{width:100%;padding:7px 10px;font-size:13px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#1a1a1a;font-family:inherit;margin-bottom:8px}
 .adj-form select:focus,.adj-form input:focus,.adj-form textarea:focus{outline:none;border-color:#059669;box-shadow:0 0 0 2px rgba(5,150,105,.12)}
 .adj-form textarea{resize:vertical;min-height:40px}
 .adj-form-actions{display:flex;gap:8px;margin-top:6px}
 .adj-form-btn{padding:8px 16px;font-size:13px;font-weight:600;border:none;border-radius:6px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
-.adj-form-save{background:#059669;color:#fff}
-.adj-form-save:hover{background:#047857}
-.adj-form-save.deduction{background:#DC2626}
-.adj-form-save.deduction:hover{background:#B91C1C}
+.adj-form-save{background:#059669;color:#fff}.adj-form-save:hover{background:#047857}
+.adj-form-save.deduction{background:#DC2626}.adj-form-save.deduction:hover{background:#B91C1C}
 .adj-form-cancel{background:#fff;color:#666;border:1px solid #ddd}
-.adj-form-cancel:hover{background:#f0efe8}
 
-/* Totals section */
+/* Totals */
 .totals-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
 .total-card{background:#fafaf7;border:1px solid #e0dfd8;border-radius:8px;padding:12px;text-align:center}
 .total-card .tc-label{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.3px;font-weight:600}
@@ -189,18 +240,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .pay-bar-track{width:100%;height:8px;background:#eee;border-radius:4px;overflow:hidden}
 .pay-bar-fill{height:100%;border-radius:4px;transition:width .3s}
 
-/* Finalize section */
+/* Finalize */
 .finalize-section{margin-top:0}
 .finalize-box{background:#fafaf7;border:1px solid #e0dfd8;border-radius:8px;padding:14px}
 .finalize-box label{font-size:11px;color:#666;display:block;margin-bottom:3px;font-weight:500}
 .finalize-box textarea{width:100%;padding:7px 10px;font-size:13px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#1a1a1a;font-family:inherit;resize:vertical;min-height:50px;margin-bottom:10px}
 .finalize-box textarea:focus{outline:none;border-color:#059669;box-shadow:0 0 0 2px rgba(5,150,105,.12)}
 .finalize-btn{width:100%;padding:12px;font-size:14px;font-weight:700;border:none;border-radius:8px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px}
-.finalize-btn-go{background:#7C3AED;color:#fff}
-.finalize-btn-go:hover{background:#6D28D9}
-.finalize-btn-reopen{background:#fff;color:#B45309;border:2px solid #B45309}
-.finalize-btn-reopen:hover{background:#FEF3C7}
-
+.finalize-btn-go{background:#7C3AED;color:#fff}.finalize-btn-go:hover{background:#6D28D9}
+.finalize-btn-reopen{background:#fff;color:#B45309;border:2px solid #B45309}.finalize-btn-reopen:hover{background:#FEF3C7}
 .finalized-info{display:flex;align-items:center;gap:10px;padding:12px;background:#EDE9FE;border:1px solid #C4B5FD;border-radius:8px;margin-bottom:12px}
 .finalized-info i{font-size:20px;color:#7C3AED;flex-shrink:0}
 .finalized-info .fi-text{flex:1}
@@ -208,13 +256,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .finalized-info .fi-when{font-size:11px;color:#888;margin-top:2px}
 .finalized-info .fi-notes{font-size:12px;color:#666;margin-top:4px;font-style:italic}
 
-/* Utility */
 .hidden{display:none!important}
+
+/* Responsive */
+@media(max-width:1200px){.cal-sidebar{width:230px;min-width:220px}.mid-panel{width:340px;min-width:300px}}
+@media(max-width:900px){.cal-sidebar{display:none}.mid-panel{width:360px;min-width:300px}}
+@media(max-width:700px){.panels{flex-direction:column}.mid-panel{width:100%;max-width:none;height:40vh;border-right:none;border-bottom:1px solid #e0dfd8}.right-panel{height:60vh}}
 </style>
 </head>
 <body>
 
-<!-- ─── LOGIN SCREEN ─── -->
+<!-- ─── LOGIN ─── -->
 <div class="login-screen" id="loginScreen">
   <div class="login-card">
     <div class="login-logo">
@@ -223,14 +275,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <div class="camp">Trip Finalization &amp; Adjustments</div>
       <div class="badge">Khoyor Zagal</div>
     </div>
-    <div class="login-field">
-      <label>Username</label>
-      <input type="text" id="loginUser" placeholder="Enter username" autocomplete="off">
-    </div>
-    <div class="login-field">
-      <label>Password</label>
-      <input type="password" id="loginPass" placeholder="Enter password" autocomplete="off">
-    </div>
+    <div class="login-field"><label>Username</label><input type="text" id="loginUser" placeholder="Enter username" autocomplete="off"></div>
+    <div class="login-field"><label>Password</label><input type="password" id="loginPass" placeholder="Enter password" autocomplete="off"></div>
     <button class="login-btn" onclick="window.doLogin()"><i class="ti ti-login"></i> Sign In</button>
     <div class="login-error" id="loginError">Invalid username or password</div>
     <div class="login-hint">Camp or admin credentials required</div>
@@ -240,7 +286,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 <!-- ─── APP ─── -->
 <div class="app" id="app">
-  <!-- Top Bar -->
   <div class="top-bar">
     <div class="top-bar-left">
       <h1><i class="ti ti-trees"></i> Camp Manager</h1>
@@ -253,29 +298,77 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     </div>
   </div>
 
-  <!-- Panels -->
   <div class="panels">
-    <!-- Left Panel: Booking List -->
-    <div class="left-panel">
+    <!-- Left: Calendar Sidebar -->
+    <div class="cal-sidebar">
+      <div class="mini-cal">
+        <div class="mini-cal-nav">
+          <button onclick="mcPrev()"><i class="ti ti-chevron-left"></i></button>
+          <span class="mc-title" id="mcTitle" onclick="mcToday()"></span>
+          <button onclick="mcNext()"><i class="ti ti-chevron-right"></i></button>
+        </div>
+        <div class="mc-grid" id="mcGrid"></div>
+      </div>
+      <div class="sidebar-stats" id="sidebarStats"></div>
+      <div class="sidebar-date-info" id="sidebarDateInfo"></div>
+    </div>
+
+    <!-- Middle: Booking List + Walk-ins -->
+    <div class="mid-panel">
       <div class="lp-toolbar">
         <div class="lp-toolbar-row">
-          <div class="lp-search-wrap">
-            <i class="ti ti-search"></i>
-            <input class="lp-search" id="searchInput" type="text" placeholder="Search company, trip code...">
-          </div>
+          <div class="lp-search-wrap"><i class="ti ti-search"></i><input class="lp-search" id="searchInput" type="text" placeholder="Search company, guide..."></div>
         </div>
-        <div class="lp-toolbar-row">
+        <div class="lp-toolbar-row" style="flex-wrap:wrap">
           <button class="filter-btn active" data-filter="all" onclick="window.setFilter('all',this)">All</button>
           <button class="filter-btn" data-filter="active" onclick="window.setFilter('active',this)">Active</button>
-          <button class="filter-btn" data-filter="checkedout" onclick="window.setFilter('checkedout',this)">Checked Out</button>
-          <button class="filter-btn" data-filter="finalized" onclick="window.setFilter('finalized',this)">Finalized</button>
+          <button class="filter-btn" data-filter="checkedout" onclick="window.setFilter('checkedout',this)">Out</button>
+          <button class="filter-btn" data-filter="finalized" onclick="window.setFilter('finalized',this)">Final</button>
+        </div>
+        <div class="lp-toolbar-row date-filter-bar" id="dateFilterBar" style="display:none">
+          <span><i class="ti ti-calendar-event" style="font-size:13px"></i> <span id="dateFilterLabel"></span></span>
+          <button onclick="mcSelectDate(mcSelectedDate)">Clear date</button>
         </div>
         <div class="lp-summary" id="lpSummary"></div>
       </div>
       <div class="lp-list" id="lpList"></div>
+
+      <!-- Walk-in Services -->
+      <div class="walkin-section" id="walkinSection">
+        <div class="walkin-header">
+          <div class="walkin-title"><i class="ti ti-walk" style="font-size:14px"></i> Walk-in Services</div>
+          <button class="walkin-add-btn" onclick="showWalkinForm()"><i class="ti ti-plus"></i> Add</button>
+        </div>
+        <div id="walkinList"></div>
+        <div class="walkin-form" id="walkinForm">
+          <label>Service</label>
+          <select id="wiService" onchange="onWiServiceChange()">
+            <option value="">-- Select --</option>
+            <option value="Breakfast|12000">Breakfast — 12,000₮</option>
+            <option value="Lunch|29000">Lunch — 29,000₮</option>
+            <option value="Dinner|24000">Dinner — 24,000₮</option>
+            <option value="Horse riding|80000">Horse riding — 80,000₮</option>
+            <option value="Camel riding|60000">Camel riding — 60,000₮</option>
+            <option value="Archery|30000">Archery — 30,000₮</option>
+            <option value="custom|0">Custom item...</option>
+          </select>
+          <div class="wf-row">
+            <div><label>Description</label><input type="text" id="wiDesc" placeholder="Service name"></div>
+            <div style="max-width:70px"><label>Qty</label><input type="number" id="wiQty" value="1" min="1"></div>
+          </div>
+          <div class="wf-row">
+            <div><label>Price each (₮)</label><input type="number" id="wiPrice" placeholder="0" min="0"></div>
+            <div><label>Note</label><input type="text" id="wiNote" placeholder="Optional"></div>
+          </div>
+          <div class="wf-actions">
+            <button class="wf-btn wf-save" onclick="saveWalkin()"><i class="ti ti-check"></i> Add</button>
+            <button class="wf-btn wf-cancel" onclick="hideWalkinForm()">Cancel</button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Right Panel: Detail -->
+    <!-- Right: Detail -->
     <div class="right-panel" id="rightPanel">
       <div class="rp-empty" id="rpEmpty">
         <i class="ti ti-trees"></i>
@@ -291,370 +384,376 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </div>
 
 <script>
-/* ═══════════════════════════════════════════
-   HELPERS
-   ═══════════════════════════════════════════ */
-function esc(s){
-  var d=document.createElement('div');
-  d.appendChild(document.createTextNode(s||''));
-  return d.innerHTML;
-}
-function fmt(n){return (n||0).toLocaleString()+'₮';}
-function resKey(r){return r.company+'_'+r.checkIn+'_'+r.checkOut;}
-function parseDate(s){if(!s)return null;var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
-function fmtDate(s){
-  if(!s)return '—';
-  var d=parseDate(s);
-  if(!d||isNaN(d))return s;
-  var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return m[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();
-}
-function nightCount(ci,co){
-  var a=parseDate(ci),b=parseDate(co);
-  if(!a||!b||isNaN(a)||isNaN(b))return 0;
-  return Math.max(0,Math.round((b-a)/(86400000)));
-}
-function today(){
-  var d=new Date();
-  var mm=String(d.getMonth()+1).padStart(2,'0');
-  var dd=String(d.getDate()).padStart(2,'0');
-  return d.getFullYear()+'-'+mm+'-'+dd;
-}
+(function(){
+'use strict';
 
-/* ═══════════════════════════════════════════
-   AUTH
-   ═══════════════════════════════════════════ */
-var SESSION_KEY='kz_camp_session';
-var USERS_KEY='kz_users';
+/* ═══ HELPERS ═══ */
+function esc(s){var d=document.createElement('div');d.appendChild(document.createTextNode(s||''));return d.innerHTML}
+function escAttr(s){return (s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}
+function fmt(n){return (n||0).toLocaleString()+'₮'}
+function resKey(r){return (r.company||'')+'_'+(r.checkIn||'')+'_'+(r.checkOut||'')}
+function parseDate(s){if(!s)return null;var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2])}
+function fmtDate(s){if(!s)return '—';var d=parseDate(s);if(!d||isNaN(d))return s;var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return m[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear()}
+function fmtDateShort(s){if(!s)return '—';var p=s.split('-');var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return m[parseInt(p[1],10)-1]+' '+parseInt(p[2],10)}
+function nightCount(ci,co){var a=parseDate(ci),b=parseDate(co);if(!a||!b||isNaN(a)||isNaN(b))return 0;return Math.max(0,Math.round((b-a)/86400000))}
+function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+
+/* ═══ AUTH ═══ */
+var SESSION_KEY='kz_camp_session',USERS_KEY='kz_users';
 var currentUser=null;
 
-function seedUsers(){
-  try{
-    var users=JSON.parse(localStorage.getItem(USERS_KEY)||'[]');
-    if(users.length===0){
-      localStorage.setItem(USERS_KEY,JSON.stringify([
-        {username:'admin',password:'admin123',role:'admin'},
-        {username:'booking',password:'kz2026',role:'booking'},
-        {username:'finance',password:'kz2026',role:'finance'},
-        {username:'camp',password:'kz2026',role:'camp'}
-      ]));
-    }
-  }catch(e){}
-}
-seedUsers();
+(function seedUsers(){
+  try{var u=JSON.parse(localStorage.getItem(USERS_KEY)||'[]');
+  if(u.length===0)localStorage.setItem(USERS_KEY,JSON.stringify([
+    {username:'admin',password:'admin123',role:'admin'},
+    {username:'booking',password:'kz2026',role:'booking'},
+    {username:'finance',password:'kz2026',role:'finance'},
+    {username:'camp',password:'kz2026',role:'camp'}
+  ]))}catch(e){}
+})();
 
 function checkSession(){
-  try{
-    var s=JSON.parse(localStorage.getItem(SESSION_KEY)||'null');
-    if(s&&s.username&&s.ts&&(Date.now()-s.ts<86400000)){
-      if(s.role==='camp'||s.role==='admin'){
-        currentUser=s;
-        return true;
-      }
-    }
-  }catch(e){}
+  try{var s=JSON.parse(localStorage.getItem(SESSION_KEY)||'null');
+  if(s&&s.username&&s.ts&&(Date.now()-s.ts<86400000)&&(s.role==='camp'||s.role==='admin')){currentUser=s;return true;}}catch(e){}
   return false;
 }
-
 function showApp(){
   document.getElementById('loginScreen').classList.add('hidden');
-  var app=document.getElementById('app');
-  app.classList.add('visible');
+  document.getElementById('app').classList.add('visible');
   document.getElementById('userLabel').textContent=currentUser.username;
-  loadBookings();
+  initData();
 }
-
 window.doLogin=function(){
-  var u=document.getElementById('loginUser').value.trim();
-  var p=document.getElementById('loginPass').value;
-  var err=document.getElementById('loginError');
+  var u=document.getElementById('loginUser').value.trim(),p=document.getElementById('loginPass').value,err=document.getElementById('loginError');
   err.classList.remove('show');
   if(!u||!p){err.textContent='Please enter username and password';err.classList.add('show');return;}
-  try{
-    var users=JSON.parse(localStorage.getItem(USERS_KEY)||'[]');
-    var found=users.find(function(x){return x.username===u&&x.password===p;});
-    if(!found){err.textContent='Invalid username or password';err.classList.add('show');return;}
-    if(found.role!=='camp'&&found.role!=='admin'){err.textContent='Access denied. Camp or admin role required.';err.classList.add('show');return;}
-    currentUser={username:found.username,role:found.role,ts:Date.now()};
-    localStorage.setItem(SESSION_KEY,JSON.stringify(currentUser));
-    showApp();
-  }catch(e){err.textContent='Login error';err.classList.add('show');}
+  try{var users=JSON.parse(localStorage.getItem(USERS_KEY)||'[]');
+  var found=users.find(function(x){return x.username===u&&x.password===p});
+  if(!found){err.textContent='Invalid username or password';err.classList.add('show');return;}
+  if(found.role!=='camp'&&found.role!=='admin'){err.textContent='Access denied. Camp or admin role required.';err.classList.add('show');return;}
+  currentUser={username:found.username,role:found.role,ts:Date.now()};
+  localStorage.setItem(SESSION_KEY,JSON.stringify(currentUser));
+  showApp();}catch(e){err.textContent='Login error';err.classList.add('show')}
 };
+window.doLogout=function(){localStorage.removeItem(SESSION_KEY);currentUser=null;location.reload()};
+document.getElementById('loginPass').addEventListener('keydown',function(e){if(e.key==='Enter')window.doLogin()});
+document.getElementById('loginUser').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('loginPass').focus()});
 
-window.doLogout=function(){
-  localStorage.removeItem(SESSION_KEY);
-  currentUser=null;
-  location.reload();
-};
-
-// Enter key login
-document.getElementById('loginPass').addEventListener('keydown',function(e){if(e.key==='Enter')window.doLogin();});
-document.getElementById('loginUser').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('loginPass').focus();});
-
-/* ═══════════════════════════════════════════
-   DATA
-   ═══════════════════════════════════════════ */
+/* ═══ DATA ═══ */
 var reservations=[];
 var selectedKey=null;
 var currentFilter='all';
 var searchTerm='';
 
-function loadReservations(){
-  try{return JSON.parse(localStorage.getItem('kz_reservations')||'[]');}catch(e){return [];}
-}
-function loadPayments(){
-  try{return JSON.parse(localStorage.getItem('kz_payments')||'{}');}catch(e){return {};}
-}
-function loadAdjustments(){
-  try{return JSON.parse(localStorage.getItem('kz_trip_adjustments')||'{}');}catch(e){return {};}
-}
-function saveAdjustments(adj){
-  localStorage.setItem('kz_trip_adjustments',JSON.stringify(adj));
-}
-function loadTripStatus(){
-  try{return JSON.parse(localStorage.getItem('kz_trip_status')||'{}');}catch(e){return {};}
-}
-function saveTripStatus(ts){
-  localStorage.setItem('kz_trip_status',JSON.stringify(ts));
-}
+function loadReservations(){try{return JSON.parse(localStorage.getItem('kz_reservations')||'[]')}catch(e){return[]}}
+function loadPayments(){try{return JSON.parse(localStorage.getItem('kz_payments')||'{}')}catch(e){return{}}}
+function loadAdjustments(){try{return JSON.parse(localStorage.getItem('kz_trip_adjustments')||'{}')}catch(e){return{}}}
+function saveAdjustments(a){localStorage.setItem('kz_trip_adjustments',JSON.stringify(a))}
+function loadTripStatus(){try{return JSON.parse(localStorage.getItem('kz_trip_status')||'{}')}catch(e){return{}}}
+function saveTripStatus(t){localStorage.setItem('kz_trip_status',JSON.stringify(t))}
+function loadWalkins(){try{return JSON.parse(localStorage.getItem('kz_walkin_services')||'{}')}catch(e){return{}}}
+function saveWalkins(w){localStorage.setItem('kz_walkin_services',JSON.stringify(w))}
 
 function getBookingStatus(r){
   if(r.cancelled)return 'cancelled';
-  var key=resKey(r);
-  var ts=loadTripStatus();
+  var key=resKey(r),ts=loadTripStatus(),td=todayStr();
   if(ts[key]&&ts[key].status==='finalized')return 'finalized';
-  var td=today();
   if(r.checkIn>td)return 'upcoming';
   if(r.checkOut<=td)return 'checkedout';
   return 'inhouse';
 }
+function getTotalPaid(key){var p=loadPayments(),arr=p[key]||[],t=0;for(var i=0;i<arr.length;i++)t+=Number(arr[i].amount)||0;return t}
+function getAdjTotals(key){var a=loadAdjustments(),arr=a[key]||[],c=0,d=0;for(var i=0;i<arr.length;i++){if(arr[i].type==='charge')c+=Number(arr[i].amount)||0;else d+=Number(arr[i].amount)||0}return{charges:c,deductions:d}}
 
-function getTotalPaid(key){
-  var payments=loadPayments();
-  var arr=payments[key]||[];
-  var total=0;
-  for(var i=0;i<arr.length;i++){total+=Number(arr[i].amount)||0;}
-  return total;
-}
+/* ═══ MINI CALENDAR ═══ */
+var mcYear,mcMonth,mcSelectedDate=null;
+(function(){var d=new Date();mcYear=d.getFullYear();mcMonth=d.getMonth()})();
+var MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-function getAdjTotals(key){
-  var adj=loadAdjustments();
-  var arr=adj[key]||[];
-  var charges=0,deductions=0;
-  for(var i=0;i<arr.length;i++){
-    if(arr[i].type==='charge')charges+=Number(arr[i].amount)||0;
-    else deductions+=Number(arr[i].amount)||0;
+function getBookingDatesMap(){
+  var map={};
+  for(var i=0;i<reservations.length;i++){
+    var r=reservations[i],ci=r.checkIn,co=r.checkOut;
+    if(!ci)continue;
+    var color=r.cancelled?'#ccc':(r.color||'#888');
+    var start=new Date(ci+'T00:00:00');
+    var end=co?new Date(co+'T00:00:00'):new Date(start.getTime()+86400000);
+    for(var d=new Date(start);d<end;d.setDate(d.getDate()+1)){
+      var ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      if(!map[ds])map[ds]=[];
+      if(map[ds].length<3)map[ds].push(color);
+    }
   }
-  return {charges:charges,deductions:deductions};
+  return map;
 }
 
-/* ═══════════════════════════════════════════
-   BOOKING LIST
-   ═══════════════════════════════════════════ */
-function loadBookings(){
-  reservations=loadReservations();
-  renderList();
+function renderMiniCal(){
+  var today=todayStr(),datesMap=getBookingDatesMap();
+  document.getElementById('mcTitle').textContent=MONTH_NAMES[mcMonth]+' '+mcYear;
+  var firstDay=new Date(mcYear,mcMonth,1).getDay();
+  var daysInMonth=new Date(mcYear,mcMonth+1,0).getDate();
+  var daysInPrev=new Date(mcYear,mcMonth,0).getDate();
+  var html='',dows=['Su','Mo','Tu','We','Th','Fr','Sa'];
+  for(var i=0;i<7;i++)html+='<div class="mc-dow">'+dows[i]+'</div>';
+  for(var p=firstDay-1;p>=0;p--)html+='<div class="mc-day empty other-month">'+(daysInPrev-p)+'</div>';
+  for(var d=1;d<=daysInMonth;d++){
+    var ds=mcYear+'-'+String(mcMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var cls='mc-day'+(ds===today?' today':'')+(ds===mcSelectedDate?' selected':'');
+    var dots=datesMap[ds];
+    html+='<div class="'+cls+'" onclick="mcSelectDate(\''+ds+'\')" data-date="'+ds+'">'+d;
+    html+='<div class="mc-dots">';
+    if(dots)for(var di=0;di<dots.length;di++)html+='<span class="mc-dot" style="background:'+dots[di]+'"></span>';
+    html+='</div></div>';
+  }
+  var total=firstDay+daysInMonth,rem=total%7===0?0:7-total%7;
+  for(var n=1;n<=rem;n++)html+='<div class="mc-day empty other-month">'+n+'</div>';
+  document.getElementById('mcGrid').innerHTML=html;
 }
 
-window.setFilter=function(f,btn){
-  currentFilter=f;
-  document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
-  if(btn)btn.classList.add('active');
-  renderList();
+window.mcPrev=function(){mcMonth--;if(mcMonth<0){mcMonth=11;mcYear--}renderMiniCal()};
+window.mcNext=function(){mcMonth++;if(mcMonth>11){mcMonth=0;mcYear++}renderMiniCal()};
+window.mcToday=function(){var d=new Date();mcYear=d.getFullYear();mcMonth=d.getMonth();mcSelectedDate=null;renderMiniCal();renderSidebar();renderList();renderWalkins()};
+window.mcSelectDate=function(ds){
+  mcSelectedDate=(mcSelectedDate===ds)?null:ds;
+  renderMiniCal();renderSidebar();renderList();renderWalkins();
 };
 
-document.getElementById('searchInput').addEventListener('input',function(){
-  searchTerm=this.value.trim().toLowerCase();
-  renderList();
-});
-
-function renderList(){
-  var list=document.getElementById('lpList');
-  var summary=document.getElementById('lpSummary');
-
-  // Sort by check-in desc
-  var sorted=reservations.slice().sort(function(a,b){
-    if(a.checkIn>b.checkIn)return -1;
-    if(a.checkIn<b.checkIn)return 1;
-    return 0;
+function getBookingsForDate(ds){
+  return reservations.filter(function(r){
+    if(!r.checkIn)return false;
+    var co=r.checkOut||r.checkIn;
+    return ds>=r.checkIn&&ds<co;
   });
+}
 
-  // Separate cancelled to bottom
-  var active=[],cancelled=[];
-  for(var i=0;i<sorted.length;i++){
-    if(sorted[i].cancelled)cancelled.push(sorted[i]);
-    else active.push(sorted[i]);
-  }
-  sorted=active.concat(cancelled);
-
-  // Count stats
-  var stats={total:0,inhouse:0,checkedout:0,finalized:0,upcoming:0};
+function renderSidebar(){
+  var stats={total:0,inhouse:0,checkedout:0,finalized:0};
   for(var i=0;i<reservations.length;i++){
     if(reservations[i].cancelled)continue;
     stats.total++;
     var st=getBookingStatus(reservations[i]);
     if(stats[st]!==undefined)stats[st]++;
   }
+  var html='<div class="sidebar-stat-row">';
+  html+='<div class="sidebar-stat-card"><div class="ssc-label">In House</div><div class="ssc-value" style="color:#15803D">'+stats.inhouse+'</div></div>';
+  html+='<div class="sidebar-stat-card"><div class="ssc-label">Checked Out</div><div class="ssc-value" style="color:#B45309">'+stats.checkedout+'</div></div>';
+  html+='</div>';
+  html+='<div class="sidebar-stat-row">';
+  html+='<div class="sidebar-stat-card"><div class="ssc-label">Finalized</div><div class="ssc-value" style="color:#7C3AED">'+stats.finalized+'</div></div>';
+  html+='<div class="sidebar-stat-card"><div class="ssc-label">Total</div><div class="ssc-value">'+stats.total+'</div></div>';
+  html+='</div>';
+  document.getElementById('sidebarStats').innerHTML=html;
 
-  summary.innerHTML=
+  var infoEl=document.getElementById('sidebarDateInfo');
+  if(!mcSelectedDate){infoEl.innerHTML='';return;}
+  var dateBookings=getBookingsForDate(mcSelectedDate);
+  var ih='<div class="sdi-title"><i class="ti ti-calendar-event" style="font-size:13px"></i> '+fmtDate(mcSelectedDate)+' ('+dateBookings.length+')</div>';
+  if(dateBookings.length===0){ih+='<div style="font-size:12px;color:#bbb;text-align:center;padding:12px">No bookings this date</div>';}
+  else{for(var j=0;j<dateBookings.length;j++){
+    var db=dateBookings[j],key=resKey(db),st=getBookingStatus(db),sc='status-'+st;
+    ih+='<div class="sdi-item'+(selectedKey===key?' active':'')+'" onclick="window.selectBooking(\''+escAttr(key)+'\')">';
+    ih+='<span class="sdi-dot" style="background:'+(db.cancelled?'#ccc':(db.color||'#888'))+'"></span>';
+    ih+='<span class="sdi-name">'+esc(db.company||'Unknown')+'</span>';
+    ih+='<span class="sdi-badge"><span class="status-badge '+sc+'" style="font-size:8px">'+st+'</span></span>';
+    ih+='</div>';
+  }}
+  infoEl.innerHTML=ih;
+}
+
+/* ═══ BOOKING LIST ═══ */
+function initData(){
+  reservations=loadReservations();
+  renderMiniCal();renderSidebar();renderList();renderWalkins();
+}
+
+window.setFilter=function(f,btn){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active')});
+  if(btn)btn.classList.add('active');
+  renderList();
+};
+document.getElementById('searchInput').addEventListener('input',function(){searchTerm=this.value.trim().toLowerCase();renderList()});
+
+function renderList(){
+  var dfBar=document.getElementById('dateFilterBar'),dfLabel=document.getElementById('dateFilterLabel');
+  if(mcSelectedDate){dfBar.style.display='flex';dfLabel.textContent=fmtDate(mcSelectedDate);}
+  else{dfBar.style.display='none';}
+
+  var sorted=reservations.slice().sort(function(a,b){return a.checkIn>b.checkIn?-1:a.checkIn<b.checkIn?1:0});
+  var active=[],cancelled=[];
+  for(var i=0;i<sorted.length;i++){if(sorted[i].cancelled)cancelled.push(sorted[i]);else active.push(sorted[i])}
+  sorted=active.concat(cancelled);
+
+  var stats={total:0,inhouse:0,checkedout:0,finalized:0,upcoming:0};
+  for(var i=0;i<reservations.length;i++){if(!reservations[i].cancelled){stats.total++;var s=getBookingStatus(reservations[i]);if(stats[s]!==undefined)stats[s]++}}
+  document.getElementById('lpSummary').innerHTML=
     '<span class="lp-stat"><strong>'+stats.total+'</strong> total</span>'+
     '<span class="lp-stat green"><strong>'+stats.inhouse+'</strong> in house</span>'+
-    '<span class="lp-stat orange"><strong>'+stats.checkedout+'</strong> checked out</span>'+
-    '<span class="lp-stat"><strong>'+stats.finalized+'</strong> finalized</span>';
+    '<span class="lp-stat orange"><strong>'+stats.checkedout+'</strong> out</span>';
 
-  // Filter
   var filtered=[];
   for(var i=0;i<sorted.length;i++){
-    var r=sorted[i];
-    var st=getBookingStatus(r);
-
-    // Search filter
-    if(searchTerm){
-      var hay=(r.company+' '+r.tripCode+' '+r.guide+' '+r.checkIn+' '+r.checkOut).toLowerCase();
-      if(hay.indexOf(searchTerm)===-1)continue;
+    var r=sorted[i],st=getBookingStatus(r);
+    // Date filter
+    if(mcSelectedDate){
+      var co=r.checkOut||r.checkIn;
+      if(!r.checkIn||!(mcSelectedDate>=r.checkIn&&mcSelectedDate<co))continue;
     }
-
-    // Status filter
-    if(currentFilter==='all'){
-      filtered.push(r);
-    } else if(currentFilter==='active'){
-      if(st==='inhouse'||st==='upcoming')filtered.push(r);
-    } else if(currentFilter==='checkedout'){
-      if(st==='checkedout')filtered.push(r);
-    } else if(currentFilter==='finalized'){
-      if(st==='finalized')filtered.push(r);
-    }
+    if(searchTerm){var hay=(r.company+' '+r.tripCode+' '+r.guide+' '+r.checkIn+' '+r.checkOut).toLowerCase();if(hay.indexOf(searchTerm)===-1)continue}
+    if(currentFilter==='all')filtered.push(r);
+    else if(currentFilter==='active'&&(st==='inhouse'||st==='upcoming'))filtered.push(r);
+    else if(currentFilter==='checkedout'&&st==='checkedout')filtered.push(r);
+    else if(currentFilter==='finalized'&&st==='finalized')filtered.push(r);
   }
 
-  if(filtered.length===0){
-    list.innerHTML='<div class="lp-empty"><i class="ti ti-tent-off"></i><div>No bookings found</div></div>';
-    return;
-  }
+  var list=document.getElementById('lpList');
+  if(filtered.length===0){list.innerHTML='<div class="lp-empty"><i class="ti ti-tent-off"></i><div>No bookings found</div></div>';return}
 
   var html='';
   for(var i=0;i<filtered.length;i++){
-    var r=filtered[i];
-    var key=resKey(r);
-    var st=getBookingStatus(r);
+    var r=filtered[i],key=resKey(r),st=getBookingStatus(r);
     var pax=(Number(r.adults)||0)+(Number(r.children48)||0)+(Number(r.children03)||0);
     var nights=nightCount(r.checkIn,r.checkOut);
-    var sel=selectedKey===key?' selected':'';
-    var canc=r.cancelled?' cancelled':'';
-
+    var sel=selectedKey===key?' selected':'',canc=r.cancelled?' cancelled':'';
     var statusLabel='',statusClass='';
-    if(st==='inhouse'){statusLabel='In House';statusClass='status-inhouse';}
-    else if(st==='upcoming'){statusLabel='Upcoming';statusClass='status-upcoming';}
-    else if(st==='checkedout'){statusLabel='Checked Out';statusClass='status-checkedout';}
-    else if(st==='finalized'){statusLabel='Finalized';statusClass='status-finalized';}
-    else if(st==='cancelled'){statusLabel='Cancelled';statusClass='status-cancelled';}
+    if(st==='inhouse'){statusLabel='In House';statusClass='status-inhouse'}
+    else if(st==='upcoming'){statusLabel='Upcoming';statusClass='status-upcoming'}
+    else if(st==='checkedout'){statusLabel='Checked Out';statusClass='status-checkedout'}
+    else if(st==='finalized'){statusLabel='Finalized';statusClass='status-finalized'}
+    else if(st==='cancelled'){statusLabel='Cancelled';statusClass='status-cancelled'}
 
-    html+='<div class="bk-row'+sel+canc+'" onclick="window.selectBooking(\''+esc(key)+'\')">';
+    html+='<div class="bk-row'+sel+canc+'" onclick="window.selectBooking(\''+escAttr(key)+'\')">';
     html+='<div class="bk-dot" style="background:'+(r.color||'#ccc')+'"></div>';
-    html+='<div class="bk-info">';
-    html+='<div class="bk-company">'+esc(r.company)+'</div>';
-    html+='<div class="bk-meta">';
-    html+='<span><i class="ti ti-calendar"></i>'+esc(r.checkIn)+' &rarr; '+esc(r.checkOut)+'</span>';
-    html+='<span><i class="ti ti-moon"></i>'+nights+'n</span>';
-    html+='<span><i class="ti ti-users"></i>'+pax+'</span>';
-    html+='</div></div>';
-    html+='<div class="bk-right"><div class="bk-badges">';
-    html+='<span class="status-badge '+statusClass+'">'+statusLabel+'</span>';
-    html+='</div></div>';
-    html+='</div>';
+    html+='<div class="bk-info"><div class="bk-company">'+esc(r.company)+'</div>';
+    html+='<div class="bk-meta"><span><i class="ti ti-calendar"></i>'+fmtDateShort(r.checkIn)+' → '+fmtDateShort(r.checkOut)+'</span>';
+    html+='<span><i class="ti ti-moon"></i>'+nights+'n</span><span><i class="ti ti-users"></i>'+pax+'</span></div></div>';
+    html+='<div class="bk-right"><div class="bk-badges"><span class="status-badge '+statusClass+'">'+statusLabel+'</span></div></div></div>';
   }
-
   list.innerHTML=html;
 }
 
-/* ═══════════════════════════════════════════
-   BOOKING SELECTION
-   ═══════════════════════════════════════════ */
-window.selectBooking=function(key){
-  selectedKey=key;
-  renderList();
-  renderDetail();
-};
+/* ═══ WALK-IN SERVICES ═══ */
+function getWalkinDate(){return mcSelectedDate||todayStr()}
 
-function findReservation(key){
-  for(var i=0;i<reservations.length;i++){
-    if(resKey(reservations[i])===key)return reservations[i];
+function renderWalkins(){
+  var date=getWalkinDate();
+  var walkins=loadWalkins();
+  var arr=walkins[date]||[];
+  var container=document.getElementById('walkinList');
+
+  if(arr.length===0){container.innerHTML='<div class="walkin-empty">No walk-in services'+(mcSelectedDate?' on '+fmtDateShort(mcSelectedDate):' today')+'</div>';return}
+
+  var html='<div class="walkin-items">',total=0;
+  for(var i=0;i<arr.length;i++){
+    var w=arr[i],lineTotal=(w.price||0)*(w.qty||1);total+=lineTotal;
+    html+='<div class="walkin-item">';
+    html+='<span class="wi-desc">'+esc(w.description)+'</span>';
+    html+='<span class="wi-qty">x'+w.qty+'</span>';
+    html+='<span class="wi-amt">'+fmt(lineTotal)+'</span>';
+    html+='<button class="wi-del" onclick="deleteWalkin(\''+esc(date)+'\','+i+')"><i class="ti ti-x"></i></button>';
+    html+='</div>';
   }
-  return null;
+  html+='</div>';
+  html+='<div class="walkin-total"><span>Total ('+arr.length+' items)</span><span>'+fmt(total)+'</span></div>';
+  container.innerHTML=html;
 }
 
+window.showWalkinForm=function(){document.getElementById('walkinForm').classList.add('show');document.getElementById('wiService').value='';document.getElementById('wiDesc').value='';document.getElementById('wiQty').value='1';document.getElementById('wiPrice').value='';document.getElementById('wiNote').value=''};
+window.hideWalkinForm=function(){document.getElementById('walkinForm').classList.remove('show')};
+
+window.onWiServiceChange=function(){
+  var sel=document.getElementById('wiService');if(!sel.value)return;
+  var parts=sel.value.split('|');
+  var desc=document.getElementById('wiDesc'),price=document.getElementById('wiPrice');
+  if(parts[0]==='custom'){desc.value='';price.value='';desc.focus();return}
+  desc.value=parts[0]||'';
+  var p=parseInt(parts[1])||0;price.value=p>0?p:'';
+  if(p===0)price.focus();
+};
+
+window.saveWalkin=function(){
+  var desc=(document.getElementById('wiDesc').value||'').trim();
+  var qty=parseInt(document.getElementById('wiQty').value)||1;
+  var price=parseFloat(document.getElementById('wiPrice').value)||0;
+  var note=(document.getElementById('wiNote').value||'').trim();
+  if(!desc){alert('Enter a description.');return}
+  if(price<=0){alert('Enter a valid price.');return}
+  var date=getWalkinDate();
+  var walkins=loadWalkins();
+  if(!walkins[date])walkins[date]=[];
+  walkins[date].push({
+    id:'WI-'+Date.now(),
+    description:desc,
+    qty:qty,
+    price:price,
+    note:note,
+    addedBy:currentUser?currentUser.username:'camp',
+    addedAt:new Date().toISOString()
+  });
+  saveWalkins(walkins);
+  hideWalkinForm();
+  renderWalkins();
+};
+
+window.deleteWalkin=function(date,idx){
+  if(!confirm('Delete this walk-in item?'))return;
+  var walkins=loadWalkins();
+  if(walkins[date]){walkins[date].splice(idx,1);if(walkins[date].length===0)delete walkins[date]}
+  saveWalkins(walkins);renderWalkins();
+};
+
+/* ═══ BOOKING DETAIL ═══ */
+window.selectBooking=function(key){
+  selectedKey=key;renderList();renderDetail();renderSidebar();
+};
+
+function findReservation(key){for(var i=0;i<reservations.length;i++){if(resKey(reservations[i])===key)return reservations[i]}return null}
+
 function renderDetail(){
-  var rpEmpty=document.getElementById('rpEmpty');
-  var rpContent=document.getElementById('rpContent');
-
-  if(!selectedKey){
-    rpEmpty.style.display='';
-    rpEmpty.classList.remove('hidden');
-    rpContent.style.display='none';
-    rpContent.classList.add('hidden');
-    return;
-  }
-
+  var rpEmpty=document.getElementById('rpEmpty'),rpContent=document.getElementById('rpContent');
+  if(!selectedKey){rpEmpty.style.display='';rpEmpty.classList.remove('hidden');rpContent.style.display='none';rpContent.classList.add('hidden');return}
   var r=findReservation(selectedKey);
-  if(!r){
-    rpEmpty.style.display='';
-    rpEmpty.classList.remove('hidden');
-    rpContent.style.display='none';
-    rpContent.classList.add('hidden');
-    return;
-  }
+  if(!r){rpEmpty.style.display='';rpEmpty.classList.remove('hidden');rpContent.style.display='none';rpContent.classList.add('hidden');return}
+  rpEmpty.style.display='none';rpEmpty.classList.add('hidden');rpContent.style.display='flex';rpContent.classList.remove('hidden');
 
-  rpEmpty.style.display='none';
-  rpEmpty.classList.add('hidden');
-  rpContent.style.display='flex';
-  rpContent.classList.remove('hidden');
-
-  var key=resKey(r);
-  var nights=nightCount(r.checkIn,r.checkOut);
+  var key=resKey(r),nights=nightCount(r.checkIn,r.checkOut);
   var pax=(Number(r.adults)||0)+(Number(r.children48)||0)+(Number(r.children03)||0);
-  var paid=getTotalPaid(key);
-  var adjTotals=getAdjTotals(key);
+  var paid=getTotalPaid(key),adjTotals=getAdjTotals(key);
   var invoiceTotal=Number(r.invoiceTotal)||0;
   var adjustedTotal=invoiceTotal+adjTotals.charges-adjTotals.deductions;
-  var st=getBookingStatus(r);
-  var tripStatus=loadTripStatus();
-  var tsData=tripStatus[key]||null;
+  var st=getBookingStatus(r),tsData=loadTripStatus()[key]||null;
+
+  var statusLabel='',statusClass='';
+  if(st==='inhouse'){statusLabel='In House';statusClass='status-inhouse'}
+  else if(st==='upcoming'){statusLabel='Upcoming';statusClass='status-upcoming'}
+  else if(st==='checkedout'){statusLabel='Checked Out';statusClass='status-checkedout'}
+  else if(st==='finalized'){statusLabel='Finalized';statusClass='status-finalized'}
+  else if(st==='cancelled'){statusLabel='Cancelled';statusClass='status-cancelled'}
 
   // Header
-  var statusLabel='',statusClass='';
-  if(st==='inhouse'){statusLabel='In House';statusClass='status-inhouse';}
-  else if(st==='upcoming'){statusLabel='Upcoming';statusClass='status-upcoming';}
-  else if(st==='checkedout'){statusLabel='Checked Out';statusClass='status-checkedout';}
-  else if(st==='finalized'){statusLabel='Finalized';statusClass='status-finalized';}
-  else if(st==='cancelled'){statusLabel='Cancelled';statusClass='status-cancelled';}
-
-  var hdr='';
-  hdr+='<div class="rp-company"><div class="dot" style="background:'+(r.color||'#ccc')+'"></div>'+esc(r.company);
-  hdr+=' <span class="status-badge '+statusClass+'" style="font-size:10px;margin-left:6px">'+statusLabel+'</span></div>';
-  hdr+='<div class="rp-meta">';
-  hdr+='<span><i class="ti ti-calendar-event"></i>'+fmtDate(r.checkIn)+' &rarr; '+fmtDate(r.checkOut)+'</span>';
-  hdr+='<span><i class="ti ti-moon"></i>'+nights+' nights</span>';
-  hdr+='<span><i class="ti ti-users"></i>'+pax+' guests</span>';
-  if(r.gers)hdr+='<span><i class="ti ti-home"></i>'+esc(String(r.gers))+' gers</span>';
-  if(r.guide)hdr+='<span><i class="ti ti-user-star"></i>'+esc(r.guide)+'</span>';
-  if(r.tripCode)hdr+='<span><i class="ti ti-hash"></i>'+esc(r.tripCode)+'</span>';
-  hdr+='</div>';
-
-  hdr+='<div class="rp-stats">';
-  hdr+='<div class="rp-stat"><div class="rs-label">Invoice</div><div class="rs-value">'+fmt(invoiceTotal)+'</div></div>';
-  hdr+='<div class="rp-stat"><div class="rs-label">Paid</div><div class="rs-value green">'+fmt(paid)+'</div></div>';
-  hdr+='<div class="rp-stat"><div class="rs-label">Adjusted</div><div class="rs-value emerald">'+fmt(adjustedTotal)+'</div></div>';
+  var h='<div class="rp-company"><div class="dot" style="background:'+(r.color||'#ccc')+'"></div>'+esc(r.company);
+  h+=' <span class="status-badge '+statusClass+'" style="font-size:10px;margin-left:6px">'+statusLabel+'</span></div>';
+  h+='<div class="rp-meta">';
+  h+='<span><i class="ti ti-calendar-event"></i>'+fmtDate(r.checkIn)+' → '+fmtDate(r.checkOut)+'</span>';
+  h+='<span><i class="ti ti-moon"></i>'+nights+' nights</span>';
+  h+='<span><i class="ti ti-users"></i>'+pax+' guests</span>';
+  if(r.guide)h+='<span><i class="ti ti-user-star"></i>'+esc(r.guide)+'</span>';
+  if(r.tripCode)h+='<span><i class="ti ti-hash"></i>'+esc(r.tripCode)+'</span>';
+  h+='</div>';
+  h+='<div class="rp-stats">';
+  h+='<div class="rp-stat"><div class="rs-label">Invoice</div><div class="rs-value">'+fmt(invoiceTotal)+'</div></div>';
+  h+='<div class="rp-stat"><div class="rs-label">Paid</div><div class="rs-value green">'+fmt(paid)+'</div></div>';
+  h+='<div class="rp-stat"><div class="rs-label">Adjusted</div><div class="rs-value emerald">'+fmt(adjustedTotal)+'</div></div>';
   var balance=adjustedTotal-paid;
-  hdr+='<div class="rp-stat"><div class="rs-label">Balance</div><div class="rs-value '+(balance>0?'orange':balance<0?'red':'green')+'">'+fmt(balance)+'</div></div>';
-  hdr+='</div>';
-
-  document.getElementById('rpHeader').innerHTML=hdr;
+  h+='<div class="rp-stat"><div class="rs-label">Balance</div><div class="rs-value '+(balance>0?'orange':balance<0?'red':'green')+'">'+fmt(balance)+'</div></div>';
+  h+='</div>';
+  document.getElementById('rpHeader').innerHTML=h;
 
   // Body
   var body='';
 
   // Trip Summary
-  body+='<div class="rp-section">';
-  body+='<div class="rp-section-title"><i class="ti ti-clipboard-list"></i> Trip Summary</div>';
+  body+='<div class="rp-section"><div class="rp-section-title"><i class="ti ti-clipboard-list"></i> Trip Summary</div>';
   body+='<div class="trip-line"><span class="tl-label">Company</span><span class="tl-value">'+esc(r.company)+'</span></div>';
   body+='<div class="trip-line"><span class="tl-label">Check-in</span><span class="tl-value">'+fmtDate(r.checkIn)+'</span></div>';
   body+='<div class="trip-line"><span class="tl-label">Check-out</span><span class="tl-value">'+fmtDate(r.checkOut)+'</span></div>';
@@ -662,61 +761,38 @@ function renderDetail(){
   body+='<div class="trip-line"><span class="tl-label">Adults</span><span class="tl-value">'+(r.adults||0)+'</span></div>';
   if(r.children48)body+='<div class="trip-line"><span class="tl-label">Children (4-8)</span><span class="tl-value">'+r.children48+'</span></div>';
   if(r.children03)body+='<div class="trip-line"><span class="tl-label">Children (0-3)</span><span class="tl-value">'+r.children03+'</span></div>';
-  if(r.gerNums)body+='<div class="trip-line"><span class="tl-label">Ger Numbers</span><span class="tl-value">'+esc(Array.isArray(r.gerNums)?r.gerNums.join(', '):String(r.gerNums))+'</span></div>';
-  if(r.singles)body+='<div class="trip-line"><span class="tl-label">Single Supplements</span><span class="tl-value">'+r.singles+'</span></div>';
   if(r.guide)body+='<div class="trip-line"><span class="tl-label">Guide</span><span class="tl-value">'+esc(r.guide)+'</span></div>';
   if(r.tripCode)body+='<div class="trip-line"><span class="tl-label">Trip Code</span><span class="tl-value">'+esc(r.tripCode)+'</span></div>';
   body+='<div class="trip-line"><span class="tl-label">Original Invoice</span><span class="tl-value" style="font-size:15px;color:#059669">'+fmt(invoiceTotal)+'</span></div>';
-
-  // Payment status bar
   var pctPaid=adjustedTotal>0?Math.min(100,Math.round(paid/adjustedTotal*100)):0;
   var barColor=pctPaid>=100?'#15803D':pctPaid>=50?'#B45309':'#DC2626';
-  body+='<div class="pay-bar" style="margin-top:10px">';
-  body+='<div class="pay-bar-label"><span>Paid: '+fmt(paid)+'</span><span>'+pctPaid+'%</span></div>';
-  body+='<div class="pay-bar-track"><div class="pay-bar-fill" style="width:'+pctPaid+'%;background:'+barColor+'"></div></div>';
-  body+='</div>';
-
+  body+='<div class="pay-bar" style="margin-top:10px"><div class="pay-bar-label"><span>Paid: '+fmt(paid)+'</span><span>'+pctPaid+'%</span></div>';
+  body+='<div class="pay-bar-track"><div class="pay-bar-fill" style="width:'+pctPaid+'%;background:'+barColor+'"></div></div></div>';
   if(r.notes)body+='<div style="margin-top:10px;font-size:12px;color:#888;background:#fafaf7;padding:8px 10px;border-radius:6px;border:1px solid #eee"><i class="ti ti-note" style="margin-right:4px"></i>'+esc(r.notes)+'</div>';
   body+='</div>';
 
-  // Adjustments section
-  body+='<div class="rp-section">';
-  body+='<div class="rp-section-title"><i class="ti ti-adjustments-horizontal"></i> Camp Adjustments</div>';
-
-  var adjustments=loadAdjustments();
-  var adjArr=adjustments[key]||[];
-
+  // Adjustments
+  body+='<div class="rp-section"><div class="rp-section-title"><i class="ti ti-adjustments-horizontal"></i> Camp Adjustments</div>';
+  var adjArr=loadAdjustments()[key]||[];
   if(adjArr.length>0){
-    body+='<table class="adj-table">';
-    body+='<thead><tr><th>Description</th><th>Type</th><th style="text-align:right">Amount</th><th></th></tr></thead>';
-    body+='<tbody>';
+    body+='<table class="adj-table"><thead><tr><th>Description</th><th>Type</th><th style="text-align:right">Amount</th><th></th></tr></thead><tbody>';
     for(var i=0;i<adjArr.length;i++){
-      var a=adjArr[i];
-      var typeClass=a.type==='charge'?'adj-charge':'adj-deduction';
-      var amtClass=a.type==='charge'?'charge':'deduction';
-      var sign=a.type==='charge'?'+':'-';
-      body+='<tr>';
-      body+='<td>'+esc(a.description)+'<div style="font-size:10px;color:#bbb;margin-top:2px">by '+esc(a.addedBy)+' &middot; '+esc(a.addedAt?a.addedAt.slice(0,10):'')+'</div></td>';
-      body+='<td><span class="adj-type '+typeClass+'">'+esc(a.type)+'</span></td>';
-      body+='<td class="adj-amount '+amtClass+'">'+sign+fmt(a.amount)+'</td>';
-      body+='<td><button class="adj-delete" onclick="window.deleteAdj(\''+esc(key)+'\',\''+esc(a.id)+'\')"><i class="ti ti-trash"></i></button></td>';
-      body+='</tr>';
+      var a=adjArr[i],tc=a.type==='charge'?'adj-charge':'adj-deduction',ac=a.type==='charge'?'charge':'deduction',sign=a.type==='charge'?'+':'-';
+      body+='<tr><td>'+esc(a.description)+'<div style="font-size:10px;color:#bbb;margin-top:2px">by '+esc(a.addedBy)+' · '+esc(a.addedAt?(a.addedAt).slice(0,10):'')+'</div></td>';
+      body+='<td><span class="adj-type '+tc+'">'+esc(a.type)+'</span></td>';
+      body+='<td class="adj-amount '+ac+'">'+sign+fmt(a.amount)+'</td>';
+      body+='<td><button class="adj-delete" onclick="window.deleteAdj(\''+escAttr(key)+'\',\''+esc(a.id)+'\')"><i class="ti ti-trash"></i></button></td></tr>';
     }
     body+='</tbody></table>';
-  } else {
-    body+='<div class="adj-empty">No adjustments yet. Add charges or deductions below.</div>';
-  }
+  } else {body+='<div class="adj-empty">No adjustments yet. Add charges or deductions below.</div>'}
 
-  // Add buttons
   body+='<div class="adj-actions">';
   body+='<button class="adj-btn adj-btn-charge" onclick="window.showAdjForm(\'charge\')"><i class="ti ti-plus"></i> Add Charge</button>';
-  body+='<button class="adj-btn adj-btn-deduct" onclick="window.showAdjForm(\'deduction\')"><i class="ti ti-minus"></i> Add Deduction</button>';
-  body+='</div>';
+  body+='<button class="adj-btn adj-btn-deduct" onclick="window.showAdjForm(\'deduction\')"><i class="ti ti-minus"></i> Add Deduction</button></div>';
 
-  // Adjustment form (hidden by default)
+  // Adj form
   body+='<div class="adj-form" id="adjForm">';
   body+='<div class="adj-form-title" id="adjFormTitle"><i class="ti ti-plus-circle"></i> <span id="adjFormTitleText">Add Charge</span></div>';
-
   body+='<label>Predefined Service</label>';
   body+='<select id="adjService" onchange="window.onServiceChange()">';
   body+='<option value="">-- Custom item --</option>';
@@ -733,25 +809,16 @@ function renderDetail(){
   body+='<option value="medical|Medical assistance|0">Medical assistance — enter amount</option>';
   body+='<option value="equipment|Equipment rental|0">Equipment rental — enter amount</option>';
   body+='</select>';
-
-  body+='<label>Description</label>';
-  body+='<input type="text" id="adjDesc" placeholder="Item description">';
-  body+='<label>Amount (₮)</label>';
-  body+='<input type="number" id="adjAmount" placeholder="0" min="0">';
-  body+='<label>Note (optional)</label>';
-  body+='<textarea id="adjNote" placeholder="Optional note..." rows="2"></textarea>';
-
+  body+='<label>Description</label><input type="text" id="adjDesc" placeholder="Item description">';
+  body+='<label>Amount (₮)</label><input type="number" id="adjAmount" placeholder="0" min="0">';
+  body+='<label>Note (optional)</label><textarea id="adjNote" placeholder="Optional note..." rows="2"></textarea>';
   body+='<div class="adj-form-actions">';
   body+='<button class="adj-form-btn adj-form-save" id="adjFormSave" onclick="window.saveAdj()"><i class="ti ti-check"></i> Save</button>';
-  body+='<button class="adj-form-btn adj-form-cancel" onclick="window.hideAdjForm()"><i class="ti ti-x"></i> Cancel</button>';
-  body+='</div>';
-  body+='</div>';
-
+  body+='<button class="adj-form-btn adj-form-cancel" onclick="window.hideAdjForm()"><i class="ti ti-x"></i> Cancel</button></div></div>';
   body+='</div>';
 
-  // Totals section
-  body+='<div class="rp-section">';
-  body+='<div class="rp-section-title"><i class="ti ti-calculator"></i> Trip Totals</div>';
+  // Totals
+  body+='<div class="rp-section"><div class="rp-section-title"><i class="ti ti-calculator"></i> Trip Totals</div>';
   body+='<div class="totals-grid">';
   body+='<div class="total-card"><div class="tc-label">Original Booking</div><div class="tc-value">'+fmt(invoiceTotal)+'</div></div>';
   body+='<div class="total-card"><div class="tc-label">Total Paid</div><div class="tc-value" style="color:#15803D">'+fmt(paid)+'</div></div>';
@@ -759,183 +826,96 @@ function renderDetail(){
   body+='<div class="total-card"><div class="tc-label">Deductions</div><div class="tc-value" style="color:#DC2626">-'+fmt(adjTotals.deductions)+'</div></div>';
   body+='<div class="total-card full highlight"><div class="tc-label">Adjusted Total</div><div class="tc-value">'+fmt(adjustedTotal)+'</div></div>';
   body+='</div>';
-
-  // Balance bar
-  var balanceAmt=adjustedTotal-paid;
+  var balAmt=adjustedTotal-paid;
   body+='<div style="display:flex;justify-content:space-between;font-size:13px;margin-top:4px">';
   body+='<span style="color:#888">Balance remaining</span>';
-  body+='<span style="font-weight:700;color:'+(balanceAmt>0?'#B45309':balanceAmt<0?'#DC2626':'#15803D')+'">'+fmt(balanceAmt)+'</span>';
-  body+='</div>';
-  body+='</div>';
+  body+='<span style="font-weight:700;color:'+(balAmt>0?'#B45309':balAmt<0?'#DC2626':'#15803D')+'">'+fmt(balAmt)+'</span></div></div>';
 
-  // Finalize section
-  body+='<div class="rp-section finalize-section">';
-  body+='<div class="rp-section-title"><i class="ti ti-circle-check"></i> Trip Finalization</div>';
-
+  // Finalize
+  body+='<div class="rp-section finalize-section"><div class="rp-section-title"><i class="ti ti-circle-check"></i> Trip Finalization</div>';
   if(tsData&&tsData.status==='finalized'){
-    body+='<div class="finalized-info">';
-    body+='<i class="ti ti-circle-check-filled"></i>';
-    body+='<div class="fi-text">';
+    body+='<div class="finalized-info"><i class="ti ti-circle-check-filled"></i><div class="fi-text">';
     body+='<div class="fi-who">Finalized by '+esc(tsData.finalizedBy)+' ('+esc(tsData.finalizedRole)+')</div>';
-    body+='<div class="fi-when">'+fmtDate(tsData.finalizedAt?tsData.finalizedAt.slice(0,10):'')+' at '+(tsData.finalizedAt?tsData.finalizedAt.slice(11,16):'')+'</div>';
+    body+='<div class="fi-when">'+fmtDate(tsData.finalizedAt?(tsData.finalizedAt).slice(0,10):'')+' at '+(tsData.finalizedAt?(tsData.finalizedAt).slice(11,16):'')+'</div>';
     if(tsData.notes)body+='<div class="fi-notes">"'+esc(tsData.notes)+'"</div>';
     body+='</div></div>';
-    body+='<button class="finalize-btn finalize-btn-reopen" onclick="window.reopenTrip(\''+esc(key)+'\')"><i class="ti ti-arrow-back-up"></i> Override / Re-open Trip</button>';
+    body+='<button class="finalize-btn finalize-btn-reopen" onclick="window.reopenTrip(\''+escAttr(key)+'\')"><i class="ti ti-arrow-back-up"></i> Override / Re-open Trip</button>';
   } else {
-    body+='<div class="finalize-box">';
-    body+='<label>Finalization Notes (optional)</label>';
+    body+='<div class="finalize-box"><label>Finalization Notes (optional)</label>';
     body+='<textarea id="finalizeNotes" placeholder="Any notes about the trip completion..."></textarea>';
-    body+='<button class="finalize-btn finalize-btn-go" onclick="window.finalizeTrip(\''+esc(key)+'\')"><i class="ti ti-circle-check"></i> Finalize Trip</button>';
-    body+='</div>';
+    body+='<button class="finalize-btn finalize-btn-go" onclick="window.finalizeTrip(\''+escAttr(key)+'\')"><i class="ti ti-circle-check"></i> Finalize Trip</button></div>';
   }
-
   body+='</div>';
 
   document.getElementById('rpBody').innerHTML=body;
 }
 
-/* ═══════════════════════════════════════════
-   ADJUSTMENT FORM
-   ═══════════════════════════════════════════ */
+/* ═══ ADJUSTMENT FORM ═══ */
 var adjFormType='charge';
-
 window.showAdjForm=function(type){
-  adjFormType=type;
-  var form=document.getElementById('adjForm');
-  if(!form)return;
-  form.classList.add('show');
-
-  var title=document.getElementById('adjFormTitle');
-  var titleText=document.getElementById('adjFormTitleText');
-  var saveBtn=document.getElementById('adjFormSave');
-
-  if(type==='charge'){
-    title.className='adj-form-title charge';
-    titleText.textContent='Add Charge';
-    title.querySelector('i').className='ti ti-plus-circle';
-    saveBtn.className='adj-form-btn adj-form-save';
-  } else {
-    title.className='adj-form-title deduction';
-    titleText.textContent='Add Deduction';
-    title.querySelector('i').className='ti ti-minus-circle';
-    saveBtn.className='adj-form-btn adj-form-save deduction';
-  }
-
-  // Reset form
-  var svc=document.getElementById('adjService');
-  if(svc)svc.value='';
-  var desc=document.getElementById('adjDesc');
-  if(desc)desc.value='';
-  var amt=document.getElementById('adjAmount');
-  if(amt)amt.value='';
-  var note=document.getElementById('adjNote');
-  if(note)note.value='';
+  adjFormType=type;var form=document.getElementById('adjForm');if(!form)return;form.classList.add('show');
+  var title=document.getElementById('adjFormTitle'),titleText=document.getElementById('adjFormTitleText'),saveBtn=document.getElementById('adjFormSave');
+  if(type==='charge'){title.className='adj-form-title charge';titleText.textContent='Add Charge';title.querySelector('i').className='ti ti-plus-circle';saveBtn.className='adj-form-btn adj-form-save'}
+  else{title.className='adj-form-title deduction';titleText.textContent='Add Deduction';title.querySelector('i').className='ti ti-minus-circle';saveBtn.className='adj-form-btn adj-form-save deduction'}
+  var s=document.getElementById('adjService');if(s)s.value='';
+  var d=document.getElementById('adjDesc');if(d)d.value='';
+  var a=document.getElementById('adjAmount');if(a)a.value='';
+  var n=document.getElementById('adjNote');if(n)n.value='';
 };
-
-window.hideAdjForm=function(){
-  var form=document.getElementById('adjForm');
-  if(form)form.classList.remove('show');
-};
-
+window.hideAdjForm=function(){var f=document.getElementById('adjForm');if(f)f.classList.remove('show')};
 window.onServiceChange=function(){
-  var svc=document.getElementById('adjService');
-  if(!svc||!svc.value)return;
-  var parts=svc.value.split('|');
-  var desc=document.getElementById('adjDesc');
-  var amt=document.getElementById('adjAmount');
-  if(desc)desc.value=parts[1]||'';
-  if(amt){
-    var a=parseInt(parts[2])||0;
-    amt.value=a>0?a:'';
-    if(a===0)amt.focus();
-  }
+  var s=document.getElementById('adjService');if(!s||!s.value)return;
+  var parts=s.value.split('|');
+  var d=document.getElementById('adjDesc'),a=document.getElementById('adjAmount');
+  if(d)d.value=parts[1]||'';
+  if(a){var v=parseInt(parts[2])||0;a.value=v>0?v:'';if(v===0)a.focus()}
 };
-
 window.saveAdj=function(){
   if(!selectedKey||!currentUser)return;
-  var desc=document.getElementById('adjDesc');
-  var amt=document.getElementById('adjAmount');
-  var note=document.getElementById('adjNote');
+  var desc=(document.getElementById('adjDesc').value||'').trim();
+  var amt=parseFloat(document.getElementById('adjAmount').value||'0');
+  var note=(document.getElementById('adjNote').value||'').trim();
   var svc=document.getElementById('adjService');
-
-  var descVal=(desc?desc.value:'').trim();
-  var amtVal=parseFloat(amt?amt.value:'0');
-  var noteVal=(note?note.value:'').trim();
-
-  if(!descVal){alert('Please enter a description.');return;}
-  if(!amtVal||amtVal<=0){alert('Please enter a valid amount.');return;}
-
-  var category='custom';
-  if(svc&&svc.value){
-    category=svc.value.split('|')[0]||'custom';
-  }
-
-  var adj=loadAdjustments();
-  if(!adj[selectedKey])adj[selectedKey]=[];
-  adj[selectedKey].push({
-    id:'ADJ-'+Date.now(),
-    type:adjFormType,
-    description:descVal,
-    amount:amtVal,
-    category:category,
-    addedBy:currentUser.username,
-    addedAt:new Date().toISOString()
-  });
-  saveAdjustments(adj);
-  window.hideAdjForm();
-  renderDetail();
+  if(!desc){alert('Please enter a description.');return}
+  if(!amt||amt<=0){alert('Please enter a valid amount.');return}
+  var category='custom';if(svc&&svc.value)category=svc.value.split('|')[0]||'custom';
+  var adj=loadAdjustments();if(!adj[selectedKey])adj[selectedKey]=[];
+  adj[selectedKey].push({id:'ADJ-'+Date.now(),type:adjFormType,description:desc,amount:amt,category:category,addedBy:currentUser.username,addedAt:new Date().toISOString()});
+  saveAdjustments(adj);window.hideAdjForm();renderDetail();
 };
-
 window.deleteAdj=function(key,id){
   if(!confirm('Delete this adjustment?'))return;
-  var adj=loadAdjustments();
-  if(!adj[key])return;
-  adj[key]=adj[key].filter(function(a){return a.id!==id;});
-  saveAdjustments(adj);
-  renderDetail();
+  var adj=loadAdjustments();if(!adj[key])return;
+  adj[key]=adj[key].filter(function(a){return a.id!==id});
+  saveAdjustments(adj);renderDetail();
 };
 
-/* ═══════════════════════════════════════════
-   FINALIZE / REOPEN
-   ═══════════════════════════════════════════ */
+/* ═══ FINALIZE / REOPEN ═══ */
 window.finalizeTrip=function(key){
-  if(!currentUser)return;
-  if(!confirm('Finalize this trip? This marks the trip as completed.'))return;
-  var notes='';
-  var notesEl=document.getElementById('finalizeNotes');
-  if(notesEl)notes=notesEl.value.trim();
-
+  if(!currentUser)return;if(!confirm('Finalize this trip? This marks the trip as completed.'))return;
+  var notes='';var el=document.getElementById('finalizeNotes');if(el)notes=el.value.trim();
   var ts=loadTripStatus();
-  ts[key]={
-    status:'finalized',
-    finalizedBy:currentUser.username,
-    finalizedAt:new Date().toISOString(),
-    finalizedRole:currentUser.role,
-    notes:notes
-  };
-  saveTripStatus(ts);
-  renderList();
-  renderDetail();
+  ts[key]={status:'finalized',finalizedBy:currentUser.username,finalizedAt:new Date().toISOString(),finalizedRole:currentUser.role,notes:notes};
+  saveTripStatus(ts);renderList();renderDetail();renderSidebar();
 };
-
 window.reopenTrip=function(key){
-  if(!currentUser)return;
-  if(!confirm('Re-open this trip? This allows further adjustments before finalizing again.'))return;
-  var ts=loadTripStatus();
-  if(ts[key]){
-    ts[key].status='pending';
-  }
-  saveTripStatus(ts);
-  renderList();
-  renderDetail();
+  if(!currentUser)return;if(!confirm('Re-open this trip? This allows further adjustments.'))return;
+  var ts=loadTripStatus();if(ts[key])ts[key].status='pending';
+  saveTripStatus(ts);renderList();renderDetail();renderSidebar();
 };
 
-/* ═══════════════════════════════════════════
-   INIT
-   ═══════════════════════════════════════════ */
-if(checkSession()){
-  showApp();
-}
+/* ═══ KEYBOARD ═══ */
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){selectedKey=null;mcSelectedDate=null;renderMiniCal();renderSidebar();renderList();renderDetail();renderWalkins()}
+});
+window.addEventListener('storage',function(e){
+  if(e.key==='kz_reservations'||e.key==='kz_trip_status'||e.key==='kz_trip_adjustments'||e.key==='kz_payments')initData();
+});
+
+/* ═══ BOOT ═══ */
+if(checkSession())showApp();
+
+})();
 </script>
 </body>
 </html>
