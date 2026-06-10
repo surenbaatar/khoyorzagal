@@ -75,10 +75,57 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .tab-content{flex:1;overflow:hidden;display:none}
 .tab-content.active{display:flex}
 
-/* ─── TWO-PANEL LAYOUT ─── */
+/* ─── THREE-PANEL LAYOUT ─── */
 .panels{display:flex;flex:1;overflow:hidden}
 
-/* Left panel */
+/* Calendar sidebar (left) */
+.cal-sidebar{width:260px;min-width:240px;border-right:1px solid #e0dfd8;display:flex;flex-direction:column;background:#fff;flex-shrink:0;overflow-y:auto}
+.cal-sidebar::-webkit-scrollbar{width:4px}
+.cal-sidebar::-webkit-scrollbar-thumb{background:#ccc;border-radius:4px}
+
+/* Mini calendar */
+.mini-cal{padding:14px 12px 10px}
+.mini-cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.mini-cal-nav .mc-title{font-size:14px;font-weight:700;color:#1a1a1a}
+.mini-cal-nav button{width:28px;height:28px;border:1px solid #e0dfd8;border-radius:6px;background:#fff;color:#888;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s}
+.mini-cal-nav button:hover{background:#E6F7F5;color:#0F766E;border-color:#0F766E}
+.mc-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.mc-grid .mc-dow{font-size:10px;font-weight:700;color:#999;padding:4px 0;text-transform:uppercase}
+.mc-day{position:relative;font-size:12px;padding:5px 2px;border-radius:6px;cursor:pointer;transition:all .12s;color:#1a1a1a;line-height:1}
+.mc-day:hover{background:#E6F7F5}
+.mc-day.empty{cursor:default}
+.mc-day.empty:hover{background:transparent}
+.mc-day.today{font-weight:700;color:#0F766E;background:#f0fdfa}
+.mc-day.selected{background:#0F766E;color:#fff;font-weight:700}
+.mc-day.selected:hover{background:#0D6860}
+.mc-day.other-month{color:#ccc}
+.mc-day .mc-dots{display:flex;gap:2px;justify-content:center;margin-top:2px;height:4px}
+.mc-day .mc-dot{width:4px;height:4px;border-radius:50%}
+.mc-day.selected .mc-dot{opacity:.7}
+
+/* Sidebar stats below calendar */
+.sidebar-stats{padding:0 14px 14px}
+.sidebar-stat-card{background:#fafaf7;border:1px solid #eee;border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.sidebar-stat-card .ssc-label{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.3px}
+.sidebar-stat-card .ssc-value{font-size:18px;font-weight:700;margin-top:2px}
+.sidebar-stat-card .ssc-sub{font-size:11px;color:#888;margin-top:2px}
+.sidebar-stat-row{display:flex;gap:8px}
+.sidebar-stat-row .sidebar-stat-card{flex:1}
+
+/* Date's bookings in sidebar */
+.sidebar-date-info{padding:0 14px 14px}
+.sidebar-date-info .sdi-title{font-size:11px;font-weight:700;color:#0F766E;text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.sidebar-date-info .sdi-item{font-size:12px;padding:6px 8px;border-radius:6px;border:1px solid #eee;margin-bottom:4px;cursor:pointer;transition:all .12s;display:flex;align-items:center;gap:8px}
+.sidebar-date-info .sdi-item:hover{background:#E6F7F5;border-color:#0F766E}
+.sidebar-date-info .sdi-item.active{background:#E6F7F5;border-color:#0F766E}
+.sidebar-date-info .sdi-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sidebar-date-info .sdi-name{flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-date-info .sdi-amt{font-size:11px;font-weight:700;color:#666;flex-shrink:0}
+
+/* Middle panel (booking list) */
+.mid-panel{width:380px;min-width:320px;max-width:440px;border-right:1px solid #e0dfd8;display:flex;flex-direction:column;background:#fff;flex-shrink:0}
+
+/* Left panel (for Payments tab, stays 2-panel) */
 .left-panel{width:420px;min-width:360px;max-width:500px;border-right:1px solid #e0dfd8;display:flex;flex-direction:column;background:#fff;flex-shrink:0}
 .lp-toolbar{padding:10px 16px;border-bottom:1px solid #e0dfd8;display:flex;flex-direction:column;gap:8px;background:#fafaf7}
 .lp-toolbar-row{display:flex;align-items:center;gap:8px}
@@ -282,11 +329,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .bk-card-body.collapsed{display:none}
 
 /* Responsive */
-@media(max-width:900px){.left-panel{width:320px;min-width:280px}}
+@media(max-width:1200px){.cal-sidebar{width:230px;min-width:220px}.mid-panel{width:340px;min-width:300px}}
+@media(max-width:900px){.cal-sidebar{display:none}.mid-panel{width:360px;min-width:300px}.left-panel{width:320px;min-width:280px}}
 @media(max-width:700px){
   .panels{flex-direction:column}
-  .left-panel{width:100%;max-width:none;height:50vh;border-right:none;border-bottom:1px solid #e0dfd8}
-  .right-panel{height:50vh}
+  .mid-panel,.left-panel{width:100%;max-width:none;height:40vh;border-right:none;border-bottom:1px solid #e0dfd8}
+  .right-panel{height:60vh}
   .main-tab{padding:0 12px;font-size:12px}
 }
 </style>
@@ -339,21 +387,36 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <!-- ═══ TAB 1: CALENDAR ═══ -->
   <div class="tab-content active" id="tabCalendar">
     <div class="panels">
-      <div class="left-panel">
+      <!-- Left: Mini Calendar Sidebar -->
+      <div class="cal-sidebar">
+        <div class="mini-cal">
+          <div class="mini-cal-nav">
+            <button onclick="mcPrev()"><i class="ti ti-chevron-left"></i></button>
+            <span class="mc-title" id="mcTitle" style="cursor:pointer" onclick="mcToday()"></span>
+            <button onclick="mcNext()"><i class="ti ti-chevron-right"></i></button>
+          </div>
+          <div class="mc-grid" id="mcGrid"></div>
+        </div>
+        <div class="sidebar-stats" id="sidebarStats"></div>
+        <div class="sidebar-date-info" id="sidebarDateInfo"></div>
+      </div>
+
+      <!-- Middle: Booking List -->
+      <div class="mid-panel">
         <div class="lp-toolbar">
           <div class="lp-toolbar-row">
             <div class="lp-search-wrap"><i class="ti ti-search"></i><input class="lp-search" id="calSearch" type="text" placeholder="Search company..."></div>
           </div>
-          <div class="lp-toolbar-row">
+          <div class="lp-toolbar-row" style="flex-wrap:wrap">
             <button class="filter-btn active" data-f="all" onclick="setCalFilter('all',this)">All</button>
-            <button class="filter-btn" data-f="upcoming" onclick="setCalFilter('upcoming',this)">Upcoming</button>
-            <button class="filter-btn" data-f="current" onclick="setCalFilter('current',this)">Current</button>
+            <button class="filter-btn" data-f="upcoming" onclick="setCalFilter('upcoming',this)">Soon</button>
+            <button class="filter-btn" data-f="current" onclick="setCalFilter('current',this)">Now</button>
             <button class="filter-btn" data-f="past" onclick="setCalFilter('past',this)">Past</button>
-            <div style="width:1px;height:18px;background:#e0dfd8"></div>
             <button class="filter-btn" data-f="unpaid" onclick="setCalFilter('unpaid',this)">Unpaid</button>
             <button class="filter-btn" data-f="partial" onclick="setCalFilter('partial',this)">Partial</button>
-            <button class="filter-btn" data-f="cancelled" onclick="setCalFilter('cancelled',this)">Cancelled</button>
+            <button class="filter-btn" data-f="cancelled" onclick="setCalFilter('cancelled',this)">Canc.</button>
           </div>
+          <div class="lp-toolbar-row" id="calDateFilter" style="display:none"><span style="font-size:11px;color:#0F766E;font-weight:600;display:flex;align-items:center;gap:4px"><i class="ti ti-calendar-event" style="font-size:13px"></i> <span id="calDateLabel"></span></span><button style="font-size:10px;padding:2px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;color:#888;cursor:pointer" onclick="mcSelectDate(mcSelectedDate)">Clear date</button></div>
           <div class="lp-toolbar-row lp-summary" id="calSummary"></div>
         </div>
         <div class="lp-list" id="calList"></div>
@@ -598,21 +661,32 @@ var calActiveKey=null;
 function calFiltered(){
   var search=(document.getElementById('calSearch').value||'').toLowerCase();
   return processedBookings.filter(function(b){
+    // Date filter from mini calendar
+    if(mcSelectedDate){
+      var ci=b.res.checkIn,co=b.res.checkOut;
+      if(!ci)return false;
+      if(!co){if(ci!==mcSelectedDate)return false;}
+      else{if(!(mcSelectedDate>=ci&&mcSelectedDate<co))return false;}
+    }
     if(calFilter==='unpaid'&&b.payStatus!=='unpaid')return false;
     if(calFilter==='partial'&&b.payStatus!=='partial')return false;
     if(calFilter==='cancelled'&&!b.cancelled)return false;
     if(calFilter==='upcoming'&&b.timing!=='upcoming')return false;
     if(calFilter==='current'&&b.timing!=='current')return false;
     if(calFilter==='past'&&b.timing!=='past')return false;
-    // By default (all/upcoming/current/past), hide cancelled unless specifically filtering for them
     if(calFilter!=='all'&&calFilter!=='cancelled'&&b.cancelled)return false;
-    if(calFilter==='all'){}// show everything including cancelled
+    if(calFilter==='all'){}
     if(search){var h=((b.res.company||'')+(b.res.tripCode||'')+(b.res.guide||'')).toLowerCase();if(h.indexOf(search)===-1)return false;}
     return true;
   });
 }
 
 function renderCalLeft(){
+  // Show/hide date filter indicator
+  var dfEl=document.getElementById('calDateFilter'),dlEl=document.getElementById('calDateLabel');
+  if(mcSelectedDate){dfEl.style.display='flex';dlEl.textContent=fmtDateFull(mcSelectedDate);}
+  else{dfEl.style.display='none';}
+
   var list=calFiltered(),today=todayStr();
   var tInv=0,tPd=0;for(var s=0;s<list.length;s++){tInv+=list[s].invoiceTotal;tPd+=list[s].paid;}
   var out=tInv-tPd;
@@ -658,7 +732,7 @@ function renderCalLeft(){
   document.getElementById('calList').innerHTML=html;
 }
 
-window.calSelect=function(key){calActiveKey=key;renderCalLeft();renderCalRight()};
+window.calSelect=function(key){calActiveKey=key;renderCalLeft();renderCalRight();renderSidebar()};
 
 function findByKey(key){for(var i=0;i<processedBookings.length;i++){if(resKey(processedBookings[i].res)===key)return processedBookings[i];}return null}
 
@@ -1046,27 +1120,164 @@ window.downloadPDF=function(){
 };
 window.openInBooking=function(){
   if(!calActiveKey)return;var b=findByKey(calActiveKey);if(!b)return;
-  var url='index.html';if(b.res.id)url+='?edit='+encodeURIComponent(b.res.id);window.location.href=url;
+  var url='booking.html';if(b.res.id)url+='?edit='+encodeURIComponent(b.res.id);window.location.href=url;
 };
+
+/* ════════════════════════════════════════════════
+   MINI CALENDAR SIDEBAR
+   ════════════════════════════════════════════════ */
+var mcYear,mcMonth,mcSelectedDate=null;
+(function(){var d=new Date();mcYear=d.getFullYear();mcMonth=d.getMonth()})();
+
+var MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function getBookingDatesMap(){
+  // Build a map of date -> array of booking colors for dot indicators
+  var map={};
+  for(var i=0;i<processedBookings.length;i++){
+    var b=processedBookings[i],ci=b.res.checkIn,co=b.res.checkOut;
+    if(!ci)continue;
+    var color=b.cancelled?'#ccc':(b.res.color||'#888');
+    // Mark check-in date and all dates in between
+    var start=new Date(ci+'T00:00:00');
+    var end=co?new Date(co+'T00:00:00'):start;
+    for(var d=new Date(start);d<end;d.setDate(d.getDate()+1)){
+      var ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      if(!map[ds])map[ds]=[];
+      if(map[ds].length<3)map[ds].push(color); // max 3 dots
+    }
+  }
+  return map;
+}
+
+function renderMiniCal(){
+  var today=todayStr();
+  var datesMap=getBookingDatesMap();
+  document.getElementById('mcTitle').textContent=MONTH_NAMES[mcMonth]+' '+mcYear;
+
+  var firstDay=new Date(mcYear,mcMonth,1).getDay(); // 0=Sun
+  var daysInMonth=new Date(mcYear,mcMonth+1,0).getDate();
+  var daysInPrev=new Date(mcYear,mcMonth,0).getDate();
+
+  var html='';
+  var dows=['Su','Mo','Tu','We','Th','Fr','Sa'];
+  for(var i=0;i<7;i++)html+='<div class="mc-dow">'+dows[i]+'</div>';
+
+  // Previous month trailing days
+  for(var p=firstDay-1;p>=0;p--){
+    var pd=daysInPrev-p;
+    html+='<div class="mc-day empty other-month">'+pd+'</div>';
+  }
+
+  // Current month days
+  for(var d=1;d<=daysInMonth;d++){
+    var ds=mcYear+'-'+String(mcMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var isToday=ds===today;
+    var isSel=ds===mcSelectedDate;
+    var cls='mc-day'+(isToday?' today':'')+(isSel?' selected':'');
+    var dots=datesMap[ds];
+    html+='<div class="'+cls+'" onclick="mcSelectDate(\''+ds+'\')" data-date="'+ds+'">'+d;
+    if(dots&&dots.length>0){
+      html+='<div class="mc-dots">';
+      for(var di=0;di<dots.length;di++)html+='<span class="mc-dot" style="background:'+dots[di]+'"></span>';
+      html+='</div>';
+    } else {
+      html+='<div class="mc-dots"></div>';
+    }
+    html+='</div>';
+  }
+
+  // Next month leading days
+  var totalCells=firstDay+daysInMonth;
+  var remaining=totalCells%7===0?0:7-totalCells%7;
+  for(var n=1;n<=remaining;n++){
+    html+='<div class="mc-day empty other-month">'+n+'</div>';
+  }
+
+  document.getElementById('mcGrid').innerHTML=html;
+}
+
+window.mcPrev=function(){mcMonth--;if(mcMonth<0){mcMonth=11;mcYear--;}renderMiniCal()};
+window.mcNext=function(){mcMonth++;if(mcMonth>11){mcMonth=0;mcYear++;}renderMiniCal()};
+window.mcToday=function(){var d=new Date();mcYear=d.getFullYear();mcMonth=d.getMonth();mcSelectedDate=null;renderMiniCal();renderSidebar();renderCalLeft()};
+
+window.mcSelectDate=function(ds){
+  if(mcSelectedDate===ds){mcSelectedDate=null;} // toggle off
+  else{mcSelectedDate=ds;}
+  renderMiniCal();
+  renderSidebar();
+  renderCalLeft();
+};
+
+function getBookingsForDate(ds){
+  return processedBookings.filter(function(b){
+    var ci=b.res.checkIn,co=b.res.checkOut;
+    if(!ci)return false;
+    if(!co)return ci===ds;
+    return ds>=ci&&ds<co;
+  });
+}
+
+function renderSidebar(){
+  // Stats
+  var totalInv=0,totalPd=0,activeCount=0,cancelledCount=0;
+  for(var i=0;i<processedBookings.length;i++){
+    var b=processedBookings[i];
+    if(b.cancelled){cancelledCount++;}
+    else{activeCount++;totalInv+=b.invoiceTotal;totalPd+=b.effectivePaid;}
+  }
+  var outstanding=totalInv-totalPd;
+  var statsHtml='<div class="sidebar-stat-row">';
+  statsHtml+='<div class="sidebar-stat-card"><div class="ssc-label">Active</div><div class="ssc-value" style="color:#0F766E">'+activeCount+'</div></div>';
+  statsHtml+='<div class="sidebar-stat-card"><div class="ssc-label">Cancelled</div><div class="ssc-value" style="color:#888">'+cancelledCount+'</div></div>';
+  statsHtml+='</div>';
+  statsHtml+='<div class="sidebar-stat-card"><div class="ssc-label">Outstanding</div><div class="ssc-value" style="color:'+(outstanding>0?'#B45309':'#15803D')+'">'+fmt(outstanding)+'</div>';
+  statsHtml+='<div class="ssc-sub">of '+fmt(totalInv)+' invoiced</div></div>';
+  document.getElementById('sidebarStats').innerHTML=statsHtml;
+
+  // Date-specific bookings
+  var infoEl=document.getElementById('sidebarDateInfo');
+  if(!mcSelectedDate){infoEl.innerHTML='';return;}
+
+  var dateBookings=getBookingsForDate(mcSelectedDate);
+  var html='<div class="sdi-title"><i class="ti ti-calendar-event" style="font-size:13px"></i> '+fmtDateFull(mcSelectedDate)+' ('+dateBookings.length+')</div>';
+  if(dateBookings.length===0){
+    html+='<div style="font-size:12px;color:#bbb;text-align:center;padding:12px">No bookings on this date</div>';
+  } else {
+    for(var j=0;j<dateBookings.length;j++){
+      var db=dateBookings[j],key=resKey(db.res);
+      var isActive=calActiveKey===key;
+      html+='<div class="sdi-item'+(isActive?' active':'')+'" onclick="calSelect(\''+escAttr(key)+'\')">';
+      html+='<span class="sdi-dot" style="background:'+(db.cancelled?'#ccc':(db.res.color||'#888'))+'"></span>';
+      html+='<span class="sdi-name">'+esc(db.res.company||'Unknown')+'</span>';
+      html+='<span class="sdi-amt">'+(db.estimated?'~':'')+fmt(db.invoiceTotal)+'</span>';
+      html+='</div>';
+    }
+  }
+  infoEl.innerHTML=html;
+}
+
 
 /* ════════════════════════════════════════════════
    REFRESH
    ════════════════════════════════════════════════ */
 function refreshAll(){
   processAll();
+  renderMiniCal();renderSidebar();
   renderCalLeft();renderCalRight();
   if(currentTab==='payments'){renderPayLeft();renderPayRight();}
 }
 
 function initData(){
   processAll();
+  renderMiniCal();renderSidebar();
   renderCalLeft();renderCalRight();
   renderPayLeft();
 }
 
 document.addEventListener('keydown',function(e){
   if(e.key==='Escape'){
-    if(currentTab==='calendar'){calActiveKey=null;renderCalLeft();renderCalRight();}
+    if(currentTab==='calendar'){calActiveKey=null;mcSelectedDate=null;renderMiniCal();renderSidebar();renderCalLeft();renderCalRight();}
     else{payActiveCompany=null;renderPayLeft();renderPayRight();}
   }
 });
