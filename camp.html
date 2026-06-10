@@ -197,23 +197,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .adj-table th{text-align:left;font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.3px;padding:6px 8px;border-bottom:2px solid #eee}
 .adj-table td{padding:8px;border-bottom:1px solid #f0efe8;vertical-align:middle}
 .adj-table tr:last-child td{border-bottom:none}
-.adj-type{font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;display:inline-block;text-transform:uppercase;letter-spacing:.3px}
-.adj-charge{background:#DCFCE7;color:#15803D}
-.adj-deduction{background:#FEE2E2;color:#DC2626}
 .adj-amount{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
-.adj-amount.charge{color:#15803D}.adj-amount.deduction{color:#DC2626}
+.adj-amount.charge{color:#059669}
 .adj-delete{width:24px;height:24px;border:none;background:none;color:#ccc;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;border-radius:4px;transition:all .15s}
 .adj-delete:hover{color:#DC2626;background:#FEE2E2}
 .adj-empty{color:#bbb;font-size:12px;text-align:center;padding:16px;font-style:italic}
 .adj-actions{display:flex;gap:8px;margin-top:12px}
 .adj-btn{padding:8px 16px;font-size:13px;font-weight:600;border:none;border-radius:6px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
 .adj-btn-charge{background:#059669;color:#fff}.adj-btn-charge:hover{background:#047857}
-.adj-btn-deduct{background:#DC2626;color:#fff}.adj-btn-deduct:hover{background:#B91C1C}
 
 .adj-form{background:#fafaf7;border:1px solid #e0dfd8;border-radius:8px;padding:14px;margin-top:12px;display:none}
 .adj-form.show{display:block}
 .adj-form-title{font-size:12px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-.adj-form-title.charge{color:#059669}.adj-form-title.deduction{color:#DC2626}
+.adj-form-title.charge{color:#059669}
 .adj-form label{font-size:11px;color:#666;display:block;margin-bottom:3px;font-weight:500}
 .adj-form select,.adj-form input,.adj-form textarea{width:100%;padding:7px 10px;font-size:13px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#1a1a1a;font-family:inherit;margin-bottom:8px}
 .adj-form select:focus,.adj-form input:focus,.adj-form textarea:focus{outline:none;border-color:#059669;box-shadow:0 0 0 2px rgba(5,150,105,.12)}
@@ -221,24 +217,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .adj-form-actions{display:flex;gap:8px;margin-top:6px}
 .adj-form-btn{padding:8px 16px;font-size:13px;font-weight:600;border:none;border-radius:6px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
 .adj-form-save{background:#059669;color:#fff}.adj-form-save:hover{background:#047857}
-.adj-form-save.deduction{background:#DC2626}.adj-form-save.deduction:hover{background:#B91C1C}
 .adj-form-cancel{background:#fff;color:#666;border:1px solid #ddd}
-
-/* Totals */
-.totals-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-.total-card{background:#fafaf7;border:1px solid #e0dfd8;border-radius:8px;padding:12px;text-align:center}
-.total-card .tc-label{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.3px;font-weight:600}
-.total-card .tc-value{font-size:20px;font-weight:700;margin-top:4px}
-.total-card.full{grid-column:1/-1}
-.total-card.highlight{background:#059669;border-color:#059669}
-.total-card.highlight .tc-label{color:rgba(255,255,255,.7)}
 .total-card.highlight .tc-value{color:#fff}
 
 /* Payment bar */
-.pay-bar{margin-top:8px}
-.pay-bar-label{display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:4px}
-.pay-bar-track{width:100%;height:8px;background:#eee;border-radius:4px;overflow:hidden}
-.pay-bar-fill{height:100%;border-radius:4px;transition:width .3s}
 
 /* Finalize */
 .finalize-section{margin-top:0}
@@ -718,9 +700,7 @@ function renderDetail(){
 
   var key=resKey(r),nights=nightCount(r.checkIn,r.checkOut);
   var pax=(Number(r.adults)||0)+(Number(r.children48)||0)+(Number(r.children03)||0);
-  var paid=getTotalPaid(key),adjTotals=getAdjTotals(key);
-  var invoiceTotal=Number(r.invoiceTotal)||0;
-  var adjustedTotal=invoiceTotal+adjTotals.charges-adjTotals.deductions;
+  var gerCount=Array.isArray(r.gers)?r.gers.length:0;
   var st=getBookingStatus(r),tsData=loadTripStatus()[key]||null;
 
   var statusLabel='',statusClass='';
@@ -730,30 +710,31 @@ function renderDetail(){
   else if(st==='finalized'){statusLabel='Finalized';statusClass='status-finalized'}
   else if(st==='cancelled'){statusLabel='Cancelled';statusClass='status-cancelled'}
 
-  // Header
+  // Header — no financial info, just people & gers
   var h='<div class="rp-company"><div class="dot" style="background:'+(r.color||'#ccc')+'"></div>'+esc(r.company);
   h+=' <span class="status-badge '+statusClass+'" style="font-size:10px;margin-left:6px">'+statusLabel+'</span></div>';
   h+='<div class="rp-meta">';
   h+='<span><i class="ti ti-calendar-event"></i>'+fmtDate(r.checkIn)+' → '+fmtDate(r.checkOut)+'</span>';
   h+='<span><i class="ti ti-moon"></i>'+nights+' nights</span>';
   h+='<span><i class="ti ti-users"></i>'+pax+' guests</span>';
+  if(gerCount)h+='<span><i class="ti ti-home"></i>'+gerCount+' gers</span>';
   if(r.guide)h+='<span><i class="ti ti-user-star"></i>'+esc(r.guide)+'</span>';
   if(r.tripCode)h+='<span><i class="ti ti-hash"></i>'+esc(r.tripCode)+'</span>';
   h+='</div>';
   h+='<div class="rp-stats">';
-  h+='<div class="rp-stat"><div class="rs-label">Invoice</div><div class="rs-value">'+fmt(invoiceTotal)+'</div></div>';
-  h+='<div class="rp-stat"><div class="rs-label">Paid</div><div class="rs-value green">'+fmt(paid)+'</div></div>';
-  h+='<div class="rp-stat"><div class="rs-label">Adjusted</div><div class="rs-value emerald">'+fmt(adjustedTotal)+'</div></div>';
-  var balance=adjustedTotal-paid;
-  h+='<div class="rp-stat"><div class="rs-label">Balance</div><div class="rs-value '+(balance>0?'orange':balance<0?'red':'green')+'">'+fmt(balance)+'</div></div>';
+  h+='<div class="rp-stat"><div class="rs-label">Guests</div><div class="rs-value">'+pax+'</div></div>';
+  h+='<div class="rp-stat"><div class="rs-label">Nights</div><div class="rs-value">'+nights+'</div></div>';
+  h+='<div class="rp-stat"><div class="rs-label">Gers</div><div class="rs-value emerald">'+gerCount+'</div></div>';
+  var adjArr=loadAdjustments()[key]||[];
+  h+='<div class="rp-stat"><div class="rs-label">Extra Items</div><div class="rs-value '+(adjArr.length>0?'orange':'')+'">'+adjArr.length+'</div></div>';
   h+='</div>';
   document.getElementById('rpHeader').innerHTML=h;
 
   // Body
   var body='';
 
-  // Trip Summary
-  body+='<div class="rp-section"><div class="rp-section-title"><i class="ti ti-clipboard-list"></i> Trip Summary</div>';
+  // Trip Summary — no financial info
+  body+='<div class="rp-section"><div class="rp-section-title"><i class="ti ti-clipboard-list"></i> Trip Details</div>';
   body+='<div class="trip-line"><span class="tl-label">Company</span><span class="tl-value">'+esc(r.company)+'</span></div>';
   body+='<div class="trip-line"><span class="tl-label">Check-in</span><span class="tl-value">'+fmtDate(r.checkIn)+'</span></div>';
   body+='<div class="trip-line"><span class="tl-label">Check-out</span><span class="tl-value">'+fmtDate(r.checkOut)+'</span></div>';
@@ -761,75 +742,71 @@ function renderDetail(){
   body+='<div class="trip-line"><span class="tl-label">Adults</span><span class="tl-value">'+(r.adults||0)+'</span></div>';
   if(r.children48)body+='<div class="trip-line"><span class="tl-label">Children (4-8)</span><span class="tl-value">'+r.children48+'</span></div>';
   if(r.children03)body+='<div class="trip-line"><span class="tl-label">Children (0-3)</span><span class="tl-value">'+r.children03+'</span></div>';
+  body+='<div class="trip-line"><span class="tl-label">Gers</span><span class="tl-value">'+gerCount+'</span></div>';
+  if(r.gers&&r.gers.length>0){
+    var gerNums=r.gers.map(function(g){return '#'+g.n}).join(', ');
+    body+='<div class="trip-line"><span class="tl-label">Ger Numbers</span><span class="tl-value">'+esc(gerNums)+'</span></div>';
+  }
   if(r.guide)body+='<div class="trip-line"><span class="tl-label">Guide</span><span class="tl-value">'+esc(r.guide)+'</span></div>';
   if(r.tripCode)body+='<div class="trip-line"><span class="tl-label">Trip Code</span><span class="tl-value">'+esc(r.tripCode)+'</span></div>';
-  body+='<div class="trip-line"><span class="tl-label">Original Invoice</span><span class="tl-value" style="font-size:15px;color:#059669">'+fmt(invoiceTotal)+'</span></div>';
-  var pctPaid=adjustedTotal>0?Math.min(100,Math.round(paid/adjustedTotal*100)):0;
-  var barColor=pctPaid>=100?'#15803D':pctPaid>=50?'#B45309':'#DC2626';
-  body+='<div class="pay-bar" style="margin-top:10px"><div class="pay-bar-label"><span>Paid: '+fmt(paid)+'</span><span>'+pctPaid+'%</span></div>';
-  body+='<div class="pay-bar-track"><div class="pay-bar-fill" style="width:'+pctPaid+'%;background:'+barColor+'"></div></div></div>';
   if(r.notes)body+='<div style="margin-top:10px;font-size:12px;color:#888;background:#fafaf7;padding:8px 10px;border-radius:6px;border:1px solid #eee"><i class="ti ti-note" style="margin-right:4px"></i>'+esc(r.notes)+'</div>';
   body+='</div>';
 
-  // Adjustments
-  body+='<div class="rp-section"><div class="rp-section-title"><i class="ti ti-adjustments-horizontal"></i> Camp Adjustments</div>';
-  var adjArr=loadAdjustments()[key]||[];
+  // Extra Service Items (replaces old adjustments)
+  body+='<div class="rp-section"><div class="rp-section-title"><i class="ti ti-list-details"></i> Extra Service Items</div>';
   if(adjArr.length>0){
-    body+='<table class="adj-table"><thead><tr><th>Description</th><th>Type</th><th style="text-align:right">Amount</th><th></th></tr></thead><tbody>';
+    body+='<table class="adj-table"><thead><tr><th>Service</th><th style="text-align:right">Unit Price</th><th style="text-align:center">Qty</th><th style="text-align:right">Total</th><th></th></tr></thead><tbody>';
     for(var i=0;i<adjArr.length;i++){
-      var a=adjArr[i],tc=a.type==='charge'?'adj-charge':'adj-deduction',ac=a.type==='charge'?'charge':'deduction',sign=a.type==='charge'?'+':'-';
+      var a=adjArr[i];
+      var qty=Number(a.qty)||1;
+      var unitPrice=Number(a.unitPrice)||Number(a.amount)||0;
+      var lineTotal=unitPrice*qty;
       body+='<tr><td>'+esc(a.description)+'<div style="font-size:10px;color:#bbb;margin-top:2px">by '+esc(a.addedBy)+' · '+esc(a.addedAt?(a.addedAt).slice(0,10):'')+'</div></td>';
-      body+='<td><span class="adj-type '+tc+'">'+esc(a.type)+'</span></td>';
-      body+='<td class="adj-amount '+ac+'">'+sign+fmt(a.amount)+'</td>';
+      body+='<td style="text-align:right;font-size:12px;color:#666">'+fmt(unitPrice)+'</td>';
+      body+='<td style="text-align:center;font-size:12px;color:#059669;font-weight:700">x'+qty+'</td>';
+      body+='<td class="adj-amount charge">'+fmt(lineTotal)+'</td>';
       body+='<td><button class="adj-delete" onclick="window.deleteAdj(\''+escAttr(key)+'\',\''+esc(a.id)+'\')"><i class="ti ti-trash"></i></button></td></tr>';
     }
     body+='</tbody></table>';
-  } else {body+='<div class="adj-empty">No adjustments yet. Add charges or deductions below.</div>'}
+    // Items summary
+    var totalExtra=0;for(var j=0;j<adjArr.length;j++){var aq=Number(adjArr[j].qty)||1;totalExtra+=(Number(adjArr[j].unitPrice)||Number(adjArr[j].amount)||0)*aq}
+    body+='<div style="display:flex;justify-content:space-between;padding:10px 8px 0;border-top:2px solid #eee;margin-top:6px;font-size:13px;font-weight:700">';
+    body+='<span>Total Extra Services ('+adjArr.length+' items)</span><span style="color:#059669">'+fmt(totalExtra)+'</span></div>';
+  } else {body+='<div class="adj-empty">No extra service items yet. Add from the menu below.</div>'}
 
-  body+='<div class="adj-actions">';
-  body+='<button class="adj-btn adj-btn-charge" onclick="window.showAdjForm(\'charge\')"><i class="ti ti-plus"></i> Add Charge</button>';
-  body+='<button class="adj-btn adj-btn-deduct" onclick="window.showAdjForm(\'deduction\')"><i class="ti ti-minus"></i> Add Deduction</button></div>';
+  // Add service button
+  body+='<div class="adj-actions" style="margin-top:12px">';
+  body+='<button class="adj-btn adj-btn-charge" onclick="window.showAdjForm(\'charge\')"><i class="ti ti-plus"></i> Add Service Item</button></div>';
 
-  // Adj form
+  // Service item form — menu-based
   body+='<div class="adj-form" id="adjForm">';
-  body+='<div class="adj-form-title" id="adjFormTitle"><i class="ti ti-plus-circle"></i> <span id="adjFormTitleText">Add Charge</span></div>';
-  body+='<label>Predefined Service</label>';
+  body+='<div class="adj-form-title charge"><i class="ti ti-list-check"></i> <span>Add Service from Menu</span></div>';
+  body+='<label>Select Service</label>';
   body+='<select id="adjService" onchange="window.onServiceChange()">';
-  body+='<option value="">-- Custom item --</option>';
+  body+='<option value="">-- Choose a service --</option>';
   body+='<option value="horse_riding|Horse riding|80000">Horse riding — 80,000₮</option>';
   body+='<option value="camel_riding|Camel riding|60000">Camel riding — 60,000₮</option>';
   body+='<option value="archery|Archery|30000">Archery — 30,000₮</option>';
   body+='<option value="laundry|Laundry service|15000">Laundry service — 15,000₮</option>';
   body+='<option value="minibar|Minibar|0">Minibar — enter amount</option>';
-  body+='<option value="extra_breakfast|Extra breakfast|12000">Extra breakfast — 12,000₮</option>';
-  body+='<option value="extra_lunch|Extra lunch|29000">Extra lunch — 29,000₮</option>';
-  body+='<option value="extra_dinner|Extra dinner|24000">Extra dinner — 24,000₮</option>';
+  body+='<option value="extra_breakfast|Extra breakfast|12000">Extra breakfast — 12,000₮/pax</option>';
+  body+='<option value="extra_lunch|Extra lunch|29000">Extra lunch — 29,000₮/pax</option>';
+  body+='<option value="extra_dinner|Extra dinner|24000">Extra dinner — 24,000₮/pax</option>';
   body+='<option value="guide_tip|Guide tip|0">Guide tip — enter amount</option>';
   body+='<option value="transfer|Airport/city transfer|150000">Airport/city transfer — 150,000₮</option>';
   body+='<option value="medical|Medical assistance|0">Medical assistance — enter amount</option>';
   body+='<option value="equipment|Equipment rental|0">Equipment rental — enter amount</option>';
+  body+='<option value="custom|custom|0">✎ Other / Custom item...</option>';
   body+='</select>';
-  body+='<label>Description</label><input type="text" id="adjDesc" placeholder="Item description">';
-  body+='<label>Amount (₮)</label><input type="number" id="adjAmount" placeholder="0" min="0">';
+  body+='<div id="adjCustomFields" style="display:none"><label>Description</label><input type="text" id="adjDesc" placeholder="Service description"></div>';
+  body+='<div style="display:flex;gap:8px"><div style="flex:1"><label>Unit Price (₮)</label><input type="number" id="adjUnitPrice" placeholder="0" min="0"></div>';
+  body+='<div style="max-width:80px"><label>Quantity</label><input type="number" id="adjQty" value="1" min="1"></div></div>';
+  body+='<div style="margin-top:4px;font-size:12px;color:#059669;font-weight:700" id="adjTotalPreview"></div>';
   body+='<label>Note (optional)</label><textarea id="adjNote" placeholder="Optional note..." rows="2"></textarea>';
   body+='<div class="adj-form-actions">';
-  body+='<button class="adj-form-btn adj-form-save" id="adjFormSave" onclick="window.saveAdj()"><i class="ti ti-check"></i> Save</button>';
+  body+='<button class="adj-form-btn adj-form-save" onclick="window.saveAdj()"><i class="ti ti-check"></i> Add Item</button>';
   body+='<button class="adj-form-btn adj-form-cancel" onclick="window.hideAdjForm()"><i class="ti ti-x"></i> Cancel</button></div></div>';
   body+='</div>';
-
-  // Totals
-  body+='<div class="rp-section"><div class="rp-section-title"><i class="ti ti-calculator"></i> Trip Totals</div>';
-  body+='<div class="totals-grid">';
-  body+='<div class="total-card"><div class="tc-label">Original Booking</div><div class="tc-value">'+fmt(invoiceTotal)+'</div></div>';
-  body+='<div class="total-card"><div class="tc-label">Total Paid</div><div class="tc-value" style="color:#15803D">'+fmt(paid)+'</div></div>';
-  body+='<div class="total-card"><div class="tc-label">Charges</div><div class="tc-value" style="color:#15803D">+'+fmt(adjTotals.charges)+'</div></div>';
-  body+='<div class="total-card"><div class="tc-label">Deductions</div><div class="tc-value" style="color:#DC2626">-'+fmt(adjTotals.deductions)+'</div></div>';
-  body+='<div class="total-card full highlight"><div class="tc-label">Adjusted Total</div><div class="tc-value">'+fmt(adjustedTotal)+'</div></div>';
-  body+='</div>';
-  var balAmt=adjustedTotal-paid;
-  body+='<div style="display:flex;justify-content:space-between;font-size:13px;margin-top:4px">';
-  body+='<span style="color:#888">Balance remaining</span>';
-  body+='<span style="font-weight:700;color:'+(balAmt>0?'#B45309':balAmt<0?'#DC2626':'#15803D')+'">'+fmt(balAmt)+'</span></div></div>';
 
   // Finalize
   body+='<div class="rp-section finalize-section"><div class="rp-section-title"><i class="ti ti-circle-check"></i> Trip Finalization</div>';
@@ -848,43 +825,94 @@ function renderDetail(){
   body+='</div>';
 
   document.getElementById('rpBody').innerHTML=body;
+
+  // Wire up live total preview
+  var upEl=document.getElementById('adjUnitPrice'),qEl=document.getElementById('adjQty');
+  if(upEl&&qEl){
+    function updatePreview(){
+      var up=parseFloat(upEl.value)||0,q=parseInt(qEl.value)||1;
+      var prev=document.getElementById('adjTotalPreview');
+      if(prev)prev.textContent=up>0?'Total: '+fmt(up*q):'';
+    }
+    upEl.addEventListener('input',updatePreview);
+    qEl.addEventListener('input',updatePreview);
+  }
 }
 
-/* ═══ ADJUSTMENT FORM ═══ */
-var adjFormType='charge';
-window.showAdjForm=function(type){
-  adjFormType=type;var form=document.getElementById('adjForm');if(!form)return;form.classList.add('show');
-  var title=document.getElementById('adjFormTitle'),titleText=document.getElementById('adjFormTitleText'),saveBtn=document.getElementById('adjFormSave');
-  if(type==='charge'){title.className='adj-form-title charge';titleText.textContent='Add Charge';title.querySelector('i').className='ti ti-plus-circle';saveBtn.className='adj-form-btn adj-form-save'}
-  else{title.className='adj-form-title deduction';titleText.textContent='Add Deduction';title.querySelector('i').className='ti ti-minus-circle';saveBtn.className='adj-form-btn adj-form-save deduction'}
+/* ═══ SERVICE ITEM FORM ═══ */
+window.showAdjForm=function(){
+  var form=document.getElementById('adjForm');if(!form)return;form.classList.add('show');
   var s=document.getElementById('adjService');if(s)s.value='';
+  var cf=document.getElementById('adjCustomFields');if(cf)cf.style.display='none';
   var d=document.getElementById('adjDesc');if(d)d.value='';
-  var a=document.getElementById('adjAmount');if(a)a.value='';
+  var up=document.getElementById('adjUnitPrice');if(up)up.value='';
+  var q=document.getElementById('adjQty');if(q)q.value='1';
   var n=document.getElementById('adjNote');if(n)n.value='';
+  var tp=document.getElementById('adjTotalPreview');if(tp)tp.textContent='';
 };
 window.hideAdjForm=function(){var f=document.getElementById('adjForm');if(f)f.classList.remove('show')};
 window.onServiceChange=function(){
   var s=document.getElementById('adjService');if(!s||!s.value)return;
   var parts=s.value.split('|');
-  var d=document.getElementById('adjDesc'),a=document.getElementById('adjAmount');
-  if(d)d.value=parts[1]||'';
-  if(a){var v=parseInt(parts[2])||0;a.value=v>0?v:'';if(v===0)a.focus()}
+  var cf=document.getElementById('adjCustomFields');
+  var desc=document.getElementById('adjDesc');
+  var up=document.getElementById('adjUnitPrice');
+  if(parts[1]==='custom'){
+    // Custom item — show description field, clear price
+    if(cf)cf.style.display='block';
+    if(desc)desc.value='';
+    if(up){up.value='';up.focus()}
+    return;
+  }
+  // Menu item — hide description field, auto-fill
+  if(cf)cf.style.display='none';
+  if(desc)desc.value=parts[1]||'';
+  var price=parseInt(parts[2])||0;
+  if(up){up.value=price>0?price:'';if(price===0)up.focus()}
+  // Trigger preview update
+  var q=document.getElementById('adjQty');
+  var prev=document.getElementById('adjTotalPreview');
+  if(prev&&price>0){var qty=parseInt(q?q.value:'1')||1;prev.textContent='Total: '+fmt(price*qty)}
 };
 window.saveAdj=function(){
   if(!selectedKey||!currentUser)return;
-  var desc=(document.getElementById('adjDesc').value||'').trim();
-  var amt=parseFloat(document.getElementById('adjAmount').value||'0');
-  var note=(document.getElementById('adjNote').value||'').trim();
   var svc=document.getElementById('adjService');
+  var descEl=document.getElementById('adjDesc');
+  var upEl=document.getElementById('adjUnitPrice');
+  var qEl=document.getElementById('adjQty');
+  var noteEl=document.getElementById('adjNote');
+
+  var svcVal=svc?svc.value:'';
+  if(!svcVal){alert('Please select a service from the menu.');return}
+
+  var parts=svcVal.split('|');
+  var isCustom=parts[1]==='custom';
+  var desc=isCustom?(descEl?descEl.value:'').trim():(parts[1]||'');
+  var unitPrice=parseFloat(upEl?upEl.value:'0');
+  var qty=parseInt(qEl?qEl.value:'1')||1;
+  var note=(noteEl?noteEl.value:'').trim();
+  var category=parts[0]||'custom';
+
   if(!desc){alert('Please enter a description.');return}
-  if(!amt||amt<=0){alert('Please enter a valid amount.');return}
-  var category='custom';if(svc&&svc.value)category=svc.value.split('|')[0]||'custom';
+  if(!unitPrice||unitPrice<=0){alert('Please enter a valid unit price.');return}
+
   var adj=loadAdjustments();if(!adj[selectedKey])adj[selectedKey]=[];
-  adj[selectedKey].push({id:'ADJ-'+Date.now(),type:adjFormType,description:desc,amount:amt,category:category,addedBy:currentUser.username,addedAt:new Date().toISOString()});
+  adj[selectedKey].push({
+    id:'ADJ-'+Date.now(),
+    type:'charge',
+    description:desc,
+    amount:unitPrice*qty,
+    unitPrice:unitPrice,
+    qty:qty,
+    category:category,
+    note:note,
+    addedBy:currentUser.username,
+    addedAt:new Date().toISOString()
+  });
   saveAdjustments(adj);window.hideAdjForm();renderDetail();
 };
 window.deleteAdj=function(key,id){
-  if(!confirm('Delete this adjustment?'))return;
+  if(!confirm('Delete this item?'))return;
   var adj=loadAdjustments();if(!adj[key])return;
   adj[key]=adj[key].filter(function(a){return a.id!==id});
   saveAdjustments(adj);renderDetail();
