@@ -554,6 +554,10 @@ function savePayments(d){localStorage.setItem('kz_payments',JSON.stringify(d))}
 function getPaymentsFor(r){var a=loadPayments(),k=resKey(r);return(a[k]&&a[k].payments)?a[k].payments:[]}
 function totalPaidFor(r){var p=getPaymentsFor(r),s=0;for(var i=0;i<p.length;i++)s+=Number(p[i].amount)||0;return s}
 
+/* ── Invoice log ── */
+function loadInvoiceLog(){try{return JSON.parse(localStorage.getItem('kz_invoice_log'))||{}}catch(e){return{}}}
+function saveInvoiceLog(d){localStorage.setItem('kz_invoice_log',JSON.stringify(d))}
+
 /* ── Credit transfers ── */
 var CREDITS_KEY='kz_credit_transfers';
 function loadCredits(){try{var r=localStorage.getItem(CREDITS_KEY);return r?JSON.parse(r):[];}catch(e){return[];}}
@@ -577,6 +581,25 @@ window.financeFinalize=function(key){
     localStorage.setItem('kz_trip_status',JSON.stringify(statuses));
     renderCalRight();
   }catch(e){alert('Error: '+e.message)}
+}
+
+window.logInvoice=function(key,type){
+  var typeLabel=type==='deposit'?'deposit':'final';
+  var note=prompt('Log '+typeLabel+' invoice sent.\n\nAdd a note (optional):','');
+  if(note===null)return;
+  var sess=JSON.parse(localStorage.getItem('kz_finance_session')||'{}');
+  var log=loadInvoiceLog();
+  if(!log[key])log[key]=[];
+  log[key].push({
+    id:'INV-'+Date.now(),
+    type:type,
+    sentBy:sess.username||'finance',
+    portal:'finance',
+    sentAt:new Date().toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}),
+    note:(note||'').trim()
+  });
+  saveInvoiceLog(log);
+  renderCalRight();
 }
 
 function calcInvoice(r){
@@ -853,6 +876,35 @@ function renderCalRight(){
       html+='</div>';
     }
   }
+
+  // Invoice log
+  var ikey=resKey(r);
+  var ilog=loadInvoiceLog()[ikey]||[];
+  html+='<div class="rp-section"><div class="rp-section-title"><i class="ti ti-mail-forward"></i> Invoice Log</div>';
+  if(ilog.length>0){
+    for(var il=ilog.length-1;il>=0;il--){
+      var ie=ilog[il];
+      var itColor=ie.type==='deposit'?'#534AB7':'#0F6E56';
+      var itLabel=ie.type==='deposit'?'Deposit Invoice':'Final Invoice';
+      var itIcon=ie.type==='deposit'?'ti-file-invoice':'ti-file-check';
+      html+='<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:11px">';
+      html+='<i class="ti '+itIcon+'" style="font-size:14px;color:'+itColor+';margin-top:1px;flex-shrink:0"></i>';
+      html+='<div><span style="font-weight:600;color:'+itColor+'">'+itLabel+'</span>';
+      html+=' <span style="color:#888">sent by '+esc(ie.sentBy)+' ('+esc(ie.portal)+')</span>';
+      html+='<div style="color:#aaa;font-size:10px">'+esc(ie.sentAt)+'</div>';
+      if(ie.note)html+='<div style="color:#666;font-style:italic;margin-top:2px">"'+esc(ie.note)+'"</div>';
+      html+='</div></div>';
+    }
+  } else {
+    html+='<div style="font-size:11px;color:#bbb;font-style:italic;padding:4px 0">No invoices sent yet</div>';
+  }
+  if(!b.cancelled){
+    html+='<div style="display:flex;gap:8px;margin-top:8px">';
+    html+='<button class="pay-btn" style="background:#534AB7;flex:1" onclick="logInvoice(\''+esc(ikey)+'\',\'deposit\')"><i class="ti ti-file-invoice"></i> Log Deposit Invoice</button>';
+    html+='<button class="pay-btn" style="background:#0F6E56;flex:1" onclick="logInvoice(\''+esc(ikey)+'\',\'final\')"><i class="ti ti-file-check"></i> Log Final Invoice</button>';
+    html+='</div>';
+  }
+  html+='</div>';
 
   // Invoice breakdown (show for all bookings)
   html+='<div class="rp-section"><div class="rp-section-title"><i class="ti ti-file-invoice"></i> Invoice Breakdown</div>';
