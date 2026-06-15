@@ -247,7 +247,7 @@ function loadCompanies(){
   }else{
     // Ensure all seed partners are present (merge missing ones)
     SEED_COMPANIES.forEach((sc,i)=>{
-      const found=companies.find(e=>e.company.toLowerCase()===sc.company.toLowerCase());
+      const found=companies.find(e=>(e.company||'').toLowerCase()===sc.company.toLowerCase());
       if(!found) companies.push({id:Date.now()+1000+i,...sc});
     });
   }

@@ -552,7 +552,7 @@ function seedCompaniesIfNeeded(){
     }else{
       // Ensure all seed partners are present (merge missing ones)
       SEED_COMPANIES.forEach((sc,i)=>{
-        const found=existing.find(e=>e.company.toLowerCase()===sc.company.toLowerCase());
+        const found=existing.find(e=>(e.company||'').toLowerCase()===sc.company.toLowerCase());
         if(!found) existing.push({id:Date.now()+1000+i,...sc});
       });
     }
@@ -568,6 +568,7 @@ function loadCompanyDropdown(){
   try{
     const companies=JSON.parse(localStorage.getItem('kz_companies')||'[]');
     companies.forEach(c=>{
+      if(!c.company) return; // skip entries without a name
       const opt=document.createElement('option');
       opt.value=String(c.id);
       // Show special rates indicator for partners with custom rates
