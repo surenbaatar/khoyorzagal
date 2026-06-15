@@ -567,6 +567,7 @@ function renderSidebar(){
 /* ═══ BOOKING LIST ═══ */
 function initData(){
   reservations=loadReservations();
+  mcSelectedDate=todayStr();
   renderMiniCal();renderSidebar();renderList();renderWalkins();
 }
 
