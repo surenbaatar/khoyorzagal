@@ -485,7 +485,6 @@ label.field-label{font-size:12px;color:#666;margin-bottom:4px;display:block;font
   </div>
 </div>
 
-<script src="seed-data.js"></script>
 <script>
 const GERS=[
   {n:1,beds:2,type:'ensuite',bf:true},{n:2,beds:2,type:'ensuite',bf:true},{n:3,beds:2,type:'ensuite',bf:true},{n:4,beds:2,type:'ensuite',bf:true},
@@ -625,9 +624,6 @@ function getActiveRates(){
 function getStandardRate(R,totalGuests){
   return totalGuests>=FIT_THRESHOLD?R.bed.standard_group:R.bed.standard_fit;
 }
-
-// Load real booking data from seed-data.js (populates localStorage if empty)
-if(typeof loadSeedData==='function') loadSeedData();
 
 const EXISTING=[];
 
