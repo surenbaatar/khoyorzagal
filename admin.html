@@ -147,6 +147,7 @@ table.admin-table tr:hover{background:#fafaf7}
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 // ─── AUTH ───
 var USERS_KEY='kz_users';
@@ -402,11 +403,18 @@ window.clearAllDataAdmin=function(){
 
 // ─── BACKUP / RESTORE ───
 function renderBackup(mc){
-  var html='<h2><i class="ti ti-download" style="color:#B45309"></i> Backup & Restore</h2><div class="subtitle">Export or import all system data as a JSON file</div>';
+  var html='<h2><i class="ti ti-download" style="color:#B45309"></i> Backup & Restore</h2><div class="subtitle">Export or import system data</div>';
 
-  html+='<div class="card"><h3><i class="ti ti-file-download"></i> Export Backup</h3>';
+  // Excel auto-backup card
+  html+='<div class="card" style="border-color:#059669"><h3><i class="ti ti-table" style="color:#059669"></i> Excel Auto-Backup</h3>';
+  html+='<p style="font-size:13px;color:#666;margin-bottom:8px">An Excel file (.xlsx) is automatically downloaded every time booking data changes. Sheets include: Reservations, Payments, Cancellations, Invoice Log, Companies.</p>';
+  html+='<div id="autoBackupStatus" style="font-size:12px;color:#888;margin-bottom:12px"></div>';
+  html+='<button class="btn btn-success" onclick="exportExcelBackup(false)" style="font-size:13px"><i class="ti ti-file-spreadsheet"></i> Download Excel Now</button></div>';
+
+  // JSON backup
+  html+='<div class="card"><h3><i class="ti ti-file-download"></i> JSON Backup</h3>';
   html+='<p style="font-size:13px;color:#666;margin-bottom:12px">Download all data (reservations, payments, companies, users, credit transfers) as a single JSON file.</p>';
-  html+='<button class="btn btn-primary" onclick="exportBackup()"><i class="ti ti-download"></i> Download Backup</button></div>';
+  html+='<button class="btn btn-primary" onclick="exportBackup()"><i class="ti ti-download"></i> Download JSON Backup</button></div>';
 
   html+='<div class="card"><h3><i class="ti ti-file-upload"></i> Restore from Backup</h3>';
   html+='<p style="font-size:13px;color:#666;margin-bottom:12px">Upload a previously exported JSON backup file. <strong style="color:#DC2626">This will overwrite all current data.</strong></p>';
@@ -419,6 +427,7 @@ function renderBackup(mc){
   html+='2. Send the JSON file to device B (email, USB, etc.)<br>';
   html+='3. Import the backup on device B</p></div>';
   mc.innerHTML=html;
+  updateBackupStatus();
 }
 
 window.exportBackup=function(){
@@ -463,6 +472,147 @@ window.importBackup=function(){
   };
   reader.readAsText(input.files[0]);
 };
+
+// ─── EXCEL AUTO-BACKUP ───
+var _backupTimer=null;
+var _lastDataHash='';
+
+function dataHash(){
+  var keys=['kz_reservations','kz_payments','kz_cancellations','kz_companies','kz_credit_transfers','kz_invoice_log'];
+  var s='';for(var i=0;i<keys.length;i++)s+=localStorage.getItem(keys[i])||'';
+  // simple fast hash
+  var h=0;for(var j=0;j<s.length;j++){h=((h<<5)-h)+s.charCodeAt(j);h|=0;}
+  return String(h);
+}
+
+function exportExcelBackup(silent){
+  if(typeof XLSX==='undefined'){if(!silent)toast('SheetJS library not loaded');return;}
+  try{
+    var wb=XLSX.utils.book_new();
+
+    // Reservations sheet
+    var res=JSON.parse(localStorage.getItem('kz_reservations')||'[]');
+    var resRows=res.map(function(r){return{
+      ID:r.id,Company:r.company||'','Trip Code':r.tripCode||'',
+      'Check-in':r.checkIn||'','Check-out':r.checkOut||'',
+      Adults:r.adults||0,'Children 0-3':r.children03||0,'Children 4-8':r.children48||0,
+      Guests:r.guests||(r.adults||0)+(r.children03||0)+(r.children48||0),
+      'Ger Numbers':(r.gerNums||[]).join(', '),'Deluxe Gers':r.dlxGers||0,'Standard Gers':r.stdGers||0,
+      Singles:r.singles||0,'Guides M':r.guidesM||0,'Guides F':r.guidesF||0,
+      'Drivers M':r.driversM||0,'Drivers F':r.driversF||0,'Staff Gers':r.staffGers||0,
+      Total:r.total||0,Guide:r.guide||'',Contact:r.contact||'',
+      Nationality:r.nationality||'',Comments:r.comments||'',
+      'Reserved At':r.reservedAt||'',Cancelled:r.cancelled?'Yes':'No'
+    }});
+    if(resRows.length===0)resRows=[{ID:'(no bookings)'}];
+    var ws1=XLSX.utils.json_to_sheet(resRows);
+    XLSX.utils.book_append_sheet(wb,ws1,'Reservations');
+
+    // Payments sheet
+    var pay=JSON.parse(localStorage.getItem('kz_payments')||'{}');
+    var payRows=[];
+    Object.keys(pay).forEach(function(k){
+      var arr=pay[k];if(!Array.isArray(arr))return;
+      arr.forEach(function(p){
+        payRows.push({Booking:k,Amount:p.amount||0,Type:p.type||'',Date:p.date||'',Method:p.method||'',
+          Note:p.note||'','Recorded By':p.recordedBy||'',Portal:p.portal||''});
+      });
+    });
+    if(payRows.length===0)payRows=[{Booking:'(no payments)'}];
+    var ws2=XLSX.utils.json_to_sheet(payRows);
+    XLSX.utils.book_append_sheet(wb,ws2,'Payments');
+
+    // Cancellations sheet
+    var canc=JSON.parse(localStorage.getItem('kz_cancellations')||'[]');
+    var cancRows=canc.map(function(c){return{
+      Company:c.company||'','Check-in':c.checkIn||'','Check-out':c.checkOut||'',
+      Guests:c.guests||0,Total:c.total||0,Reason:c.reason||'',
+      'Cancelled At':c.cancelledAt||'','Cancelled By':c.cancelledBy||''
+    }});
+    if(cancRows.length===0)cancRows=[{Company:'(no cancellations)'}];
+    var ws3=XLSX.utils.json_to_sheet(cancRows);
+    XLSX.utils.book_append_sheet(wb,ws3,'Cancellations');
+
+    // Invoice Log sheet
+    var ilog=JSON.parse(localStorage.getItem('kz_invoice_log')||'{}');
+    var iRows=[];
+    Object.keys(ilog).forEach(function(k){
+      var arr=ilog[k];if(!Array.isArray(arr))return;
+      arr.forEach(function(e){
+        iRows.push({Booking:k,Type:e.type||'','Sent By':e.sentBy||'',Portal:e.portal||'',
+          'Sent At':e.sentAt||'',Note:e.note||''});
+      });
+    });
+    if(iRows.length===0)iRows=[{Booking:'(no invoices)'}];
+    var ws4=XLSX.utils.json_to_sheet(iRows);
+    XLSX.utils.book_append_sheet(wb,ws4,'Invoice Log');
+
+    // Companies sheet
+    var comp=JSON.parse(localStorage.getItem('kz_companies')||'[]');
+    var compRows=comp.map(function(c){return{
+      ID:c.id,Company:c.company||'',Contact:c.contact||'',Email:c.email||'',Phone:c.phone||'',
+      'Bed Ensuite':(c.bed&&c.bed.ensuite)||'','Bed Std FIT':(c.bed&&c.bed.standard_fit)||'',
+      'Bed Std Group':(c.bed&&c.bed.standard_group)||'','Supplement Ensuite':(c.bed&&c.bed.supplement_ensuite)||'',
+      'Supplement Std':(c.bed&&c.bed.supplement_standard)||'',
+      Breakfast:(c.meal&&c.meal.breakfast)||'',Lunch:(c.meal&&c.meal.lunch)||'',
+      Dinner:(c.meal&&c.meal.dinner)||''
+    }});
+    if(compRows.length===0)compRows=[{ID:'(no companies)'}];
+    var ws5=XLSX.utils.json_to_sheet(compRows);
+    XLSX.utils.book_append_sheet(wb,ws5,'Companies');
+
+    // Download
+    var fname='KZ_Backup_'+new Date().toISOString().slice(0,10)+'.xlsx';
+    XLSX.writeFile(wb,fname);
+    localStorage.setItem('kz_last_excel_backup',new Date().toISOString());
+    _lastDataHash=dataHash();
+    if(!silent)toast('Excel backup downloaded: '+fname);
+  }catch(err){
+    if(!silent)toast('Excel export error: '+err.message);
+    console.error('Excel export error:',err);
+  }
+}
+
+// Auto-backup: check every 30 seconds if data changed
+function startAutoBackup(){
+  _lastDataHash=dataHash();
+  _backupTimer=setInterval(function(){
+    var newHash=dataHash();
+    if(newHash!==_lastDataHash){
+      _lastDataHash=newHash;
+      exportExcelBackup(true);
+      updateBackupStatus();
+    }
+  },30000);
+}
+
+function updateBackupStatus(){
+  var el=document.getElementById('autoBackupStatus');
+  if(el){
+    var last=localStorage.getItem('kz_last_excel_backup');
+    el.textContent=last?'Last auto-backup: '+new Date(last).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'No auto-backups yet';
+  }
+}
+
+// Listen for changes from other tabs/portals
+window.addEventListener('storage',function(e){
+  if(e.key&&e.key.startsWith('kz_')){
+    var newHash=dataHash();
+    if(newHash!==_lastDataHash){
+      _lastDataHash=newHash;
+      exportExcelBackup(true);
+      updateBackupStatus();
+    }
+  }
+});
+
+// Start auto-backup when logged in
+var _origShowApp=window.showApp;
+if(typeof _origShowApp==='undefined'){
+  // hook into the login flow
+  var _origDoLogin=window.doAdminLogin;
+}
+startAutoBackup();
 </script>
 </body>
 </html>
