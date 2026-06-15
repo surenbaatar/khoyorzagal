@@ -34,6 +34,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .top-bar h1{font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px}
 .top-bar .camp-badge{font-size:11px;padding:3px 10px;border-radius:20px;background:#EEEDFE;color:#534AB7;font-weight:500}
 .top-bar .date-display{font-size:13px;color:#666}
+.date-nav{display:flex;align-items:center;gap:4px}
+.date-nav button{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#666;cursor:pointer;font-size:14px;transition:all .15s;padding:0}
+.date-nav button:hover{background:#EEEDFE;border-color:#534AB7;color:#534AB7}
+.date-nav .date-today{font-size:11px;padding:3px 8px;border-radius:5px;border:1px solid #ddd;background:#fff;color:#888;cursor:pointer;font-weight:500;transition:all .15s;width:auto;height:auto}
+.date-nav .date-today:hover{background:#EEEDFE;border-color:#534AB7;color:#534AB7}
 .bk-wrap{display:grid;grid-template-columns:300px 1fr 300px;height:calc(100vh - 48px);gap:1px;background:#e0dfd8}
 .bk-panel{background:#fff;padding:16px 18px;overflow-y:auto}
 .bk-panel::-webkit-scrollbar{width:4px}
@@ -276,7 +281,12 @@ label.field-label{font-size:12px;color:#666;margin-bottom:4px;display:block;font
     <a href="calendar.html" style="display:flex;align-items:center;gap:5px;font-size:13px;color:#534AB7;text-decoration:none;font-weight:500;padding:5px 12px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer;transition:all .15s" onmouseover="this.style.background='#EEEDFE';this.style.borderColor='#534AB7'" onmouseout="this.style.background='#fff';this.style.borderColor='#ddd'"><i class="ti ti-calendar-event" style="font-size:14px"></i> Calendar</a>
     <a href="contacts.html" style="display:flex;align-items:center;gap:5px;font-size:13px;color:#534AB7;text-decoration:none;font-weight:500;padding:5px 12px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer;transition:all .15s" onmouseover="this.style.background='#EEEDFE';this.style.borderColor='#534AB7'" onmouseout="this.style.background='#fff';this.style.borderColor='#ddd'"><i class="ti ti-address-book" style="font-size:14px"></i> Contract</a>
     <button onclick="showCancelLog()" style="display:flex;align-items:center;gap:5px;font-size:13px;color:#999;font-weight:500;padding:5px 12px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer;transition:all .15s" onmouseover="this.style.background='#FEE2E2';this.style.borderColor='#fca5a5';this.style.color='#c53030'" onmouseout="this.style.background='#fff';this.style.borderColor='#ddd';this.style.color='#999'"><i class="ti ti-archive" style="font-size:14px"></i> Cancelled <span class="cancel-badge" id="cancelBadge">0</span></button>
-    <div class="date-display" id="dateDisplay"></div>
+    <div class="date-nav">
+      <button onclick="navDay(-1)" title="Previous day"><i class="ti ti-chevron-left"></i></button>
+      <div class="date-display" id="dateDisplay"></div>
+      <button onclick="navDay(1)" title="Next day"><i class="ti ti-chevron-right"></i></button>
+      <button class="date-today" onclick="navToday()" title="Go to today">Today</button>
+    </div>
     <button onclick="doBookingLogout()" style="display:flex;align-items:center;gap:4px;font-size:12px;color:#999;border:1px solid #ddd;background:#fff;padding:5px 10px;border-radius:6px;cursor:pointer;transition:all .15s" onmouseover="this.style.color='#DC2626';this.style.borderColor='#fca5a5';this.style.background='#FEE2E2'" onmouseout="this.style.color='#999';this.style.borderColor='#ddd';this.style.background='#fff'"><i class="ti ti-logout" style="font-size:13px"></i> Logout</button>
   </div>
 </div>
@@ -661,8 +671,7 @@ const EXISTING_COLORS=EXISTING.map(b=>b.color);
   if(changed) saveReservations();
 })();
 
-EXISTING.forEach(b=>b.gers.forEach(g=>occupied.add(g.n)));
-reservations.forEach(r=>{if(r.gerNums)r.gerNums.forEach(n=>occupied.add(n))});
+// occupied set is now populated dynamically inside buildGrid() based on viewDate
 
 // Guide/driver allocation: standard gers from 50 descending
 let staffAlloc=[];
@@ -670,7 +679,29 @@ const STAFF_GERS=GERS.filter(g=>g.type==='standard').sort((a,b)=>b.n-a.n); // de
 
 function fmt(v){return v.toLocaleString('en-US')+'₮'}
 
-document.getElementById('dateDisplay').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+// ─── Day navigation ───
+let viewDate=new Date();
+function fmtViewDate(d){return d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}
+function viewDateStr(){return viewDate.toISOString().slice(0,10)}
+function updateDateDisplay(){
+  document.getElementById('dateDisplay').textContent=fmtViewDate(viewDate);
+}
+function navDay(delta){
+  viewDate.setDate(viewDate.getDate()+delta);
+  updateDateDisplay();
+  renderGers();
+}
+function navToday(){
+  viewDate=new Date();
+  updateDateDisplay();
+  renderGers();
+}
+// Helper: check if a reservation is active on the view date
+function isActiveOnDate(r,dateStr){
+  if(!r.checkIn||!r.checkOut) return true; // no dates = always show
+  return r.checkIn<=dateStr && r.checkOut>dateStr;
+}
+updateDateDisplay();
 
 function getNights(){
   const ci=document.getElementById('checkIn').value, co=document.getElementById('checkOut').value;
@@ -742,7 +773,15 @@ function toggleAllMeals(on){
   });
 }
 
+function renderGers(){buildGrid()} // alias for day-nav calls
 function buildGrid(){
+  // Filter reservations active on the current view date
+  const vd=viewDateStr();
+  const activeReservations=reservations.filter(r=>isActiveOnDate(r,vd));
+  // Rebuild occupied set for current view date
+  occupied.clear();
+  EXISTING.forEach(b=>b.gers.forEach(g=>occupied.add(g.n)));
+  activeReservations.forEach(r=>{if(r.gerNums)r.gerNums.forEach(n=>occupied.add(n))});
   // Build set of gers in the staff pool (occupied or reserved)
   const staffOccupiedGers=new Set();
   const staffGerInfo={};
@@ -761,7 +800,7 @@ function buildGrid(){
     EXISTING.forEach(b=>{const bg=b.gers.find(x=>x.n===g.n);if(bg)existingBooking=b});
     // Check reserved bookings from localStorage
     let reservedBooking=null;
-    if(!existingBooking) reservations.forEach(r=>{if(r.gerNums&&r.gerNums.includes(g.n))reservedBooking=r});
+    if(!existingBooking) activeReservations.forEach(r=>{if(r.gerNums&&r.gerNums.includes(g.n))reservedBooking=r});
     // Check if this ger is used for guides/drivers
     const isStaffGer=staffOccupiedGers.has(g.n);
     if(existingBooking){
@@ -817,7 +856,7 @@ function buildGrid(){
     t.addEventListener('click',()=>showBookingDetail({type:'existing',data:b}));
     tags.appendChild(t);
   });
-  reservations.forEach(r=>{
+  activeReservations.forEach(r=>{
     const t=document.createElement('span');t.className='booking-tag';t.style.background=r.color;t.style.cursor='pointer';
     t.textContent=r.company+' · '+(r.gerNums?r.gerNums.length:0)+' gers · '+r.guests+' pax';
     t.addEventListener('click',()=>showBookingDetail({type:'reserved',data:r}));
