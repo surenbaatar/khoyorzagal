@@ -305,7 +305,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 <a class="fab" href="booking.html"><i class="ti ti-plus" style="font-size:16px"></i> New booking</a>
 
+<script src="seed-data.js"></script>
 <script>
+if(typeof loadSeedData==='function') loadSeedData();
 const GERS=[
   {n:1,beds:2,type:'ensuite'},{n:2,beds:2,type:'ensuite'},{n:3,beds:2,type:'ensuite'},{n:4,beds:2,type:'ensuite'},
   {n:5,beds:2,type:'ensuite',dbl:true},{n:6,beds:2,type:'ensuite'},{n:7,beds:3,type:'ensuite'},{n:8,beds:2,type:'ensuite'},

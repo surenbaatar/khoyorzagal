@@ -279,7 +279,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <button class="login-btn" onclick="window.doLogin()"><i class="ti ti-login"></i> Sign In</button>
     <div class="login-error" id="loginError">Invalid username or password</div>
     <div class="login-hint">Camp or admin credentials required</div>
-    <div class="login-back"><a href="index.html"><i class="ti ti-arrow-left"></i> Back to Portal</a></div>
+    <div class="login-back"></div>
   </div>
 </div>
 
@@ -292,7 +292,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     </div>
     <div class="top-bar-right">
       <div class="user-badge"><i class="ti ti-user"></i> <span id="userLabel">camp</span></div>
-      <a href="index.html" class="nav-link"><i class="ti ti-layout-grid"></i> Portal</a>
       <button class="logout-btn" onclick="window.doLogout()"><i class="ti ti-logout"></i> Logout</button>
     </div>
   </div>
@@ -383,9 +382,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   </div>
 </div>
 
+<script src="seed-data.js"></script>
 <script>
 (function(){
 'use strict';
+if(typeof loadSeedData==='function') loadSeedData();
 
 /* ═══ HELPERS ═══ */
 function esc(s){var d=document.createElement('div');d.appendChild(document.createTextNode(s||''));return d.innerHTML}

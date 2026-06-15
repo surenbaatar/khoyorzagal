@@ -264,7 +264,7 @@ label.field-label{font-size:12px;color:#666;margin-bottom:4px;display:block;font
     </div>
     <button class="login-btn" onclick="doBookingLogin()"><i class="ti ti-lock-open"></i> Sign In</button>
     <div class="login-error" id="loginError">Invalid username or password</div>
-    <div class="login-back"><a href="index.html"><i class="ti ti-arrow-left" style="font-size:11px"></i> Back to Portal</a></div>
+    <div class="login-back"></div>
   </div>
 </div>
 
@@ -485,6 +485,7 @@ label.field-label{font-size:12px;color:#666;margin-bottom:4px;display:block;font
   </div>
 </div>
 
+<script src="seed-data.js"></script>
 <script>
 const GERS=[
   {n:1,beds:2,type:'ensuite',bf:true},{n:2,beds:2,type:'ensuite',bf:true},{n:3,beds:2,type:'ensuite',bf:true},{n:4,beds:2,type:'ensuite',bf:true},
@@ -625,12 +626,10 @@ function getStandardRate(R,totalGuests){
   return totalGuests>=FIT_THRESHOLD?R.bed.standard_group:R.bed.standard_fit;
 }
 
-const EXISTING=[
-  {company:'Juulchin Tourism',color:'#E63946',gers:[{n:1,guests:2},{n:2,guests:2},{n:3,guests:2}],
-    staff:[{role:'Guide',sex:'M',name:'Juulchin Tourism'},{role:'Driver',sex:'M',name:'Juulchin Tourism'}]},
-  {company:'Discovery Mongolia',color:'#2563EB',gers:[{n:10,guests:2},{n:11,guests:2},{n:19,guests:3}],
-    staff:[{role:'Guide',sex:'F',name:'Discovery Mongolia'},{role:'Driver',sex:'M',name:'Discovery Mongolia'}]}
-];
+// Load real booking data from seed-data.js (populates localStorage if empty)
+if(typeof loadSeedData==='function') loadSeedData();
+
+const EXISTING=[];
 
 let mode='auto', selected=new Set(), singleGers=new Set(), gerOccupancy=new Map(), clickTimer=null;
 const occupied=new Set();
