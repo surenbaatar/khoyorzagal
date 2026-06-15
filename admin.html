@@ -321,7 +321,7 @@ function renderCompanies(mc){
   var co=getCompanies();
   var html='<h2><i class="ti ti-building" style="color:#B45309"></i> Companies</h2><div class="subtitle">All registered companies and their contract rates</div>';
   html+='<div class="card"><table class="admin-table"><thead><tr><th></th><th>Company</th><th>Ensuite Rate</th><th>Std Group</th><th>Std FIT</th></tr></thead><tbody>';
-  if(co.length===0) html+='<tr><td colspan="5" style="text-align:center;color:#ccc;padding:24px">No companies registered. Add them via the Contacts page in the Booking system.</td></tr>';
+  if(co.length===0) html+='<tr><td colspan="5" style="text-align:center;color:#ccc;padding:24px">No companies registered. Add them via the Contract page in the Booking system.</td></tr>';
   co.forEach(function(c){
     var r=c.rates&&c.rates.bed?c.rates.bed:{};
     html+='<tr><td><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:'+(c.color||'#ccc')+'"></span></td>';
