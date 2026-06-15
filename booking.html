@@ -506,7 +506,7 @@ const GERS=[
 ];
 const PRICES={ensuite:{rate:190000,supplement:90000},new_ensuite:{rate:190000,supplement:90000},standard:{group:65000,fit:85000,supplement:60000}};
 const FIT_THRESHOLD=5; // 1-4 guests = FIT rate, 5+ = group rate
-const MEAL_PRICES={breakfast:25000,lunch:45000,dinner:55000,khorkhog:55000,boolton:40000};
+const MEAL_PRICES={breakfast:25000,lunch:55000,dinner:45000,khorkhog:55000,boolton:40000};
 const STAFF_MEAL={bed:45000,supplement:60000,breakfast:12000,lunch:29000,dinner:24000};
 
 const MEALS=[
@@ -546,11 +546,17 @@ const SEED_COMPANIES=[
 ];
 function seedCompaniesIfNeeded(){
   try{
-    const existing=JSON.parse(localStorage.getItem('kz_companies')||'[]');
+    let existing=JSON.parse(localStorage.getItem('kz_companies')||'[]');
     if(!existing.length){
-      const seeded=SEED_COMPANIES.map((c,i)=>({id:Date.now()+i,...c}));
-      localStorage.setItem('kz_companies',JSON.stringify(seeded));
+      existing=SEED_COMPANIES.map((c,i)=>({id:Date.now()+i,...c}));
+    }else{
+      // Ensure all seed partners are present (merge missing ones)
+      SEED_COMPANIES.forEach((sc,i)=>{
+        const found=existing.find(e=>e.company.toLowerCase()===sc.company.toLowerCase());
+        if(!found) existing.push({id:Date.now()+1000+i,...sc});
+      });
     }
+    localStorage.setItem('kz_companies',JSON.stringify(existing));
   }catch(e){}
 }
 
@@ -564,7 +570,9 @@ function loadCompanyDropdown(){
     companies.forEach(c=>{
       const opt=document.createElement('option');
       opt.value=String(c.id);
-      opt.textContent=c.company;
+      // Show special rates indicator for partners with custom rates
+      const hasRates=(c.bed&&Object.values(c.bed).some(v=>v!=null))||(c.meal&&Object.values(c.meal).some(v=>v!=null));
+      opt.textContent=c.company+(hasRates?' ★':'');
       sel.appendChild(opt);
     });
   }catch(e){}

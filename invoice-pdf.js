@@ -46,7 +46,7 @@ function generateInvoicePDF(reservation) {
 
   var PRICES = {ensuite:{rate:190000,supplement:90000},new_ensuite:{rate:190000,supplement:90000},standard:{group:65000,fit:85000,supplement:60000}};
   var FIT_THRESHOLD = 5;
-  var MEAL_PRICES = {breakfast:25000,lunch:45000,dinner:55000,khorkhog:55000,boolton:40000};
+  var MEAL_PRICES = {breakfast:25000,lunch:55000,dinner:45000,khorkhog:55000,boolton:40000};
   var STAFF_MEAL = {bed:45000,supplement:60000,breakfast:12000,lunch:29000,dinner:24000};
 
   var rates = {

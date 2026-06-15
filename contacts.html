@@ -173,8 +173,8 @@ const DEFAULT_RATES={
   },
   meal:{
     breakfast:25000,
-    lunch:45000,
-    dinner:55000,
+    lunch:55000,
+    dinner:45000,
     khorkhog:55000,
     boolton:40000
   },
@@ -243,10 +243,15 @@ let companies=[];
 function loadCompanies(){
   try{companies=JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){companies=[];}
   if(!companies.length){
-    // Seed from spreadsheet data on first load
     companies=SEED_COMPANIES.map((c,i)=>({id:Date.now()+i,...c}));
-    saveCompanies();
+  }else{
+    // Ensure all seed partners are present (merge missing ones)
+    SEED_COMPANIES.forEach((sc,i)=>{
+      const found=companies.find(e=>e.company.toLowerCase()===sc.company.toLowerCase());
+      if(!found) companies.push({id:Date.now()+1000+i,...sc});
+    });
   }
+  saveCompanies();
 }
 function saveCompanies(){localStorage.setItem(LS_KEY,JSON.stringify(companies));}
 
