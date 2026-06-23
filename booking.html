@@ -1576,10 +1576,10 @@ function calculate(){
 
   const isEditing=editingReservationId!==null;
   if(isEditing){
-    html+=`<button class="btn btn-primary btn-icon" onclick="reserveBooking()" style="margin-top:16px;padding:11px;font-size:14px;background:#534AB7"><i class="ti ti-device-floppy" style="font-size:16px"></i> Update booking</button>`;
+    html+=`<button class="btn btn-primary btn-icon" onclick="reserveBooking()" style="margin-top:16px;padding:12px 20px;font-size:15px;background:#534AB7;width:100%"><i class="ti ti-device-floppy" style="font-size:18px"></i> Update Booking</button>`;
     html+=`<button class="btn btn-secondary btn-icon" onclick="cancelEdit()" style="margin-top:6px;font-size:12px;padding:7px"><i class="ti ti-x" style="font-size:13px"></i> Cancel edit</button>`;
   }else{
-    html+=`<button class="btn btn-primary btn-icon" onclick="reserveBooking()" style="margin-top:16px;padding:11px;font-size:14px;background:#0F6E56"><i class="ti ti-bookmark-filled" style="font-size:16px"></i> Reserve booking</button>`;
+    html+=`<button class="btn btn-primary btn-icon" onclick="reserveBooking()" style="margin-top:16px;padding:14px 20px;font-size:16px;font-weight:700;background:#0F6E56;width:100%;border-radius:10px;letter-spacing:.3px"><i class="ti ti-check" style="font-size:20px"></i> Book</button>`;
   }
   html+=`<div class="inv-actions" style="margin-top:8px">
     <button class="btn btn-secondary btn-icon"><i class="ti ti-printer" style="font-size:14px"></i> Print</button>
@@ -2031,10 +2031,12 @@ function showBookingDetail(booking){
     const resObj2=reservations.find(x=>x.id===d.id);
     if(resObj2&&resObj2.cancelled){
       html+=`<button class="btn btn-primary btn-icon" onclick="reinstateReservation(${d.id})"><i class="ti ti-arrow-back-up" style="font-size:14px"></i> Reinstate booking</button>`;
+      html+=`<button class="btn btn-secondary btn-icon" onclick="deleteReservation(${d.id})" style="color:#c53030;border-color:#fecaca"><i class="ti ti-trash" style="font-size:14px"></i> Delete</button>`;
     } else {
       html+=`<button class="btn btn-primary btn-icon" onclick="editReservation(${d.id})"><i class="ti ti-pencil" style="font-size:14px"></i> Edit booking</button>`;
       html+=`<button class="btn btn-secondary btn-icon" onclick="generateInvoicePDF(reservations.find(x=>x.id===${d.id}))"><i class="ti ti-file-type-pdf" style="font-size:14px;color:#c53030"></i> Download invoice</button>`;
       html+=`<button class="btn btn-secondary btn-icon" onclick="cancelReservation(${d.id})" style="color:#c53030;border-color:#fecaca"><i class="ti ti-ban" style="font-size:14px"></i> Cancel booking</button>`;
+      html+=`<button class="btn btn-secondary btn-icon" onclick="deleteReservation(${d.id})" style="color:#c53030;border-color:#fecaca"><i class="ti ti-trash" style="font-size:14px"></i> Delete</button>`;
     }
   }
   html+=`<button class="btn btn-secondary btn-icon" onclick="closeDetail()"><i class="ti ti-arrow-left" style="font-size:14px"></i> New booking</button>`;
@@ -2231,6 +2233,25 @@ function reinstateReservation(id){
   closeDetail();
   buildGrid();
   showToast(`${r.company} booking reinstated`,'#0F6E56');
+}
+
+function deleteReservation(id){
+  const r=reservations.find(x=>x.id===id);
+  if(!r)return;
+  if(!confirm(`Permanently delete booking for "${r.company}"?\n${r.checkIn} → ${r.checkOut}\n\nThis will remove the booking entirely (not cancel). Use this for duplicates.`))return;
+  if(!confirm(`CONFIRM DELETE: "${r.company}" will be permanently removed. This cannot be undone.`))return;
+
+  // Free up gers
+  if(r.gerNums) r.gerNums.forEach(n=>occupied.delete(n));
+
+  // Remove from reservations array
+  reservations=reservations.filter(x=>x.id!==id);
+  saveReservations();
+  updateReserveBadge();
+
+  closeDetail();
+  buildGrid();
+  showToast(`${r.company} booking deleted`,'#c53030');
 }
 
 // ─── Invoice log ───
