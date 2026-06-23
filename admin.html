@@ -137,6 +137,7 @@ table.admin-table tr:hover{background:#fafaf7}
       <div class="sidebar-item" onclick="showSection('payments',this)"><i class="ti ti-cash"></i> All Payments</div>
 
       <div class="sidebar-section">Tools</div>
+      <div class="sidebar-item" onclick="showSection('import',this)"><i class="ti ti-file-spreadsheet"></i> Import Excel</div>
       <div class="sidebar-item" onclick="showSection('mockdata',this)"><i class="ti ti-database"></i> Mock Data</div>
       <div class="sidebar-item" onclick="showSection('backup',this)"><i class="ti ti-download"></i> Backup / Restore</div>
     </div>
@@ -218,7 +219,7 @@ function showSection(name,el){
   document.querySelectorAll('.sidebar-item').forEach(function(s){s.classList.remove('active')});
   if(el)el.classList.add('active');
   var mc=document.getElementById('mainContent');
-  var fn={dashboard:renderDashboard,users:renderUsers,companies:renderCompanies,bookings:renderBookings,payments:renderPayments,mockdata:renderMockData,backup:renderBackup};
+  var fn={dashboard:renderDashboard,users:renderUsers,companies:renderCompanies,bookings:renderBookings,payments:renderPayments,import:renderImport,mockdata:renderMockData,backup:renderBackup};
   if(fn[name])fn[name](mc);
 }
 
@@ -380,6 +381,315 @@ function renderPayments(mc){
   html+='</tbody></table></div>';
   mc.innerHTML=html;
 }
+
+// ─── IMPORT EXCEL ───
+function renderImport(mc){
+  var html='<h2><i class="ti ti-file-spreadsheet" style="color:#B45309"></i> Import Excel</h2><div class="subtitle">Import bookings from a cleaned Excel file (.xlsx)</div>';
+
+  html+='<div class="card"><h3><i class="ti ti-upload"></i> Upload Excel File</h3>';
+  html+='<p style="font-size:13px;color:#666;margin-bottom:12px">Upload a cleaned Excel file with standardized columns. Expected columns: <strong>Company, Check-in, Check-out, Trip Code, Nationality, Guests, Staff, Dlx Single, Dlx Twin, Dlx Triple, Dlx Total, Std Single, Std Twin, Std Triple, Std 4-bed, Std 5-bed, Std Total, Total Gers, Comment, Payment, Payment %</strong></p>';
+  html+='<div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">';
+  html+='<input type="file" id="importFile" accept=".xlsx,.xls" style="font-size:13px">';
+  html+='<select id="importSheet" style="padding:7px 12px;font-size:13px;border:1px solid #ddd;border-radius:6px;display:none"><option value="__all__">All Sheets</option></select>';
+  html+='</div>';
+  html+='<div style="display:flex;gap:8px">';
+  html+='<button class="btn btn-primary" onclick="parseImportFile()"><i class="ti ti-eye"></i> Preview Import</button>';
+  html+='<select id="importMode" style="padding:6px 12px;font-size:12px;border:1px solid #ddd;border-radius:6px"><option value="merge">Merge (add to existing)</option><option value="replace">Replace all bookings</option></select>';
+  html+='</div></div>';
+
+  html+='<div id="importPreview"></div>';
+  html+='<div id="importActions" style="display:none;margin-top:12px">';
+  html+='<button class="btn btn-success" onclick="confirmImport()" style="font-size:14px;padding:10px 24px"><i class="ti ti-check"></i> Confirm Import</button>';
+  html+='<button class="btn btn-secondary" onclick="cancelImport()" style="margin-left:8px"><i class="ti ti-x"></i> Cancel</button>';
+  html+='</div>';
+  mc.innerHTML=html;
+
+  // When file is selected, read sheet names
+  document.getElementById('importFile').addEventListener('change',function(e){
+    var f=e.target.files[0];if(!f)return;
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      try{
+        var data=new Uint8Array(ev.target.result);
+        window._importWB=XLSX.read(data,{type:'array',cellDates:true});
+        var sel=document.getElementById('importSheet');
+        sel.innerHTML='<option value="__all__">All Sheets ('+window._importWB.SheetNames.length+')</option>';
+        window._importWB.SheetNames.forEach(function(sn){
+          sel.innerHTML+='<option value="'+esc(sn)+'">'+esc(sn)+'</option>';
+        });
+        sel.style.display='inline-block';
+      }catch(err){alert('Error reading file: '+err.message);}
+    };
+    reader.readAsArrayBuffer(f);
+  });
+}
+
+window._importParsed=[];
+
+// Color palette for imported reservations
+var IMPORT_COLORS=['#16A34A','#7C3AED','#1a1a1a','#0891B2','#DB2777','#CA8A04','#4F46E5','#059669','#BE123C','#0D9488',
+  '#6D28D9','#EA580C','#0E7490','#9333EA','#B91C1C','#65A30D','#C026D3','#0369A1','#D97706','#4338CA'];
+
+function parseExcelDate(v){
+  if(!v)return '';
+  if(v instanceof Date){
+    var y=v.getFullYear(),m=String(v.getMonth()+1).padStart(2,'0'),d=String(v.getDate()).padStart(2,'0');
+    return y+'-'+m+'-'+d;
+  }
+  if(typeof v==='number'){
+    // Excel serial date
+    var d2=XLSX.SSF.parse_date_code(v);
+    if(d2)return d2.y+'-'+String(d2.m).padStart(2,'0')+'-'+String(d2.d).padStart(2,'0');
+  }
+  var s=String(v).trim();
+  // try ISO
+  var m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m)return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+  // try DD/MM/YYYY or MM/DD/YYYY
+  m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if(m)return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+  return s;
+}
+
+function parseNum(v){
+  if(v===null||v===undefined||v==='')return 0;
+  if(typeof v==='number')return Math.round(v);
+  var s=String(v).trim();
+  // Handle patterns like "16(12+)" → 16, "4+" → 4
+  var m=s.match(/^(\d+)/);
+  return m?parseInt(m[1],10):0;
+}
+
+window.parseImportFile=function(){
+  if(!window._importWB){alert('Please select an Excel file first.');return;}
+  var wb=window._importWB;
+  var sheetSel=document.getElementById('importSheet').value;
+  var sheetsToProcess=[];
+  if(sheetSel==='__all__'){
+    sheetsToProcess=wb.SheetNames.slice();
+  }else{
+    sheetsToProcess=[sheetSel];
+  }
+
+  var allRows=[];
+  var companyColors={};
+  var colorIdx=0;
+
+  sheetsToProcess.forEach(function(sheetName){
+    var ws=wb.Sheets[sheetName];
+    var json=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false,dateNF:'yyyy-mm-dd'});
+    // Also get raw for dates
+    var jsonRaw=XLSX.utils.sheet_to_json(ws,{defval:'',raw:true});
+
+    json.forEach(function(row,ri){
+      var rawRow=jsonRaw[ri]||{};
+      // Find the company column (flexible matching)
+      var company=findCol(row,'Company','company','COMPANY','Comp')||'';
+      if(!company||company==='(no bookings)')return;
+
+      var checkIn=parseExcelDate(rawRow[findColKey(row,'Check-in','Check-In','CheckIn','check-in','Checkin','check_in')]||row[findColKey(row,'Check-in','Check-In','CheckIn','check-in','Checkin','check_in')]);
+      var checkOut=parseExcelDate(rawRow[findColKey(row,'Check-out','Check-Out','CheckOut','check-out','Checkout','check_out')]||row[findColKey(row,'Check-out','Check-Out','CheckOut','check-out','Checkout','check_out')]);
+
+      if(!checkIn||!checkOut)return;
+
+      var tripCode=findCol(row,'Trip Code','Trip_Code','TripCode','trip_code','trip code')||'';
+      var nationality=findCol(row,'Nationality','nationality','NATIONALITY','Nation')||'';
+      var guests=parseNum(findCol(row,'Guests','guests','GUESTS','Pax','pax'));
+      var staff=parseNum(findCol(row,'Staff','staff','STAFF'));
+      var comment=findCol(row,'Comment','Comments','comment','comments','COMMENT','Notes','notes')||'';
+      var payment=findCol(row,'Payment','payment','PAYMENT','Amount')||'';
+      var paymentPct=findCol(row,'Payment %','Payment%','payment_pct','PaymentPct')||'';
+
+      // Ger counts
+      var dlxSingle=parseNum(findCol(row,'Dlx Single','dlx_single'));
+      var dlxTwin=parseNum(findCol(row,'Dlx Twin','dlx_twin'));
+      var dlxTriple=parseNum(findCol(row,'Dlx Triple','dlx_triple'));
+      var dlxTotal=parseNum(findCol(row,'Dlx Total','dlx_total'));
+      var stdSingle=parseNum(findCol(row,'Std Single','std_single'));
+      var stdTwin=parseNum(findCol(row,'Std Twin','std_twin'));
+      var stdTriple=parseNum(findCol(row,'Std Triple','std_triple'));
+      var std4bed=parseNum(findCol(row,'Std 4-bed','std_4bed','Std 4-Bed'));
+      var std5bed=parseNum(findCol(row,'Std 5-bed','std_5bed','Std 5-Bed'));
+      var stdTotal=parseNum(findCol(row,'Std Total','std_total'));
+      var totalGers=parseNum(findCol(row,'Total Gers','total_gers','TotalGers'));
+
+      // Calculate if totals missing
+      if(!dlxTotal)dlxTotal=dlxSingle+dlxTwin+dlxTriple;
+      if(!stdTotal)stdTotal=stdSingle+stdTwin+stdTriple+std4bed+std5bed;
+      if(!totalGers)totalGers=dlxTotal+stdTotal;
+
+      // Assign color per company
+      if(!companyColors[company]){
+        companyColors[company]=IMPORT_COLORS[colorIdx%IMPORT_COLORS.length];
+        colorIdx++;
+      }
+
+      allRows.push({
+        company:company,
+        tripCode:tripCode,
+        checkIn:checkIn,
+        checkOut:checkOut,
+        nationality:nationality,
+        guests:guests||1,
+        adults:guests||1,
+        children03:0,children48:0,
+        staff:staff,
+        guidesM:0,guidesF:0,driversM:staff,driversF:0,
+        dlxSingle:dlxSingle,dlxTwin:dlxTwin,dlxTriple:dlxTriple,dlxTotal:dlxTotal,
+        stdSingle:stdSingle,stdTwin:stdTwin,stdTriple:stdTriple,std4bed:std4bed,std5bed:std5bed,stdTotal:stdTotal,
+        totalGers:totalGers,
+        comment:comment,
+        payment:payment,
+        paymentPct:paymentPct,
+        color:companyColors[company],
+        sourceSheet:sheetName
+      });
+    });
+  });
+
+  window._importParsed=allRows;
+
+  // Show preview
+  var pv=document.getElementById('importPreview');
+  if(allRows.length===0){
+    pv.innerHTML='<div class="card" style="border-color:#DC2626"><p style="color:#DC2626;font-size:13px"><i class="ti ti-alert-triangle"></i> No valid rows found. Check that the file has the expected columns.</p></div>';
+    document.getElementById('importActions').style.display='none';
+    return;
+  }
+
+  // Summary by company
+  var byCo={};
+  allRows.forEach(function(r){
+    if(!byCo[r.company])byCo[r.company]={count:0,color:r.color,guests:0,gers:0};
+    byCo[r.company].count++;
+    byCo[r.company].guests+=r.guests;
+    byCo[r.company].gers+=r.totalGers;
+  });
+
+  var html='<div class="card" style="border-color:#059669"><h3><i class="ti ti-eye" style="color:#059669"></i> Import Preview — '+allRows.length+' bookings found</h3>';
+  html+='<div class="stat-grid" style="margin-bottom:16px">';
+  html+='<div class="stat-card"><div class="num">'+allRows.length+'</div><div class="lbl">Total Bookings</div></div>';
+  html+='<div class="stat-card"><div class="num">'+Object.keys(byCo).length+'</div><div class="lbl">Companies</div></div>';
+  var totGuests=allRows.reduce(function(s,r){return s+r.guests},0);
+  var totGers=allRows.reduce(function(s,r){return s+r.totalGers},0);
+  html+='<div class="stat-card"><div class="num">'+totGuests+'</div><div class="lbl">Total Guests</div></div>';
+  html+='<div class="stat-card"><div class="num">'+totGers+'</div><div class="lbl">Total Gers</div></div>';
+  html+='</div>';
+
+  // Company breakdown
+  html+='<h3 style="font-size:13px;margin-bottom:8px">By Company</h3>';
+  html+='<table class="admin-table"><thead><tr><th></th><th>Company</th><th>Bookings</th><th>Guests</th><th>Gers</th></tr></thead><tbody>';
+  Object.keys(byCo).sort().forEach(function(name){
+    var c=byCo[name];
+    html+='<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+c.color+'"></span></td>';
+    html+='<td>'+esc(name)+'</td><td>'+c.count+'</td><td>'+c.guests+'</td><td>'+c.gers+'</td></tr>';
+  });
+  html+='</tbody></table>';
+
+  // Sample rows
+  html+='<h3 style="font-size:13px;margin:16px 0 8px">Sample Rows (first 10)</h3>';
+  html+='<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Company</th><th>Trip</th><th>Check-In</th><th>Check-Out</th><th>Guests</th><th>Dlx</th><th>Std</th><th>Comment</th></tr></thead><tbody>';
+  allRows.slice(0,10).forEach(function(r){
+    html+='<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+r.color+';margin-right:4px"></span>'+esc(r.company)+'</td>';
+    html+='<td>'+esc(r.tripCode)+'</td><td>'+r.checkIn+'</td><td>'+r.checkOut+'</td>';
+    html+='<td>'+r.guests+'</td><td>'+r.dlxTotal+'</td><td>'+r.stdTotal+'</td>';
+    html+='<td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(r.comment)+'">'+esc(r.comment||'—')+'</td></tr>';
+  });
+  html+='</tbody></table></div></div>';
+  pv.innerHTML=html;
+  document.getElementById('importActions').style.display='block';
+};
+
+// Flexible column finder helpers
+function findColKey(row){
+  var keys=Object.keys(row);
+  for(var i=1;i<arguments.length;i++){
+    var search=arguments[i];
+    for(var j=0;j<keys.length;j++){
+      if(keys[j]===search||keys[j].toLowerCase()===search.toLowerCase())return keys[j];
+    }
+  }
+  // partial match
+  for(var i=1;i<arguments.length;i++){
+    var search=arguments[i].toLowerCase();
+    for(var j=0;j<keys.length;j++){
+      if(keys[j].toLowerCase().indexOf(search)!==-1)return keys[j];
+    }
+  }
+  return null;
+}
+
+function findCol(row){
+  var key=findColKey.apply(null,arguments);
+  return key?row[key]:null;
+}
+
+window.confirmImport=function(){
+  var rows=window._importParsed;
+  if(!rows||rows.length===0){alert('No data to import.');return;}
+
+  var mode=document.getElementById('importMode').value;
+  var existing=(mode==='merge')?getReservations():[];
+
+  // Build reservation objects
+  var baseId=Date.now();
+  var newRes=rows.map(function(r,i){
+    return{
+      id:baseId+i,
+      company:r.company,
+      tripCode:r.tripCode,
+      guide:'',
+      contact:'',
+      color:r.color,
+      companyId:null,
+      checkIn:r.checkIn,
+      checkOut:r.checkOut,
+      guests:r.guests,
+      adults:r.adults,
+      children03:0,
+      children48:0,
+      nationality:r.nationality,
+      gers:[],
+      gerNums:[],
+      singles:[],
+      staffGers:[],
+      guidesM:r.guidesM,
+      guidesF:r.guidesF,
+      driversM:r.driversM,
+      driversF:r.driversF,
+      dlxGers:r.dlxTotal,
+      stdGers:r.stdTotal,
+      total:0,
+      comments:r.comment,
+      mealSelections:{},
+      staffMealNights:{},
+      reservedAt:'Imported '+new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}),
+      imported:true,
+      importMeta:{
+        dlxSingle:r.dlxSingle,dlxTwin:r.dlxTwin,dlxTriple:r.dlxTriple,
+        stdSingle:r.stdSingle,stdTwin:r.stdTwin,stdTriple:r.stdTriple,
+        std4bed:r.std4bed,std5bed:r.std5bed,
+        staff:r.staff,payment:r.payment,paymentPct:r.paymentPct,
+        sourceSheet:r.sourceSheet
+      }
+    };
+  });
+
+  var combined=existing.concat(newRes);
+  localStorage.setItem('kz_reservations',JSON.stringify(combined));
+
+  toast(newRes.length+' bookings imported successfully!');
+  document.getElementById('importPreview').innerHTML='<div class="card" style="border-color:#059669"><p style="color:#059669;font-size:14px;font-weight:600"><i class="ti ti-check"></i> '+newRes.length+' bookings imported! Ger assignments can be made in the Booking portal.</p></div>';
+  document.getElementById('importActions').style.display='none';
+  window._importParsed=[];
+};
+
+window.cancelImport=function(){
+  window._importParsed=[];
+  document.getElementById('importPreview').innerHTML='';
+  document.getElementById('importActions').style.display='none';
+  toast('Import cancelled');
+};
 
 // ─── MOCK DATA ───
 function renderMockData(mc){
