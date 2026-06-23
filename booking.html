@@ -297,7 +297,7 @@ label.field-label{font-size:12px;color:#666;margin-bottom:4px;display:block;font
     <div id="detailView"></div>
     <!-- Form view (default new booking form) -->
     <div id="formView">
-    <div id="editBanner" style="display:none;margin-bottom:10px;padding:8px 12px;background:#EEEDFE;border:1px solid #534AB7;border-radius:8px;font-size:12px;color:#534AB7;display:none">
+    <div id="editBanner" style="display:none;margin-bottom:10px;padding:10px 14px;background:#534AB7;border:2px solid #4338CA;border-radius:10px;font-size:13px;color:#fff;font-weight:600">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <span><i class="ti ti-pencil" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i> <b>Editing reservation</b> — make changes then click Update</span>
         <button onclick="cancelEdit()" style="border:none;background:none;color:#534AB7;cursor:pointer;font-size:18px;padding:0 4px;line-height:1" title="Cancel edit">×</button>
@@ -2159,7 +2159,7 @@ function editReservation(id){
 
   // Show edit banner
   const eb=document.getElementById('editBanner');
-  eb.innerHTML=`<i class="ti ti-pencil" style="margin-right:4px"></i> Editing <b>${r.company}</b> — modify fields then click Update`;
+  eb.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between"><span><i class="ti ti-pencil" style="margin-right:4px"></i> EDITING: ${r.company} — modify then click Update</span><button onclick="cancelEdit()" style="background:#fff;color:#534AB7;border:none;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer">✕ Cancel Edit</button></div>`;
   eb.style.display='block';
 
   showToast(`Editing ${r.company} — make changes then update`,'#534AB7');
@@ -2332,6 +2332,9 @@ function cancelBooking(){
 }
 
 function resetForm(){
+  // Always clear edit mode
+  editingReservationId=null;
+  editingReservationColor=null;
   document.getElementById('editBanner').style.display='none';
   document.getElementById('companySelect').value='';
   document.getElementById('companyName').value='';
