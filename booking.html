@@ -703,7 +703,8 @@ function navToday(){
 }
 function jumpToDate(dateStr){
   if(!dateStr)return;
-  viewDate=new Date(dateStr+'T00:00:00');
+  const p=dateStr.split('-');
+  viewDate=new Date(+p[0],+p[1]-1,+p[2]);
   updateDateDisplay();
   renderGers();
 }
@@ -1704,8 +1705,9 @@ document.getElementById('children48').addEventListener('input',calculate);
   const ci=params.get('checkIn'), co=params.get('checkOut');
   if(ci){
     document.getElementById('checkIn').value=ci;
-    // Jump viewDate to match so ger map shows the right day
-    viewDate=new Date(ci+'T00:00:00');
+    // Jump viewDate to match — parse manually to avoid any timezone issues
+    const parts=ci.split('-');
+    viewDate=new Date(+parts[0], +parts[1]-1, +parts[2]);
     updateDateDisplay();
     renderGers();
   }
@@ -1715,7 +1717,8 @@ document.getElementById('children48').addEventListener('input',calculate);
 document.getElementById('checkIn').addEventListener('change',function(){
   const v=this.value;
   if(v){
-    viewDate=new Date(v+'T00:00:00');
+    const p=v.split('-');
+    viewDate=new Date(+p[0],+p[1]-1,+p[2]);
     updateDateDisplay();
     renderGers();
   }
