@@ -683,11 +683,13 @@ function fmt(v){return v.toLocaleString('en-US')+'₮'}
 // ─── Day navigation ───
 let viewDate=new Date();
 function fmtViewDate(d){return d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}
-function viewDateStr(){return viewDate.toISOString().slice(0,10)}
+function viewDateStr(){
+  const y=viewDate.getFullYear(),m=String(viewDate.getMonth()+1).padStart(2,'0'),d=String(viewDate.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+d;
+}
 function updateDateDisplay(){
   document.getElementById('dateDisplay').textContent=fmtViewDate(viewDate);
-  const jd=document.getElementById('jumpDate');
-  if(jd) jd.value=viewDateStr();
+  try{document.getElementById('jumpDate').value=viewDateStr();}catch(e){}
 }
 function navDay(delta){
   viewDate.setDate(viewDate.getDate()+delta);
@@ -1663,12 +1665,11 @@ document.getElementById('children48').addEventListener('input',calculate);
 
 // Set default dates to today → tomorrow
 (function(){
+  function localDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
   const today=new Date();
   const tomorrow=new Date(today);tomorrow.setDate(tomorrow.getDate()+1);
-  const todayStr=today.toISOString().slice(0,10);
-  const tomorrowStr=tomorrow.toISOString().slice(0,10);
-  if(!document.getElementById('checkIn').value) document.getElementById('checkIn').value=todayStr;
-  if(!document.getElementById('checkOut').value) document.getElementById('checkOut').value=tomorrowStr;
+  if(!document.getElementById('checkIn').value) document.getElementById('checkIn').value=localDate(today);
+  if(!document.getElementById('checkOut').value) document.getElementById('checkOut').value=localDate(tomorrow);
 })();
 // Read URL params (from calendar click-through)
 (function(){
@@ -2375,9 +2376,10 @@ function resetForm(){
   document.getElementById('contactNum').value='';
   document.getElementById('guideName').value='';
   // Reset dates to today/tomorrow
+  function _ld(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
   const _today=new Date(),_tmrw=new Date(_today);_tmrw.setDate(_tmrw.getDate()+1);
-  document.getElementById('checkIn').value=_today.toISOString().slice(0,10);
-  document.getElementById('checkOut').value=_tmrw.toISOString().slice(0,10);
+  document.getElementById('checkIn').value=_ld(_today);
+  document.getElementById('checkOut').value=_ld(_tmrw);
   document.getElementById('adults').value=2;
   document.getElementById('children03').value=0;
   document.getElementById('children48').value=0;
