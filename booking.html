@@ -788,11 +788,34 @@ function renderGers(){buildGrid()} // alias for day-nav calls
 function buildGrid(){
   // Filter reservations active on the current view date
   const vd=viewDateStr();
-  const activeReservations=reservations.filter(r=>isActiveOnDate(r,vd));
+  const activeReservations=reservations.filter(r=>!r.cancelled&&isActiveOnDate(r,vd));
   // Rebuild occupied set for current view date
   occupied.clear();
   EXISTING.forEach(b=>b.gers.forEach(g=>occupied.add(g.n)));
-  activeReservations.forEach(r=>{if(r.gerNums)r.gerNums.forEach(n=>occupied.add(n))});
+  // First pass: add gers from bookings that already have assignments
+  activeReservations.forEach(r=>{if(r.gerNums&&r.gerNums.length>0)r.gerNums.forEach(n=>occupied.add(n))});
+  // Second pass: auto-assign gers for imported bookings with counts but no ger numbers
+  const ensuitePool=GERS.filter(g=>g.type==='ensuite'||g.type==='new_ensuite').map(g=>g.n);
+  const standardPool=GERS.filter(g=>g.type==='standard').map(g=>g.n);
+  activeReservations.forEach(r=>{
+    if(r.gerNums&&r.gerNums.length>0)return; // already assigned
+    if(!r.imported)return; // only auto-assign for imported bookings
+    const dlxNeed=r.dlxGers||0, stdNeed=r.stdGers||0;
+    if(dlxNeed===0&&stdNeed===0)return; // no ger info
+    const assigned=[];
+    // Assign deluxe/ensuite gers
+    let dlxCount=0;
+    for(let i=0;i<ensuitePool.length&&dlxCount<dlxNeed;i++){
+      if(!occupied.has(ensuitePool[i])){assigned.push(ensuitePool[i]);occupied.add(ensuitePool[i]);dlxCount++;}
+    }
+    // Assign standard gers
+    let stdCount=0;
+    for(let i=0;i<standardPool.length&&stdCount<stdNeed;i++){
+      if(!occupied.has(standardPool[i])){assigned.push(standardPool[i]);occupied.add(standardPool[i]);stdCount++;}
+    }
+    // Store temporary assignment for display (not saved to localStorage)
+    r._tempGerNums=assigned;
+  });
   // Build set of gers in the staff pool (occupied or reserved)
   const staffOccupiedGers=new Set();
   const staffGerInfo={};
@@ -811,7 +834,10 @@ function buildGrid(){
     EXISTING.forEach(b=>{const bg=b.gers.find(x=>x.n===g.n);if(bg)existingBooking=b});
     // Check reserved bookings from localStorage
     let reservedBooking=null;
-    if(!existingBooking) activeReservations.forEach(r=>{if(r.gerNums&&r.gerNums.includes(g.n))reservedBooking=r});
+    if(!existingBooking) activeReservations.forEach(r=>{
+      if(r.gerNums&&r.gerNums.includes(g.n)){reservedBooking=r}
+      else if(r._tempGerNums&&r._tempGerNums.includes(g.n)){reservedBooking=r}
+    });
     // Check if this ger is used for guides/drivers
     const isStaffGer=staffOccupiedGers.has(g.n);
     if(existingBooking){
@@ -869,7 +895,8 @@ function buildGrid(){
   });
   activeReservations.forEach(r=>{
     const t=document.createElement('span');t.className='booking-tag';t.style.background=r.color;t.style.cursor='pointer';
-    t.textContent=r.company+' · '+(r.gerNums?r.gerNums.length:0)+' gers · '+r.guests+' pax';
+    const gerCount=(r.gerNums&&r.gerNums.length>0)?r.gerNums.length:(r._tempGerNums?r._tempGerNums.length:((r.dlxGers||0)+(r.stdGers||0)));
+    t.textContent=r.company+' · '+gerCount+' gers · '+r.guests+' pax';
     t.addEventListener('click',()=>showBookingDetail({type:'reserved',data:r}));
     tags.appendChild(t);
   });
@@ -1983,15 +2010,31 @@ function showBookingDetail(booking){
   // Gers
   html+=`<div class="dv-section">Gers assigned</div>`;
   html+=`<div class="dv-gers">`;
-  const gerList=isReserved?(d.gers||[]):(d.gers||[]);
-  gerList.forEach(g=>{
-    const gn=typeof g==='object'?g.n:g;
-    const occ=typeof g==='object'?(g.occ||g.guests||'?'):'?';
-    const gerDef=GERS.find(x=>x.n===gn);
-    const typeLabel=gerDef?((gerDef.type==='ensuite'||gerDef.type==='new_ensuite')?'ens':'std'):'';
-    const isSingle=isReserved&&d.singles&&d.singles.includes(gn);
-    html+=`<span class="dv-ger" style="background:${d.color}">#${gn}${isSingle?' <span style="font-size:8px;opacity:.8">SS</span>':''}<span class="dv-type-label">${typeLabel}</span></span>`;
-  });
+  let gerList=isReserved?(d.gers||[]):(d.gers||[]);
+  // For imported bookings with no gers but temp assignments, show those
+  const tempGers=d._tempGerNums||[];
+  if(gerList.length===0&&tempGers.length>0){
+    tempGers.forEach(gn=>{
+      const gerDef=GERS.find(x=>x.n===gn);
+      const typeLabel=gerDef?((gerDef.type==='ensuite'||gerDef.type==='new_ensuite')?'ens':'std'):'';
+      html+=`<span class="dv-ger" style="background:${d.color};opacity:0.85">#${gn}<span class="dv-type-label">${typeLabel}</span></span>`;
+    });
+    const dlxNeed=d.dlxGers||0,stdNeed=d.stdGers||0;
+    const totalNeed=dlxNeed+stdNeed;
+    if(tempGers.length<totalNeed){
+      html+=`<span style="font-size:10px;color:#c53030;display:block;margin-top:4px">⚠ Only ${tempGers.length}/${totalNeed} gers available — ${totalNeed-tempGers.length} overbooked</span>`;
+    }
+    html+=`<span style="font-size:10px;color:#888;display:block;margin-top:2px">Auto-assigned from import (${dlxNeed} dlx, ${stdNeed} std)</span>`;
+  }else{
+    gerList.forEach(g=>{
+      const gn=typeof g==='object'?g.n:g;
+      const occ=typeof g==='object'?(g.occ||g.guests||'?'):'?';
+      const gerDef=GERS.find(x=>x.n===gn);
+      const typeLabel=gerDef?((gerDef.type==='ensuite'||gerDef.type==='new_ensuite')?'ens':'std'):'';
+      const isSingle=isReserved&&d.singles&&d.singles.includes(gn);
+      html+=`<span class="dv-ger" style="background:${d.color}">#${gn}${isSingle?' <span style="font-size:8px;opacity:.8">SS</span>':''}<span class="dv-type-label">${typeLabel}</span></span>`;
+    });
+  }
   html+=`</div>`;
 
   // Total
@@ -1999,6 +2042,25 @@ function showBookingDetail(booking){
     html+=`<div class="dv-section">Financials</div>`;
     html+=`<div class="dv-row"><span class="dv-label">Total</span><span style="font-weight:700;font-size:14px">${d.total}</span></div>`;
     html+=`<div class="dv-row"><span class="dv-label">Reserved</span><span style="color:#0F6E56">${d.reservedAt}</span></div>`;
+  }
+
+  // Import metadata
+  if(d.imported&&d.importMeta){
+    const m=d.importMeta;
+    html+=`<div class="dv-section">Import details</div>`;
+    const gerBreak=[];
+    if(m.dlxSingle>0) gerBreak.push(m.dlxSingle+' dlx single');
+    if(m.dlxTwin>0) gerBreak.push(m.dlxTwin+' dlx twin');
+    if(m.dlxTriple>0) gerBreak.push(m.dlxTriple+' dlx triple');
+    if(m.stdSingle>0) gerBreak.push(m.stdSingle+' std single');
+    if(m.stdTwin>0) gerBreak.push(m.stdTwin+' std twin');
+    if(m.stdTriple>0) gerBreak.push(m.stdTriple+' std triple');
+    if(m.std4bed>0) gerBreak.push(m.std4bed+' std 4-bed');
+    if(m.std5bed>0) gerBreak.push(m.std5bed+' std 5-bed');
+    if(m.staff>0) gerBreak.push(m.staff+' staff');
+    if(gerBreak.length>0) html+=`<div class="dv-row"><span class="dv-label">Ger breakdown</span><span>${gerBreak.join(', ')}</span></div>`;
+    if(m.payment) html+=`<div class="dv-row"><span class="dv-label">Payment</span><span>${m.payment}${m.paymentPct?' ('+m.paymentPct+')':''}</span></div>`;
+    if(m.sourceSheet) html+=`<div class="dv-row"><span class="dv-label">Source sheet</span><span>${m.sourceSheet}</span></div>`;
   }
 
   // Notes
