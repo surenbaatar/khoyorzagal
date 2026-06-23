@@ -286,6 +286,7 @@ label.field-label{font-size:12px;color:#666;margin-bottom:4px;display:block;font
       <div class="date-display" id="dateDisplay"></div>
       <button onclick="navDay(1)" title="Next day"><i class="ti ti-chevron-right"></i></button>
       <button class="date-today" onclick="navToday()" title="Go to today">Today</button>
+      <input type="date" id="jumpDate" title="Jump to date" style="padding:3px 6px;font-size:11px;border:1px solid #ddd;border-radius:5px;background:#fff;color:#1a1a1a;cursor:pointer;width:130px" onchange="jumpToDate(this.value)">
     </div>
     <button onclick="doBookingLogout()" style="display:flex;align-items:center;gap:4px;font-size:12px;color:#999;border:1px solid #ddd;background:#fff;padding:5px 10px;border-radius:6px;cursor:pointer;transition:all .15s" onmouseover="this.style.color='#DC2626';this.style.borderColor='#fca5a5';this.style.background='#FEE2E2'" onmouseout="this.style.color='#999';this.style.borderColor='#ddd';this.style.background='#fff'"><i class="ti ti-logout" style="font-size:13px"></i> Logout</button>
   </div>
@@ -320,13 +321,13 @@ label.field-label{font-size:12px;color:#666;margin-bottom:4px;display:block;font
     <input class="field-input" id="guideName" placeholder="e.g. Batbold" style="margin-bottom:10px">
 
     <div class="field-row">
-      <div><label class="field-label">Check-in</label><input class="field-input" type="date" id="checkIn" value="2026-06-15"></div>
-      <div><label class="field-label">Check-out</label><input class="field-input" type="date" id="checkOut" value="2026-06-18"></div>
+      <div><label class="field-label">Check-in</label><input class="field-input" type="date" id="checkIn"></div>
+      <div><label class="field-label">Check-out</label><input class="field-input" type="date" id="checkOut"></div>
     </div>
     <div class="night-badge" id="nightInfo"><i class="ti ti-moon" style="font-size:13px"></i> 3 nights</div>
 
     <div class="field-row" id="guestCountRow">
-      <div><label class="field-label">Adults</label><input class="field-input" type="number" id="adults" min="0" value="14"></div>
+      <div><label class="field-label">Adults</label><input class="field-input" type="number" id="adults" min="0" value="2"></div>
     </div>
     <div class="addon-body" id="childrenBody">
       <div class="field-row" style="margin-bottom:4px">
@@ -685,6 +686,8 @@ function fmtViewDate(d){return d.toLocaleDateString('en-US',{weekday:'long',year
 function viewDateStr(){return viewDate.toISOString().slice(0,10)}
 function updateDateDisplay(){
   document.getElementById('dateDisplay').textContent=fmtViewDate(viewDate);
+  const jd=document.getElementById('jumpDate');
+  if(jd) jd.value=viewDateStr();
 }
 function navDay(delta){
   viewDate.setDate(viewDate.getDate()+delta);
@@ -693,6 +696,12 @@ function navDay(delta){
 }
 function navToday(){
   viewDate=new Date();
+  updateDateDisplay();
+  renderGers();
+}
+function jumpToDate(dateStr){
+  if(!dateStr)return;
+  viewDate=new Date(dateStr+'T00:00:00');
   updateDateDisplay();
   renderGers();
 }
@@ -1652,13 +1661,37 @@ function checkAutoOpenChildren(){
 document.getElementById('children03').addEventListener('input',calculate);
 document.getElementById('children48').addEventListener('input',calculate);
 
+// Set default dates to today → tomorrow
+(function(){
+  const today=new Date();
+  const tomorrow=new Date(today);tomorrow.setDate(tomorrow.getDate()+1);
+  const todayStr=today.toISOString().slice(0,10);
+  const tomorrowStr=tomorrow.toISOString().slice(0,10);
+  if(!document.getElementById('checkIn').value) document.getElementById('checkIn').value=todayStr;
+  if(!document.getElementById('checkOut').value) document.getElementById('checkOut').value=tomorrowStr;
+})();
 // Read URL params (from calendar click-through)
 (function(){
   const params=new URLSearchParams(window.location.search);
   const ci=params.get('checkIn'), co=params.get('checkOut');
-  if(ci) document.getElementById('checkIn').value=ci;
+  if(ci){
+    document.getElementById('checkIn').value=ci;
+    // Jump viewDate to match so ger map shows the right day
+    viewDate=new Date(ci+'T00:00:00');
+    updateDateDisplay();
+    renderGers();
+  }
   if(co) document.getElementById('checkOut').value=co;
 })();
+// When check-in date changes, also update viewDate to show gers for that date
+document.getElementById('checkIn').addEventListener('change',function(){
+  const v=this.value;
+  if(v){
+    viewDate=new Date(v+'T00:00:00');
+    updateDateDisplay();
+    renderGers();
+  }
+});
 
 // ─── Toast notification ───
 function showToast(msg,color='#0F6E56'){
@@ -2341,7 +2374,11 @@ function resetForm(){
   document.getElementById('tripCode').value='';
   document.getElementById('contactNum').value='';
   document.getElementById('guideName').value='';
-  document.getElementById('adults').value=0;
+  // Reset dates to today/tomorrow
+  const _today=new Date(),_tmrw=new Date(_today);_tmrw.setDate(_tmrw.getDate()+1);
+  document.getElementById('checkIn').value=_today.toISOString().slice(0,10);
+  document.getElementById('checkOut').value=_tmrw.toISOString().slice(0,10);
+  document.getElementById('adults').value=2;
   document.getElementById('children03').value=0;
   document.getElementById('children48').value=0;
   document.getElementById('ensuiteCount').value=0;
