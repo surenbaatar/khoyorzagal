@@ -233,7 +233,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <button class="nav-link" onclick="openSearch()" style="color:#534AB7"><i class="ti ti-search" style="font-size:14px"></i> Search</button>
     <button class="nav-link" onclick="window.print()"><i class="ti ti-printer" style="font-size:14px"></i> Print</button>
     <a class="nav-link" href="contacts.html"><i class="ti ti-address-book" style="font-size:14px"></i> Contract</a>
-    <a class="nav-link" href="booking.html"><i class="ti ti-arrow-left" style="font-size:14px"></i> Booking view</a>
+    <a class="nav-link" id="bookingLink" href="booking.html"><i class="ti ti-arrow-left" style="font-size:14px"></i> Booking view</a>
   </div>
 </div>
 
@@ -362,7 +362,7 @@ const BOOKINGS=[];
 
 // Helpers
 function pd(s){return new Date(s+'T00:00:00')}
-function fd(d){return d.toISOString().split('T')[0]}
+function fd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function addD(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r}
 function diffD(a,b){return Math.round((b-a)/86400000)}
 function isWe(d){const w=d.getDay();return w===0||w===6}
@@ -509,6 +509,8 @@ function render(){
   updateSummary(dates);
   updateLegend();
   document.getElementById('printSub').textContent=fd(rangeFrom)+' to '+fd(rangeTo)+' — Printed '+new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  // Update booking link to pass the current range start date
+  document.getElementById('bookingLink').href='booking.html?checkIn='+fd(rangeFrom);
 }
 
 function updateSummary(dates){
