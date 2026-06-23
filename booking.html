@@ -651,22 +651,30 @@ function saveCancellations(){localStorage.setItem('kz_cancellations',JSON.string
 function loadInvoiceLog(){try{return JSON.parse(localStorage.getItem('kz_invoice_log'))||{}}catch(e){return{}}}
 function saveInvoiceLog(d){localStorage.setItem('kz_invoice_log',JSON.stringify(d))}
 
-// Color palette for reservations — maximally distinct, avoids EXISTING colors (red, blue)
-const RESERVE_COLORS=['#16A34A','#7C3AED','#1a1a1a','#0891B2','#DB2777','#CA8A04','#4F46E5','#059669','#BE123C','#0D9488'];
+// Color palette for reservations — 30 maximally distinct colors, each booking gets a unique one
+const RESERVE_COLORS=[
+  '#16A34A','#7C3AED','#1a1a1a','#0891B2','#DB2777','#CA8A04','#4F46E5','#059669','#BE123C','#0D9488',
+  '#6D28D9','#EA580C','#0E7490','#9333EA','#B91C1C','#65A30D','#C026D3','#0369A1','#D97706','#4338CA',
+  '#7E22CE','#15803D','#A21CAF','#1D4ED8','#C2410C','#047857','#6366F1','#DC2626','#0284C7','#854D0E',
+  '#9F1239','#4D7C0F','#7C2D12','#1E3A5F','#6B21A8','#B45309','#0F766E','#9D174D','#3730A3','#166534'
+];
 const EXISTING_COLORS=EXISTING.map(b=>b.color);
 
-// Refresh reservation colors on load to stay in sync with current palette
+// Refresh reservation colors on load — every booking gets a unique color
 (function refreshColors(){
   const usedColors=new Set();
   let changed=false;
   reservations.forEach(r=>{
-    // Check if company already seen — reuse that color
-    const prev=reservations.find(x=>x!==r&&x.company.toLowerCase()===r.company.toLowerCase()&&usedColors.has(x.color));
-    if(prev){r.color=prev.color;usedColors.add(r.color);return;}
-    // Pick a fresh color avoiding EXISTING and already-used
+    // Every booking gets its own unique color — no sharing even for same company
     const pick=RESERVE_COLORS.find(c=>!EXISTING_COLORS.includes(c)&&!usedColors.has(c));
     if(pick&&r.color!==pick){r.color=pick;changed=true;}
-    else if(!pick){r.color=RESERVE_COLORS[reservations.indexOf(r)%RESERVE_COLORS.length];}
+    else if(!pick){
+      // Exhausted palette — generate a deterministic color from index
+      const idx=reservations.indexOf(r);
+      const hue=(idx*137.508)%360;
+      r.color='hsl('+Math.round(hue)+',65%,40%)';
+      changed=true;
+    }
     usedColors.add(r.color);
   });
   if(changed) saveReservations();
@@ -1734,13 +1742,14 @@ function showToast(msg,color='#0F6E56'){
 
 // ─── Reservation system ───
 function pickColor(company){
-  const existing=reservations.find(r=>r.company.toLowerCase()===company.toLowerCase());
-  if(existing&&existing.color) return existing.color;
-  const ex=EXISTING.find(b=>b.company.toLowerCase()===company.toLowerCase());
-  if(ex) return ex.color;
+  // Every booking gets a unique color — never reuse even for same company
   const usedColors=new Set([...reservations.map(r=>r.color),...EXISTING_COLORS]);
   const avail=RESERVE_COLORS.find(c=>!usedColors.has(c));
-  return avail||RESERVE_COLORS[reservations.length%RESERVE_COLORS.length];
+  if(avail) return avail;
+  // Exhausted palette — generate from golden angle
+  const idx=reservations.length;
+  const hue=(idx*137.508)%360;
+  return 'hsl('+Math.round(hue)+',65%,40%)';
 }
 
 function reserveBooking(){

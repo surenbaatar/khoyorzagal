@@ -426,9 +426,13 @@ function renderImport(mc){
 
 window._importParsed=[];
 
-// Color palette for imported reservations
-var IMPORT_COLORS=['#16A34A','#7C3AED','#1a1a1a','#0891B2','#DB2777','#CA8A04','#4F46E5','#059669','#BE123C','#0D9488',
-  '#6D28D9','#EA580C','#0E7490','#9333EA','#B91C1C','#65A30D','#C026D3','#0369A1','#D97706','#4338CA'];
+// Color palette for imported reservations — 40 distinct colors, each booking unique
+var IMPORT_COLORS=[
+  '#16A34A','#7C3AED','#1a1a1a','#0891B2','#DB2777','#CA8A04','#4F46E5','#059669','#BE123C','#0D9488',
+  '#6D28D9','#EA580C','#0E7490','#9333EA','#B91C1C','#65A30D','#C026D3','#0369A1','#D97706','#4338CA',
+  '#7E22CE','#15803D','#A21CAF','#1D4ED8','#C2410C','#047857','#6366F1','#DC2626','#0284C7','#854D0E',
+  '#9F1239','#4D7C0F','#7C2D12','#1E3A5F','#6B21A8','#B45309','#0F766E','#9D174D','#3730A3','#166534'
+];
 
 function parseExcelDate(v){
   if(!v)return '';
@@ -472,7 +476,7 @@ window.parseImportFile=function(){
   }
 
   var allRows=[];
-  var companyColors={};
+  // Each booking gets a unique color (companyColors removed)
   var colorIdx=0;
 
   sheetsToProcess.forEach(function(sheetName){
@@ -518,11 +522,16 @@ window.parseImportFile=function(){
       if(!stdTotal)stdTotal=stdSingle+stdTwin+stdTriple+std4bed+std5bed;
       if(!totalGers)totalGers=dlxTotal+stdTotal;
 
-      // Assign color per company
-      if(!companyColors[company]){
-        companyColors[company]=IMPORT_COLORS[colorIdx%IMPORT_COLORS.length];
-        colorIdx++;
+      // Assign unique color per booking (not per company)
+      var bookingColor;
+      if(colorIdx<IMPORT_COLORS.length){
+        bookingColor=IMPORT_COLORS[colorIdx];
+      }else{
+        // Golden angle hue for unlimited unique colors
+        var hue=Math.round((colorIdx*137.508)%360);
+        bookingColor='hsl('+hue+',65%,40%)';
       }
+      colorIdx++;
 
       allRows.push({
         company:company,
@@ -541,7 +550,7 @@ window.parseImportFile=function(){
         comment:comment,
         payment:payment,
         paymentPct:paymentPct,
-        color:companyColors[company],
+        color:bookingColor,
         sourceSheet:sheetName
       });
     });
