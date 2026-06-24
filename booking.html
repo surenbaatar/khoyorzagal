@@ -433,6 +433,20 @@ label.field-label{font-size:12px;color:#666;margin-bottom:4px;display:block;font
       <div class="metric-card"><div class="mv" id="mGers">0</div><div class="ml">Gers used</div></div>
       <div class="metric-card"><div class="mv" id="mBeds">0</div><div class="ml">Beds used</div></div>
       <div class="metric-card"><div class="mv" id="mAvail">60</div><div class="ml">Available</div></div>
+      <div class="metric-card" style="border-left:2px solid #f59e0b;cursor:pointer" onclick="document.getElementById('mealSummaryPanel').style.display=document.getElementById('mealSummaryPanel').style.display==='none'?'block':'none'" title="Click to toggle meal summary">
+        <div class="mv" style="display:flex;gap:6px;align-items:center;font-size:13px">
+          <span id="mMealTotal">0</span><i class="ti ti-tools-kitchen-2" style="font-size:14px;color:#f59e0b"></i>
+        </div>
+        <div class="ml">Meals today</div>
+      </div>
+    </div>
+
+    <div id="mealSummaryPanel" style="display:none;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin:4px 0 8px;font-size:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-weight:600;color:#92400e;font-size:11px"><i class="ti ti-tools-kitchen-2" style="font-size:12px"></i> Daily meal summary</span>
+        <span style="font-size:10px;color:#b45309" id="mealSummaryDate"></span>
+      </div>
+      <div id="mealSummaryBody"></div>
     </div>
 
     <div class="ger-legend">
@@ -1318,6 +1332,106 @@ function updateMetrics(){
   document.getElementById('mGers').textContent=usedGers;
   document.getElementById('mBeds').textContent=usedBeds;
   document.getElementById('mAvail').textContent=Math.max(0,avail);
+  updateMealSummary();
+}
+
+function updateMealSummary(){
+  const vd=viewDateStr(); // YYYY-MM-DD
+  const activeRes=reservations.filter(r=>!r.cancelled&&isActiveOnDate(r,vd));
+  // Count per meal type: {guests, staff}
+  const mealTypes=['breakfast','lunch','dinner','khorkhog','boolton'];
+  const counts={};
+  mealTypes.forEach(m=>{counts[m]={guests:0,staff:0};});
+
+  activeRes.forEach(r=>{
+    const guests=(r.adults||0)+(r.children03||0)+(r.children48||0)||(r.guests||0);
+    const staffCount=(r.guidesM||0)+(r.guidesF||0)+(r.driversM||0)+(r.driversF||0);
+    // Figure out which night index this date is for the booking
+    if(!r.checkIn) return;
+    const ciParts=r.checkIn.split('-');
+    const ciDate=new Date(+ciParts[0],+ciParts[1]-1,+ciParts[2]);
+    const vdParts=vd.split('-');
+    const vdDate=new Date(+vdParts[0],+vdParts[1]-1,+vdParts[2]);
+    const nightIdx=Math.round((vdDate-ciDate)/(1000*60*60*24));
+    if(nightIdx<0) return;
+    // Calculate total nights
+    let totalNights=1;
+    if(r.checkOut){
+      const coParts=r.checkOut.split('-');
+      const coDate=new Date(+coParts[0],+coParts[1]-1,+coParts[2]);
+      totalNights=Math.round((coDate-ciDate)/(1000*60*60*24));
+    }
+    if(nightIdx>=totalNights) return;
+
+    const ms=r.mealSelections||{};
+    const hasDetailedMeals=Object.keys(ms).length>0&&Object.values(ms).some(v=>v.nightsOn>0);
+
+    mealTypes.forEach(m=>{
+      let mealOn=false;
+      if(hasDetailedMeals){
+        // Detailed: if nightsOn == totalNights, meal is on every night
+        // If nightsOn < totalNights, assume first N nights (simplification — per-night data not stored individually)
+        const sel=ms[m];
+        if(sel&&sel.nightsOn>0){
+          mealOn=nightIdx<sel.nightsOn;
+        }
+      }else{
+        // Imported or no meal data: assume defaults (breakfast, lunch, dinner ON)
+        if(m==='breakfast'||m==='lunch'||m==='dinner') mealOn=true;
+      }
+      if(mealOn){
+        counts[m].guests+=guests;
+        // Staff get breakfast always; lunch/dinner follow guest schedule
+        if(m==='breakfast'||m==='lunch'||m==='dinner'){
+          counts[m].staff+=staffCount;
+        }
+      }
+    });
+  });
+
+  // Also count EXISTING hardcoded bookings' guests
+  EXISTING.forEach(b=>{
+    if(!b.gers||b.gers.length===0) return;
+    const guests=b.gers.reduce((s,g)=>s+g.occ,0);
+    const staffCount=b.staff?b.staff.length:0;
+    ['breakfast','lunch','dinner'].forEach(m=>{
+      counts[m].guests+=guests;
+      counts[m].staff+=staffCount;
+    });
+  });
+
+  // Build summary HTML
+  const totalMeals=mealTypes.reduce((s,m)=>s+counts[m].guests+counts[m].staff,0);
+  document.getElementById('mMealTotal').textContent=totalMeals;
+
+  const dateLabel=vd.split('-').reverse().join('/');
+  document.getElementById('mealSummaryDate').textContent=dateLabel;
+
+  let html='<table style="width:100%;border-collapse:collapse">';
+  html+='<tr style="font-size:10px;color:#92400e;font-weight:600;border-bottom:1px solid #fde68a">'
+    +'<td style="padding:3px 0">Meal</td><td style="text-align:right;padding:3px 4px">Guests</td>'
+    +'<td style="text-align:right;padding:3px 4px">Staff</td><td style="text-align:right;padding:3px 0;font-weight:700">Total</td></tr>';
+
+  const labels={breakfast:'Breakfast',lunch:'Lunch',dinner:'Dinner',khorkhog:'Khorkhog',boolton:'Boolton'};
+  const icons={breakfast:'ti-coffee',lunch:'ti-salad',dinner:'ti-moon',khorkhog:'ti-flame',boolton:'ti-soup'};
+  mealTypes.forEach(m=>{
+    const g=counts[m].guests, st=counts[m].staff, t=g+st;
+    if(t===0) return; // skip meals with no one
+    html+=`<tr style="border-bottom:1px solid #fef3c7">`;
+    html+=`<td style="padding:4px 0;font-size:11px"><i class="ti ${icons[m]}" style="font-size:12px;color:#d97706;margin-right:4px"></i>${labels[m]}</td>`;
+    html+=`<td style="text-align:right;padding:4px;font-size:12px">${g}</td>`;
+    html+=`<td style="text-align:right;padding:4px;font-size:12px;color:#78716c">${st}</td>`;
+    html+=`<td style="text-align:right;padding:4px 0;font-size:13px;font-weight:600;color:#92400e">${t}</td>`;
+    html+=`</tr>`;
+  });
+  html+='</table>';
+
+  if(activeRes.length>0||EXISTING.length>0){
+    html+=`<div style="margin-top:6px;font-size:10px;color:#b45309">${activeRes.length+EXISTING.length} booking(s) active</div>`;
+  }else{
+    html='<div style="font-size:11px;color:#b45309;text-align:center;padding:4px 0">No bookings on this date</div>';
+  }
+  document.getElementById('mealSummaryBody').innerHTML=html;
 }
 
 function handleClick(n){
