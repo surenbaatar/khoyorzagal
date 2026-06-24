@@ -643,6 +643,7 @@ const occupied=new Set();
 
 // Load persisted data from localStorage early so occupied set is correct
 let reservations=JSON.parse(localStorage.getItem('kz_reservations')||'[]');
+console.log('[LOAD] reservations loaded from localStorage: '+reservations.length);
 let cancellations=JSON.parse(localStorage.getItem('kz_cancellations')||'[]');
 function saveReservations(){localStorage.setItem('kz_reservations',JSON.stringify(reservations));}
 function saveCancellations(){localStorage.setItem('kz_cancellations',JSON.stringify(cancellations));}
@@ -662,22 +663,24 @@ const EXISTING_COLORS=EXISTING.map(b=>b.color);
 
 // Refresh reservation colors on load — every booking gets a unique color
 (function refreshColors(){
-  const usedColors=new Set();
-  let changed=false;
-  reservations.forEach(r=>{
-    // Every booking gets its own unique color — no sharing even for same company
-    const pick=RESERVE_COLORS.find(c=>!EXISTING_COLORS.includes(c)&&!usedColors.has(c));
-    if(pick&&r.color!==pick){r.color=pick;changed=true;}
-    else if(!pick){
-      // Exhausted palette — generate a deterministic color from index
-      const idx=reservations.indexOf(r);
-      const hue=(idx*137.508)%360;
-      r.color='hsl('+Math.round(hue)+',65%,40%)';
-      changed=true;
-    }
-    usedColors.add(r.color);
-  });
-  if(changed) saveReservations();
+  try{
+    const usedColors=new Set();
+    let changed=false;
+    reservations.forEach((r,idx)=>{
+      // Every booking gets its own unique color — no sharing even for same company
+      const pick=RESERVE_COLORS.find(c=>!EXISTING_COLORS.includes(c)&&!usedColors.has(c));
+      if(pick&&r.color!==pick){r.color=pick;changed=true;}
+      else if(!pick){
+        // Exhausted palette — generate a deterministic color from golden angle
+        const hue=(idx*137.508)%360;
+        r.color='hsl('+Math.round(hue)+',65%,40%)';
+        changed=true;
+      }
+      usedColors.add(r.color);
+    });
+    if(changed) saveReservations();
+    console.log('[refreshColors] done, '+reservations.length+' reservations, changed='+changed);
+  }catch(e){console.error('[refreshColors] error:',e);}
 })();
 
 // occupied set is now populated dynamically inside buildGrid() based on viewDate
@@ -802,11 +805,37 @@ function buildGrid(){
   // Filter reservations active on the current view date
   const vd=viewDateStr();
   const activeReservations=reservations.filter(r=>!r.cancelled&&isActiveOnDate(r,vd));
+  console.log('[buildGrid] viewDate='+vd+', total reservations='+reservations.length+', active='+activeReservations.length);
+  if(activeReservations.length>0){
+    const sample=activeReservations[0];
+    console.log('[buildGrid] sample:',sample.company,sample.checkIn,'→',sample.checkOut,'dlx='+sample.dlxGers,'std='+sample.stdGers,'gerNums='+JSON.stringify(sample.gerNums),'imported='+sample.imported);
+  }
   // Rebuild occupied set for current view date
   occupied.clear();
   EXISTING.forEach(b=>b.gers.forEach(g=>occupied.add(g.n)));
   // First pass: add gers from bookings that already have assignments
   activeReservations.forEach(r=>{if(r.gerNums&&r.gerNums.length>0)r.gerNums.forEach(n=>occupied.add(n))});
+  // Count total staff across all active bookings to reserve staff gers first
+  let totalStaffCount=0;
+  activeReservations.forEach(r=>{
+    if(editingReservationId&&r.id===editingReservationId)return;
+    totalStaffCount+=(r.guidesM||0)+(r.guidesF||0)+(r.driversM||0)+(r.driversF||0);
+  });
+  // Add staff from current form
+  totalStaffCount+=(+(document.getElementById('guidesM').value)||0)+(+(document.getElementById('guidesF').value)||0)
+    +(+(document.getElementById('driversM').value)||0)+(+(document.getElementById('driversF').value)||0);
+  // Reserve staff gers from top of standard pool (50 downward), before guest auto-assign
+  const staffReserved=new Set();
+  if(totalStaffCount>0){
+    const staffAvail=STAFF_GERS.filter(g=>!occupied.has(g.n)&&!selected.has(g.n));
+    let beds=0;
+    for(const g of staffAvail){
+      staffReserved.add(g.n);
+      beds+=g.beds;
+      if(beds>=totalStaffCount)break;
+    }
+  }
+
   // Second pass: auto-assign gers for imported bookings with counts but no ger numbers
   const ensuitePool=GERS.filter(g=>g.type==='ensuite'||g.type==='new_ensuite').map(g=>g.n);
   const standardPool=GERS.filter(g=>g.type==='standard').map(g=>g.n);
@@ -821,10 +850,10 @@ function buildGrid(){
     for(let i=0;i<ensuitePool.length&&dlxCount<dlxNeed;i++){
       if(!occupied.has(ensuitePool[i])){assigned.push(ensuitePool[i]);occupied.add(ensuitePool[i]);dlxCount++;}
     }
-    // Assign standard gers
+    // Assign standard gers — skip staff-reserved gers
     let stdCount=0;
     for(let i=0;i<standardPool.length&&stdCount<stdNeed;i++){
-      if(!occupied.has(standardPool[i])){assigned.push(standardPool[i]);occupied.add(standardPool[i]);stdCount++;}
+      if(!occupied.has(standardPool[i])&&!staffReserved.has(standardPool[i])){assigned.push(standardPool[i]);occupied.add(standardPool[i]);stdCount++;}
     }
     // Store temporary assignment for display (not saved to localStorage)
     r._tempGerNums=assigned;
