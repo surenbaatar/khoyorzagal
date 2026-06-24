@@ -801,6 +801,7 @@ let editingReservationId=null;
 let editingReservationColor=null;
 
 function renderGers(){buildGrid()} // alias for day-nav calls
+let _skipStaffRefresh=false; // flag to skip staff recalc when workstation triggers buildGrid
 function buildGrid(){
   // Filter reservations active on the current view date
   const vd=viewDateStr();
@@ -859,9 +860,12 @@ function buildGrid(){
     r._tempGerNums=assigned;
   });
   // Refresh staff workstation for current view date (must happen before staffOccupiedGers)
-  wsCollectStaff();
-  wsAutoGers();
-  autoPlaceStaff();
+  if(!_skipStaffRefresh){
+    wsCollectStaff();
+    wsAutoGers();
+    autoPlaceStaff();
+  }
+  _skipStaffRefresh=false;
 
   // Build set of gers in the staff pool (occupied or reserved)
   const staffOccupiedGers=new Set();
@@ -1033,6 +1037,7 @@ function addStaffGer(){
   wsGers.push({n:avail[0].n,beds:avail[0].beds});
   wsGers.sort((a,b)=>b.n-a.n);
   renderWorkstation();
+  _skipStaffRefresh=true;
   buildGrid();
 }
 
@@ -1043,6 +1048,7 @@ function removeStaffGer(){
   wsStaff.forEach(s=>{if(s.gerN===last.n)s.gerN=null;});
   wsGers.pop();
   renderWorkstation();
+  _skipStaffRefresh=true;
   buildGrid();
 }
 
@@ -1059,6 +1065,7 @@ function toggleSS(staffId){
   if(!s)return;
   s.singleSupp=!s.singleSupp;
   renderWorkstation();
+  _skipStaffRefresh=true;
   buildGrid();
 }
 
@@ -1066,6 +1073,7 @@ function removeFromGer(staffId){
   const s=wsStaff.find(x=>x.id===staffId);
   if(s)s.gerN=null;
   renderWorkstation();
+  _skipStaffRefresh=true;
   buildGrid();
 }
 
@@ -1106,6 +1114,7 @@ function onGerDrop(e,gerN){
   }
   s.gerN=gerN;
   renderWorkstation();
+  _skipStaffRefresh=true;
   buildGrid();
 }
 function onUnassignDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';e.currentTarget.classList.add('drag-over');}
@@ -1116,6 +1125,7 @@ function onUnassignDrop(e){
   const s=wsStaff.find(x=>x.id===dragStaffId);
   if(s)s.gerN=null;
   renderWorkstation();
+  _skipStaffRefresh=true;
   buildGrid();
 }
 
