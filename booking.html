@@ -474,9 +474,11 @@ label.field-label{font-size:12px;color:#666;margin-bottom:4px;display:block;font
         <div>
           <div class="ws-col-label"><i class="ti ti-home" style="font-size:11px"></i> Staff gers (std first, then deluxe if needed)</div>
           <div class="ws-ger-grid" id="wsGerGrid"></div>
-          <div class="ws-ger-actions">
-            <button class="btn btn-secondary btn-icon" onclick="addStaffGer()"><i class="ti ti-plus" style="font-size:12px"></i> Add ger</button>
-            <button class="btn btn-secondary btn-icon" onclick="removeStaffGer()"><i class="ti ti-minus" style="font-size:12px"></i> Remove ger</button>
+          <div class="ws-ger-actions" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <select id="wsAddGerSelect" style="font-size:11px;padding:3px 6px;border:1px solid #ddd;border-radius:5px;background:#fff;max-width:100px"></select>
+            <button class="btn btn-secondary btn-icon" onclick="addStaffGerSelected()" style="font-size:11px;padding:4px 10px"><i class="ti ti-plus" style="font-size:12px"></i> Add</button>
+            <select id="wsRemoveGerSelect" style="font-size:11px;padding:3px 6px;border:1px solid #ddd;border-radius:5px;background:#fff;max-width:100px"></select>
+            <button class="btn btn-secondary btn-icon" onclick="removeStaffGerSelected()" style="font-size:11px;padding:4px 10px;color:#c53030;border-color:#fecaca"><i class="ti ti-minus" style="font-size:12px"></i> Remove</button>
             <span style="font-size:10px;color:#999;margin-left:auto" id="wsGerCount"></span>
           </div>
         </div>
@@ -1032,23 +1034,53 @@ function wsAutoGers(){
   wsGers=needed;
 }
 
-function addStaffGer(){
+function updateStaffGerDropdowns(){
+  // Add dropdown: show available gers not already in staff pool
   const usedNums=new Set(wsGers.map(g=>g.n));
   const avail=STAFF_GERS_ALL.filter(g=>!occupied.has(g.n)&&!selected.has(g.n)&&!usedNums.has(g.n));
-  if(avail.length===0)return;
-  wsGers.push({n:avail[0].n,beds:avail[0].beds});
+  const addSel=document.getElementById('wsAddGerSelect');
+  if(addSel){
+    let h='<option value="">— pick ger —</option>';
+    avail.forEach(g=>{
+      const type=g.type==='standard'?'Std':(g.type==='new_ensuite'?'New':'Ens');
+      h+=`<option value="${g.n}">#${g.n} ${type} (${g.beds}b)</option>`;
+    });
+    addSel.innerHTML=h;
+  }
+  // Remove dropdown: show gers currently in staff pool
+  const remSel=document.getElementById('wsRemoveGerSelect');
+  if(remSel){
+    let h='<option value="">— pick ger —</option>';
+    wsGers.forEach(g=>{
+      const def=GERS.find(x=>x.n===g.n);
+      const type=def?(def.type==='standard'?'Std':(def.type==='new_ensuite'?'New':'Ens')):'';
+      const inGer=wsStaff.filter(s=>s.gerN===g.n).length;
+      h+=`<option value="${g.n}">#${g.n} ${type} (${inGer}/${g.beds} staff)</option>`;
+    });
+    remSel.innerHTML=h;
+  }
+}
+
+function addStaffGerSelected(){
+  const sel=document.getElementById('wsAddGerSelect');
+  const n=+sel.value;
+  if(!n)return;
+  const gerDef=GERS.find(g=>g.n===n);
+  if(!gerDef)return;
+  wsGers.push({n:gerDef.n,beds:gerDef.beds});
   wsGers.sort((a,b)=>b.n-a.n);
   renderWorkstation();
   _skipStaffRefresh=true;
   buildGrid();
 }
 
-function removeStaffGer(){
-  if(wsGers.length===0)return;
-  const last=wsGers[wsGers.length-1];
+function removeStaffGerSelected(){
+  const sel=document.getElementById('wsRemoveGerSelect');
+  const n=+sel.value;
+  if(!n)return;
   // Unassign any staff in this ger
-  wsStaff.forEach(s=>{if(s.gerN===last.n)s.gerN=null;});
-  wsGers.pop();
+  wsStaff.forEach(s=>{if(s.gerN===n)s.gerN=null;});
+  wsGers=wsGers.filter(g=>g.n!==n);
   renderWorkstation();
   _skipStaffRefresh=true;
   buildGrid();
@@ -1209,6 +1241,8 @@ function renderWorkstation(){
 
   // Sync staffAlloc for ger map and invoice compatibility
   syncStaffAlloc();
+  // Populate add/remove ger dropdowns
+  updateStaffGerDropdowns();
 }
 
 function syncStaffAlloc(){
