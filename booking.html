@@ -296,15 +296,24 @@ label.field-label{font-size:12px;color:#666;margin-bottom:4px;display:block;font
   <div class="bk-panel" id="leftPanel">
     <!-- Detail view (shown when clicking a booked ger) -->
     <div id="detailView"></div>
+    <!-- New booking button (shown when form is hidden) -->
+    <div id="newBookingPrompt" style="text-align:center;padding:30px 16px">
+      <i class="ti ti-calendar-plus" style="font-size:48px;color:#ddd;display:block;margin-bottom:12px"></i>
+      <div style="font-size:14px;color:#888;margin-bottom:16px">Select a booking tag above to view details,<br>or start a new reservation.</div>
+      <button class="btn btn-primary btn-icon" onclick="openBookingForm()" style="font-size:14px;padding:10px 28px;display:inline-flex"><i class="ti ti-plus" style="font-size:16px"></i> New booking</button>
+    </div>
     <!-- Form view (default new booking form) -->
-    <div id="formView">
+    <div id="formView" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="section-title" style="margin:0"><i class="ti ti-forms"></i> Booking details</div>
+      <button onclick="closeBookingForm()" style="border:none;background:none;color:#999;cursor:pointer;font-size:20px;padding:0 4px;line-height:1" title="Close form">&times;</button>
+    </div>
     <div id="editBanner" style="display:none;margin-bottom:10px;padding:10px 14px;background:#534AB7;border:2px solid #4338CA;border-radius:10px;font-size:13px;color:#fff;font-weight:600">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <span><i class="ti ti-pencil" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i> <b>Editing reservation</b> — make changes then click Update</span>
         <button onclick="cancelEdit()" style="border:none;background:none;color:#534AB7;cursor:pointer;font-size:18px;padding:0 4px;line-height:1" title="Cancel edit">×</button>
       </div>
     </div>
-    <div class="section-title"><i class="ti ti-forms"></i> Booking details</div>
     <label class="field-label">Company / group name</label>
     <div style="display:flex;gap:6px;margin-bottom:6px">
       <select class="field-input" id="companySelect" onchange="onCompanySelect()" style="flex:1">
@@ -2150,6 +2159,9 @@ function reserveBooking(){
   editingReservationId=null;
   editingReservationColor=null;
   resetForm();
+  // Close form back to prompt
+  document.getElementById('formView').style.display='none';
+  document.getElementById('newBookingPrompt').style.display='';
 }
 
 function downloadCurrentInvoice(){
@@ -2276,7 +2288,7 @@ function showBookingDetail(booking){
   const ci=new Date(d.checkIn+'T00:00:00'),co=new Date(d.checkOut+'T00:00:00');
   const nights=Math.round((co-ci)/86400000);
 
-  let html=`<button class="dv-back" onclick="closeDetail()"><i class="ti ti-arrow-left" style="font-size:13px"></i> Back to new booking</button>`;
+  let html=`<button class="dv-back" onclick="closeDetail()"><i class="ti ti-arrow-left" style="font-size:13px"></i> Back</button>`;
   html+=`<div class="dv-company"><span class="dv-color" style="background:${d.color}"></span>${d.company}</div>`;
   html+=`<div class="dv-dates">${d.checkIn} → ${d.checkOut} · ${nights} night${nights!==1?'s':''}</div>`;
 
@@ -2452,6 +2464,7 @@ function showBookingDetail(booking){
   dv.innerHTML=html;
   dv.style.display='block';
   fv.style.display='none';
+  document.getElementById('newBookingPrompt').style.display='none';
 
   // Highlight the gers on the map
   document.querySelectorAll('.ger-cell').forEach(el=>{
@@ -2466,7 +2479,9 @@ function showBookingDetail(booking){
 function closeDetail(){
   activeDetailBooking=null;
   document.getElementById('detailView').style.display='none';
-  document.getElementById('formView').style.display='block';
+  // Show prompt (editReservation will override to show form if needed)
+  document.getElementById('formView').style.display='none';
+  document.getElementById('newBookingPrompt').style.display='';
   // Remove highlights
   document.querySelectorAll('.ger-cell').forEach(el=>{
     el.style.outline='';el.style.outlineOffset='';el.style.boxShadow='';el.style.transform='';el.style.zIndex='';
@@ -2489,6 +2504,8 @@ function editReservation(id){
 
   // Close detail view, show form
   closeDetail();
+  document.getElementById('newBookingPrompt').style.display='none';
+  document.getElementById('formView').style.display='';
 
   // Switch to manual mode so user sees exactly which gers are selected
   setMode('manual');
@@ -2583,6 +2600,9 @@ function cancelEdit(){
   editingReservationColor=null;
   document.getElementById('editBanner').style.display='none';
   resetForm();
+  // Close form back to prompt
+  document.getElementById('formView').style.display='none';
+  document.getElementById('newBookingPrompt').style.display='';
   showToast('Edit cancelled','#666');
 }
 
@@ -2735,6 +2755,31 @@ function cancelBooking(){
   updateCancelBadge();
   resetForm();
   if(ridx>=0) buildGrid(); // Refresh grid to show freed gers
+}
+
+function openBookingForm(){
+  document.getElementById('newBookingPrompt').style.display='none';
+  document.getElementById('formView').style.display='';
+  document.getElementById('detailView').innerHTML='';
+  // Set check-in to current view date
+  const vd=viewDateStr();
+  document.getElementById('checkIn').value=vd;
+  const co=new Date(viewDate);co.setDate(co.getDate()+1);
+  document.getElementById('checkOut').value=co.getFullYear()+'-'+String(co.getMonth()+1).padStart(2,'0')+'-'+String(co.getDate()).padStart(2,'0');
+  buildMeals();
+  buildGrid();
+}
+
+function closeBookingForm(){
+  // If editing, cancel the edit first
+  if(editingReservationId) cancelEdit();
+  document.getElementById('formView').style.display='none';
+  document.getElementById('newBookingPrompt').style.display='';
+  // Clear form state so phantom staff don't appear
+  editingReservationId=null;
+  editingReservationColor=null;
+  selected.clear();singleGers.clear();gerOccupancy.clear();
+  buildGrid();
 }
 
 function resetForm(){
