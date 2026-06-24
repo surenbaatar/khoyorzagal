@@ -825,6 +825,11 @@ function buildGrid(){
     // Store temporary assignment for display (not saved to localStorage)
     r._tempGerNums=assigned;
   });
+  // Refresh staff workstation for current view date (must happen before staffOccupiedGers)
+  wsCollectStaff();
+  wsAutoGers();
+  autoPlaceStaff();
+
   // Build set of gers in the staff pool (occupied or reserved)
   const staffOccupiedGers=new Set();
   const staffGerInfo={};
@@ -909,6 +914,7 @@ function buildGrid(){
     t.addEventListener('click',()=>showBookingDetail({type:'reserved',data:r}));
     tags.appendChild(t);
   });
+  renderWorkstation();
   updateMetrics();
   updateManualTally();
 }
@@ -920,11 +926,11 @@ let wsNextId=1;
 let wsCollapsed=false;
 
 function wsCollectStaff(){
-  // Build combined staff list from existing bookings + current booking form
+  // Build combined staff list from existing bookings + reserved/imported bookings + current booking form
   const prev=new Map(); // preserve placements by id
   wsStaff.forEach(s=>prev.set(s.id,s));
   wsStaff=[];
-  // Existing bookings
+  // Existing bookings (hardcoded)
   EXISTING.forEach(b=>{
     if(!b.staff)return;
     b.staff.forEach((s,i)=>{
@@ -933,7 +939,27 @@ function wsCollectStaff(){
       wsStaff.push({id:key,role:s.role,sex:s.sex,name:b.company,company:b.company,color:b.color,existing:true,singleSupp:old?old.singleSupp:false,gerN:old?old.gerN:null});
     });
   });
-  // Current booking
+  // Reserved/imported bookings active on current view date
+  const vd=viewDateStr();
+  reservations.forEach(r=>{
+    if(r.cancelled||!isActiveOnDate(r,vd))return;
+    // Skip the booking currently being edited (it's handled by the form fields below)
+    if(editingReservationId&&r.id===editingReservationId)return;
+    const staffCounts=[
+      {role:'Guide',sex:'M',count:r.guidesM||0},
+      {role:'Guide',sex:'F',count:r.guidesF||0},
+      {role:'Driver',sex:'M',count:r.driversM||0},
+      {role:'Driver',sex:'F',count:r.driversF||0}
+    ];
+    staffCounts.forEach(c=>{
+      for(let i=0;i<c.count;i++){
+        const key='res_'+r.id+'_'+c.role+'_'+c.sex+'_'+i;
+        const old=prev.get(key);
+        wsStaff.push({id:key,role:c.role,sex:c.sex,name:r.company,company:r.company,color:r.color,existing:true,singleSupp:old?old.singleSupp:false,gerN:old?old.gerN:null});
+      }
+    });
+  });
+  // Current booking form
   const companyName=document.getElementById('companyName').value||'New booking';
   const counts=[
     {role:'Guide',sex:'M',count:+(document.getElementById('guidesM').value)||0},
@@ -1076,16 +1102,21 @@ function renderWorkstation(){
   // Staff list (left side) — grouped by booking
   const listEl=document.getElementById('wsStaffList');
   let html='';
-  // Existing bookings
-  EXISTING.forEach(b=>{
-    const bStaff=wsStaff.filter(s=>s.existing&&s.company===b.company);
-    if(bStaff.length===0)return;
+  // Group existing staff by company (includes reserved/imported bookings)
+  const existingStaff=wsStaff.filter(s=>s.existing);
+  const companyGroups=new Map();
+  existingStaff.forEach(s=>{
+    const key=s.company;
+    if(!companyGroups.has(key)) companyGroups.set(key,{color:s.color,staff:[]});
+    companyGroups.get(key).staff.push(s);
+  });
+  companyGroups.forEach((g,company)=>{
     html+=`<div class="ws-booking-group">`;
-    html+=`<div class="ws-booking-label"><span class="ws-booking-dot" style="background:${b.color}"></span>${b.company}</div>`;
-    html+=`<div>${bStaff.map(s=>buildStaffChip(s)).join('')}</div>`;
+    html+=`<div class="ws-booking-label"><span class="ws-booking-dot" style="background:${g.color}"></span>${company}</div>`;
+    html+=`<div>${g.staff.map(s=>buildStaffChip(s)).join('')}</div>`;
     html+=`</div>`;
   });
-  // Current booking
+  // Current booking (form)
   const curStaff=wsStaff.filter(s=>!s.existing);
   if(curStaff.length>0){
     const companyName=document.getElementById('companyName').value||'New booking';
