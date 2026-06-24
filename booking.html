@@ -495,6 +495,10 @@ label.field-label{font-size:12px;color:#666;margin-bottom:4px;display:block;font
             <button class="btn btn-secondary btn-icon" onclick="removeStaffGerSelected()" style="font-size:11px;padding:4px 10px;color:#c53030;border-color:#fecaca"><i class="ti ti-minus" style="font-size:12px"></i> Remove</button>
             <span style="font-size:10px;color:#999;margin-left:auto" id="wsGerCount"></span>
           </div>
+          <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+            <button class="btn btn-secondary btn-icon" onclick="saveWorkstationState()" style="font-size:11px;padding:5px 14px;background:#059669;color:#fff;border-color:#059669"><i class="ti ti-device-floppy" style="font-size:13px"></i> Save workstation</button>
+            <span id="wsSaveStatus" style="font-size:10px;color:#999"></span>
+          </div>
         </div>
       </div>
     </div>
@@ -883,7 +887,8 @@ function buildGrid(){
   if(!_skipStaffRefresh){
     wsCollectStaff();
     wsAutoGers();
-    autoPlaceStaff();
+    const _wsRestored=loadWorkstationState();
+    if(!_wsRestored) autoPlaceStaff();
   }
   _skipStaffRefresh=false;
 
@@ -1280,11 +1285,69 @@ function syncStaffAlloc(){
   });
 }
 
+function saveWorkstationState(){
+  const vd=viewDateStr();
+  // Build state: which gers, staff placements, single supplements
+  const state={
+    gers:wsGers.map(g=>g.n),
+    placements:{},
+    singleSupps:{}
+  };
+  wsStaff.forEach(s=>{
+    if(s.gerN!==null) state.placements[s.id]=s.gerN;
+    if(s.singleSupp) state.singleSupps[s.id]=true;
+  });
+  // Load all saved states, update this date
+  let allStates={};
+  try{allStates=JSON.parse(localStorage.getItem('kz_ws_states')||'{}');}catch(e){}
+  allStates[vd]=state;
+  localStorage.setItem('kz_ws_states',JSON.stringify(allStates));
+  // Visual feedback
+  const el=document.getElementById('wsSaveStatus');
+  el.textContent='Saved!';
+  el.style.color='#059669';
+  setTimeout(()=>{el.textContent='';},2000);
+  console.log('[WS] Saved workstation state for '+vd);
+}
+
+function loadWorkstationState(){
+  const vd=viewDateStr();
+  try{
+    const allStates=JSON.parse(localStorage.getItem('kz_ws_states')||'{}');
+    const state=allStates[vd];
+    if(!state) return false;
+    // Restore gers
+    if(state.gers&&state.gers.length>0){
+      wsGers=[];
+      state.gers.forEach(n=>{
+        const def=GERS.find(g=>g.n===n);
+        if(def) wsGers.push({n:def.n,beds:def.beds});
+      });
+      wsGers.sort((a,b)=>b.n-a.n);
+    }
+    // Restore placements and single supplements
+    wsStaff.forEach(s=>{
+      if(state.placements&&state.placements[s.id]!==undefined){
+        // Only restore if that ger is still in the pool
+        const targetGer=state.placements[s.id];
+        if(wsGers.some(g=>g.n===targetGer)) s.gerN=targetGer;
+      }
+      if(state.singleSupps&&state.singleSupps[s.id]) s.singleSupp=true;
+    });
+    console.log('[WS] Restored workstation state for '+vd);
+    // Show saved status
+    const el=document.getElementById('wsSaveStatus');
+    if(el){el.textContent='Loaded saved layout';el.style.color='#6b7280';setTimeout(()=>{el.textContent='';},3000);}
+    return true;
+  }catch(e){console.error('[WS] loadState error:',e);return false;}
+}
+
 function initWorkstation(){
   wsCollectStaff();
   wsAutoGers();
-  // Auto-place existing bookings' staff and current staff into gers
-  autoPlaceStaff();
+  // Try to restore saved state for this date; if none, auto-place
+  const restored=loadWorkstationState();
+  if(!restored) autoPlaceStaff();
   renderWorkstation();
 }
 
