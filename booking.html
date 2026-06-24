@@ -472,7 +472,7 @@ label.field-label{font-size:12px;color:#666;margin-bottom:4px;display:block;font
           </div>
         </div>
         <div>
-          <div class="ws-col-label"><i class="ti ti-home" style="font-size:11px"></i> Staff gers (standard, from #50 ↓)</div>
+          <div class="ws-col-label"><i class="ti ti-home" style="font-size:11px"></i> Staff gers (std first, then deluxe if needed)</div>
           <div class="ws-ger-grid" id="wsGerGrid"></div>
           <div class="ws-ger-actions">
             <button class="btn btn-secondary btn-icon" onclick="addStaffGer()"><i class="ti ti-plus" style="font-size:12px"></i> Add ger</button>
@@ -687,7 +687,8 @@ const EXISTING_COLORS=EXISTING.map(b=>b.color);
 
 // Guide/driver allocation: standard gers from 50 descending
 let staffAlloc=[];
-const STAFF_GERS=GERS.filter(g=>g.type==='standard').sort((a,b)=>b.n-a.n); // descending: 50,49,48...29
+const STAFF_GERS_STD=GERS.filter(g=>g.type==='standard').sort((a,b)=>b.n-a.n); // descending: 50,49,48...29
+const STAFF_GERS_ALL=[...STAFF_GERS_STD,...GERS.filter(g=>g.type==='new_ensuite').sort((a,b)=>b.n-a.n),...GERS.filter(g=>g.type==='ensuite').sort((a,b)=>b.n-a.n)]; // std first, then new ensuite, then ensuite
 
 function fmt(v){return v.toLocaleString('en-US')+'₮'}
 
@@ -825,10 +826,10 @@ function buildGrid(){
   // Add staff from current form
   totalStaffCount+=(+(document.getElementById('guidesM').value)||0)+(+(document.getElementById('guidesF').value)||0)
     +(+(document.getElementById('driversM').value)||0)+(+(document.getElementById('driversF').value)||0);
-  // Reserve staff gers from top of standard pool (50 downward), before guest auto-assign
+  // Reserve staff gers (prefer std 50 down, then deluxe), before guest auto-assign
   const staffReserved=new Set();
   if(totalStaffCount>0){
-    const staffAvail=STAFF_GERS.filter(g=>!occupied.has(g.n)&&!selected.has(g.n));
+    const staffAvail=STAFF_GERS_ALL.filter(g=>!occupied.has(g.n)&&!selected.has(g.n));
     let beds=0;
     for(const g of staffAvail){
       staffReserved.add(g.n);
@@ -1017,10 +1018,11 @@ function wsCollectStaff(){
 }
 
 function wsAutoGers(){
-  // Calculate how many gers needed for all staff, starting from 50 descending
+  // Calculate how many gers needed for all staff
+  // Prefer standard (50 down), fall back to new ensuite then ensuite if not enough
   const total=wsStaff.length;
   if(total===0){wsGers=[];return;}
-  const avail=STAFF_GERS.filter(g=>!occupied.has(g.n)&&!selected.has(g.n));
+  const avail=STAFF_GERS_ALL.filter(g=>!occupied.has(g.n)&&!selected.has(g.n));
   let beds=0, needed=[];
   for(const g of avail){
     needed.push({n:g.n,beds:g.beds});
@@ -1032,7 +1034,7 @@ function wsAutoGers(){
 
 function addStaffGer(){
   const usedNums=new Set(wsGers.map(g=>g.n));
-  const avail=STAFF_GERS.filter(g=>!occupied.has(g.n)&&!selected.has(g.n)&&!usedNums.has(g.n));
+  const avail=STAFF_GERS_ALL.filter(g=>!occupied.has(g.n)&&!selected.has(g.n)&&!usedNums.has(g.n));
   if(avail.length===0)return;
   wsGers.push({n:avail[0].n,beds:avail[0].beds});
   wsGers.sort((a,b)=>b.n-a.n);
