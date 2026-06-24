@@ -793,6 +793,10 @@ function toggleAllMeals(on){
   });
 }
 
+// Edit mode tracking — declared early because wsCollectStaff (inside buildGrid) needs it
+let editingReservationId=null;
+let editingReservationColor=null;
+
 function renderGers(){buildGrid()} // alias for day-nav calls
 function buildGrid(){
   // Filter reservations active on the current view date
@@ -2205,9 +2209,8 @@ function closeDetail(){
   });
 }
 
-// ─── Edit mode tracking ───
-let editingReservationId=null;
-let editingReservationColor=null;
+// ─── Edit mode tracking (moved up, referenced by wsCollectStaff) ───
+// editingReservationId and editingReservationColor declared earlier near buildGrid
 
 function editReservation(id){
   const r=reservations.find(x=>x.id===id);
