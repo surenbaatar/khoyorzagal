@@ -825,9 +825,12 @@ function buildGrid(){
     if(editingReservationId&&r.id===editingReservationId)return;
     totalStaffCount+=(r.guidesM||0)+(r.guidesF||0)+(r.driversM||0)+(r.driversF||0);
   });
-  // Add staff from current form
-  totalStaffCount+=(+(document.getElementById('guidesM').value)||0)+(+(document.getElementById('guidesF').value)||0)
-    +(+(document.getElementById('driversM').value)||0)+(+(document.getElementById('driversF').value)||0);
+  // Add staff from current form only if actively creating/editing
+  const _cn=document.getElementById('companyName').value||'';
+  if(editingReservationId||_cn.trim().length>0){
+    totalStaffCount+=(+(document.getElementById('guidesM').value)||0)+(+(document.getElementById('guidesF').value)||0)
+      +(+(document.getElementById('driversM').value)||0)+(+(document.getElementById('driversF').value)||0);
+  }
   // Reserve staff gers (prefer std 50 down, then deluxe), before guest auto-assign
   const staffReserved=new Set();
   if(totalStaffCount>0){
@@ -999,21 +1002,30 @@ function wsCollectStaff(){
       }
     });
   });
-  // Current booking form
-  const companyName=document.getElementById('companyName').value||'New booking';
-  const counts=[
-    {role:'Guide',sex:'M',count:+(document.getElementById('guidesM').value)||0},
-    {role:'Guide',sex:'F',count:+(document.getElementById('guidesF').value)||0},
-    {role:'Driver',sex:'M',count:+(document.getElementById('driversM').value)||0},
-    {role:'Driver',sex:'F',count:+(document.getElementById('driversF').value)||0}
-  ];
-  counts.forEach(c=>{
-    for(let i=0;i<c.count;i++){
-      const key='new_'+c.role+'_'+c.sex+'_'+i;
-      const old=prev.get(key);
-      wsStaff.push({id:key,role:c.role,sex:c.sex,name:companyName,company:companyName,color:'#16A34A',existing:false,singleSupp:old?old.singleSupp:false,gerN:old?old.gerN:null});
-    }
-  });
+  // Current booking form — only include if user is actively creating/editing a booking
+  const companyName=document.getElementById('companyName').value||'';
+  const formGuidesM=+(document.getElementById('guidesM').value)||0;
+  const formGuidesF=+(document.getElementById('guidesF').value)||0;
+  const formDriversM=+(document.getElementById('driversM').value)||0;
+  const formDriversF=+(document.getElementById('driversF').value)||0;
+  const hasFormStaff=formGuidesM+formGuidesF+formDriversM+formDriversF>0;
+  const isActiveForm=editingReservationId||companyName.trim().length>0;
+  if(hasFormStaff&&isActiveForm){
+    const displayName=companyName||'New booking';
+    const counts=[
+      {role:'Guide',sex:'M',count:formGuidesM},
+      {role:'Guide',sex:'F',count:formGuidesF},
+      {role:'Driver',sex:'M',count:formDriversM},
+      {role:'Driver',sex:'F',count:formDriversF}
+    ];
+    counts.forEach(c=>{
+      for(let i=0;i<c.count;i++){
+        const key='new_'+c.role+'_'+c.sex+'_'+i;
+        const old=prev.get(key);
+        wsStaff.push({id:key,role:c.role,sex:c.sex,name:displayName,company:displayName,color:'#16A34A',existing:false,singleSupp:old?old.singleSupp:false,gerN:old?old.gerN:null});
+      }
+    });
+  }
   // Clean up placements referencing gers no longer in pool
   const gerNums=new Set(wsGers.map(g=>g.n));
   wsStaff.forEach(s=>{if(s.gerN!==null&&!gerNums.has(s.gerN))s.gerN=null;});
