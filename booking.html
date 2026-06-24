@@ -1603,12 +1603,12 @@ function autoAllocate(adults,singleDeluxe,singleStandard){
   const ensuiteWant=+(document.getElementById('ensuiteCount').value)||0;
   const standardWant=+(document.getElementById('standardCount').value)||0;
 
-  // Sort smallest beds first so 2-bed gers are used before 3-bed
+  // Sort largest beds first to minimize number of gers used (3-bed before 2-bed)
   const availEns=GERS.filter(g=>(g.type==='ensuite'||g.type==='new_ensuite')&&!occupied.has(g.n)).sort((a,b)=>{
-    if(a.beds!==b.beds)return a.beds-b.beds;return a.n-b.n;
+    if(a.beds!==b.beds)return b.beds-a.beds;return a.n-b.n;
   });
   const availStd=GERS.filter(g=>g.type==='standard'&&!occupied.has(g.n)&&!wsGers.some(wg=>wg.n===g.n)).sort((a,b)=>{
-    if(a.beds!==b.beds)return a.beds-b.beds;return a.n-b.n;
+    if(a.beds!==b.beds)return b.beds-a.beds;return a.n-b.n;
   });
 
   // Allocate singles — deluxe singles from ensuite pool, standard singles from standard pool
@@ -1640,28 +1640,42 @@ function autoAllocate(adults,singleDeluxe,singleStandard){
   const ensRemaining=Math.max(0,ensuiteWant-ensSingles);
   const stdRemaining=Math.max(0,standardWant-stdSingles);
 
+  // Helper: pack guests into pool using fewest gers possible
+  function packGuests(pool,count){
+    if(count<=0)return[];
+    const picked=[];
+    let remaining=count;
+    // Pool is already sorted largest-first; greedily fill full gers,
+    // but prefer an exact-match ger when one exists for the remaining count
+    const available=[...pool]; // clone so we can remove used
+    while(remaining>0&&available.length>0){
+      // Look for exact bed match first (e.g. 3 remaining → pick a 3-bed ger)
+      const exactIdx=available.findIndex(g=>g.beds===remaining);
+      if(exactIdx!==-1){
+        const g=available.splice(exactIdx,1)[0];
+        picked.push({...g,occupants:g.beds});
+        remaining=0;
+        break;
+      }
+      // Otherwise take the largest available and fill it
+      const g=available.shift();
+      const occ=Math.min(g.beds,remaining);
+      picked.push({...g,occupants:occ});
+      remaining-=occ;
+    }
+    return picked;
+  }
+
   // Fill ensuite portion
   if(ensRemaining>0){
     const ensPool=availEns.filter(g=>!usedForSingle.has(g.n));
-    let filled=0;
-    for(const g of ensPool){
-      if(filled>=ensRemaining)break;
-      const occ=Math.min(g.beds,ensRemaining-filled);
-      result.push({...g,occupants:occ});
-      filled+=occ;
-    }
+    result.push(...packGuests(ensPool,ensRemaining));
   }
 
   // Fill standard portion
   if(stdRemaining>0){
     const stdPool=availStd.filter(g=>!usedForSingle.has(g.n));
-    let filled=0;
-    for(const g of stdPool){
-      if(filled>=stdRemaining)break;
-      const occ=Math.min(g.beds,stdRemaining-filled);
-      result.push({...g,occupants:occ});
-      filled+=occ;
-    }
+    result.push(...packGuests(stdPool,stdRemaining));
   }
 
   return{gers:result,singles};
