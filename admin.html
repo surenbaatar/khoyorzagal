@@ -148,6 +148,9 @@ table.admin-table tr:hover{background:#fafaf7}
 
 <div class="toast" id="toast"></div>
 
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="firebase-sync.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 // ─── AUTH ───
@@ -932,6 +935,13 @@ if(typeof _origShowApp==='undefined'){
   var _origDoLogin=window.doAdminLogin;
 }
 startAutoBackup();
+
+// Firebase sync handler
+window.onFirebaseSync = function(changedKey) {
+  console.log('[Firebase Sync] Admin refreshing');
+  var activeItem = document.querySelector('.sidebar-item.active');
+  if (activeItem) activeItem.click();
+};
 </script>
 </body>
 </html>

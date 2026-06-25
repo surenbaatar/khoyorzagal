@@ -91,6 +91,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <div class="portal-footer">&copy; 2026 Integrated Travel Lodges — Khoyor Zagal</div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="firebase-sync.js"></script>
 <script>
 // Seed default users if none exist
 (function(){
@@ -107,6 +110,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     }
   }catch(e){}
 })();
+
+window.onFirebaseSync = function() {};
 </script>
 
 </body>

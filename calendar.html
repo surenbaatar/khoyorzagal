@@ -305,6 +305,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 <a class="fab" href="booking.html"><i class="ti ti-plus" style="font-size:16px"></i> New booking</a>
 
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="firebase-sync.js"></script>
 <script>
 const GERS=[
   {n:1,beds:2,type:'ensuite'},{n:2,beds:2,type:'ensuite'},{n:3,beds:2,type:'ensuite'},{n:4,beds:2,type:'ensuite'},
@@ -800,6 +803,42 @@ document.addEventListener('keydown',function(e){
   var inp=document.getElementById('searchInput');
   if(inp){var t;inp.addEventListener('input',function(){clearTimeout(t);t=setTimeout(function(){runSearch(inp.value)},150)});}
 })();
+
+// ─── Firebase sync handler ───
+// Firebase sync handler
+window.onFirebaseSync = function(changedKey){
+  (function(){
+    // Re-read reservations from localStorage
+    BOOKINGS.length=0;
+    try{
+      var saved=JSON.parse(localStorage.getItem('kz_reservations')||'[]');
+      saved.forEach(function(r){
+        if(r.cancelled)return;
+        BOOKINGS.push({
+          id:r.id,
+          company:r.company,
+          color:r.color||'#999',
+          guests:r.guests||(r.adults||0)+(r.children03||0)+(r.children48||0),
+          guide:r.guide||'',
+          checkIn:r.checkIn,
+          checkOut:r.checkOut,
+          nationality:r.nationality||'',
+          tripCode:r.tripCode||'',
+          gers:(r.gers||[]).map(function(g){return typeof g==='object'?g:{n:g,occ:2}}),
+          gerNums:r.gerNums||[],
+          staffGers:r.staffGers||[],
+          dlxGers:r.dlxGers||0,
+          stdGers:r.stdGers||0,
+          comments:r.comments||'',
+          reserved:true
+        });
+      });
+    }catch(e){}
+    // kz_payments is read on-demand by loadPayments()/getPayStatus(),
+    // so no extra work needed — just re-render.
+    render();
+  })();
+};
 </script>
 </body>
 </html>
