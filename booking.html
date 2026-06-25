@@ -757,7 +757,8 @@ function viewDateStr(){
 function updateDateDisplay(){
   document.getElementById('dateDisplay').textContent=fmtViewDate(viewDate);
   try{document.getElementById('jumpDate').value=viewDateStr();}catch(e){}
-  // Keep URL in sync so refresh stays on the current date
+}
+function syncURLToViewDate(){
   try{
     const vds=viewDateStr();
     const nextDay=new Date(viewDate);nextDay.setDate(nextDay.getDate()+1);
@@ -771,11 +772,13 @@ function updateDateDisplay(){
 function navDay(delta){
   viewDate.setDate(viewDate.getDate()+delta);
   updateDateDisplay();
+  syncURLToViewDate();
   renderGers();
 }
 function navToday(){
   viewDate=new Date();
   updateDateDisplay();
+  syncURLToViewDate();
   renderGers();
 }
 function jumpToDate(dateStr){
@@ -783,6 +786,7 @@ function jumpToDate(dateStr){
   const p=dateStr.split('-');
   viewDate=new Date(+p[0],+p[1]-1,+p[2]);
   updateDateDisplay();
+  syncURLToViewDate();
   renderGers();
 }
 // Helper: check if a reservation is active on the view date
@@ -2086,6 +2090,7 @@ document.getElementById('checkIn').addEventListener('change',function(){
     const p=v.split('-');
     viewDate=new Date(+p[0],+p[1]-1,+p[2]);
     updateDateDisplay();
+    syncURLToViewDate();
     renderGers();
   }
 });
