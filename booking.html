@@ -2182,6 +2182,18 @@ function reserveBooking(){
   const comments=document.getElementById('bookingComments').value.trim();
   const total=grandEl.textContent;
 
+  // Prevent duplicate bookings (same company, dates, trip code, and guest count)
+  const isEdit=editingReservationId!==null;
+  const dup=reservations.find(r=>
+    r.company===company && r.checkIn===ci && r.checkOut===co &&
+    (r.tripCode||'')===(tripCode||'') && r.guests===guests &&
+    (!isEdit || r.id!==editingReservationId)
+  );
+  if(dup){
+    showToast('⚠ Duplicate booking — this exact reservation already exists','#DC2626');
+    return;
+  }
+
   // Capture reserved ger numbers
   const gerNums=[...selected].sort((a,b)=>a-b);
   const singleNums=[...singleGers].sort((a,b)=>a-b);
@@ -2193,7 +2205,6 @@ function reserveBooking(){
   const driversF=+document.getElementById('driversF').value||0;
 
   // Use existing color if editing, otherwise pick new
-  const isEdit=editingReservationId!==null;
   const color=isEdit?editingReservationColor:pickColor(company);
 
   // Build ger detail array (matching calendar format)
