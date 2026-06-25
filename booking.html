@@ -240,6 +240,8 @@ label.field-label{font-size:12px;color:#666;margin-bottom:4px;display:block;font
 .booking-success-card .bsc-btn-primary:hover{background:#047857}
 .booking-success-card .bsc-btn-secondary{background:transparent;color:#534AB7;margin-right:8px}
 .booking-success-card .bsc-btn-secondary:hover{background:#EEEDFE}
+@keyframes tagFlash{0%{transform:scale(1);box-shadow:none}25%{transform:scale(1.25);box-shadow:0 0 12px rgba(5,150,105,.6)}50%{transform:scale(1)}75%{transform:scale(1.15);box-shadow:0 0 8px rgba(5,150,105,.4)}100%{transform:scale(1);box-shadow:none}}
+.booking-tag.just-added{animation:tagFlash .8s ease 2}
 
 /* Booking detail view */
 #detailView{display:none}
@@ -2113,8 +2115,20 @@ function showBookingConfirmation(company,gerCount,checkIn,checkOut,guests,isEdit
       </div>
     </div>`;
   document.body.appendChild(overlay);
-  // Also dismiss on overlay background click
-  overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove()});
+
+  // Flash the matching booking tag when overlay is dismissed
+  function flashTag(){
+    document.querySelectorAll('.booking-tag').forEach(t=>{
+      if(t.textContent.includes(company)){
+        t.classList.add('just-added');
+        setTimeout(()=>t.classList.remove('just-added'),3000);
+      }
+    });
+  }
+  // Dismiss on overlay background click
+  overlay.addEventListener('click',e=>{if(e.target===overlay){overlay.remove();flashTag();}});
+  // Dismiss on button clicks (handled inline, but add flash)
+  overlay.querySelectorAll('.bsc-btn').forEach(btn=>btn.addEventListener('click',()=>setTimeout(flashTag,50)));
 }
 
 // ─── Reservation system ───
@@ -2223,6 +2237,7 @@ function reserveBooking(){
   updateReserveBadge();
 
   // Clear edit mode
+  const _savedCompany=company, _savedGerCount=gerNums.length, _savedCI=ci, _savedCO=co, _savedGuests=guests, _savedIsEdit=isEdit, _savedColor=color;
   editingReservationId=null;
   editingReservationColor=null;
   resetForm();
@@ -2230,8 +2245,11 @@ function reserveBooking(){
   document.getElementById('formView').style.display='none';
   document.getElementById('newBookingPrompt').style.display='';
 
-  // Show big success confirmation
-  showBookingConfirmation(company,gerNums.length,ci,co,guests,isEdit,color);
+  // Rebuild grid so new booking tag appears behind the overlay
+  buildGrid();
+
+  // Show big success confirmation overlay
+  showBookingConfirmation(_savedCompany,_savedGerCount,_savedCI,_savedCO,_savedGuests,_savedIsEdit,_savedColor);
 }
 
 function downloadCurrentInvoice(){
