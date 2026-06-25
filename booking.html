@@ -1829,27 +1829,39 @@ function calculate(){
     });
   }
   if(totalStaff){
-    // Sync workstation data to staffAlloc
+    // Ensure workstation is up-to-date before calculating staff costs
+    wsCollectStaff();
+    if(wsGers.length===0) wsAutoGers();
+    if(wsStaff.filter(s=>!s.existing).every(s=>s.gerN===null)&&wsGers.length>0) autoPlaceStaff();
     syncStaffAlloc();
 
     // Show per-ger staff breakdown — only charge for current booking's staff (not existing)
+    let staffBedCharged=0;
     staffAlloc.filter(g=>g.occupants.some(o=>!o.existing)).forEach(ga=>{
       const myStaff=ga.occupants.filter(o=>!o.existing);
       if(myStaff.length===0)return;
       const hasSingle=myStaff.some(o=>o.singleSupp);
       const occ=myStaff.length;
+      staffBedCharged+=occ;
       const names=myStaff.map(o=>o.name).join(', ');
       if(hasSingle&&occ===1){
-        const rate=R.staff.bed+R.staff.supplement;
+        const rate=R.staff.bed+(R.staff.supplement||0);
         const sub=rate*nights;bedTotal+=sub;
         html+=`<div class="inv-line"><span>Ger #${ga.ger_number} · ${names} <span style="color:#BA7517;font-size:10px;font-weight:600">SS</span></span><span>${fmt(sub)}</span></div>`;
-        html+=`<div class="inv-line sub"><span>(${fmt(R.staff.bed)} + ${fmt(R.staff.supplement)}) × ${nights}n</span></div>`;
+        html+=`<div class="inv-line sub"><span>(${fmt(R.staff.bed)} + ${fmt(R.staff.supplement||0)}) × ${nights}n</span></div>`;
       }else{
         const sub=occ*R.staff.bed*nights;bedTotal+=sub;
         html+=`<div class="inv-line"><span>Ger #${ga.ger_number} · ${occ} staff</span><span>${fmt(sub)}</span></div>`;
         html+=`<div class="inv-line sub"><span>${names} — ${occ} × ${fmt(R.staff.bed)} × ${nights}n</span></div>`;
       }
     });
+    // Fallback: if workstation couldn't assign gers, still charge staff accommodation
+    if(staffBedCharged<totalStaff){
+      const remaining=totalStaff-staffBedCharged;
+      const sub=remaining*R.staff.bed*nights;bedTotal+=sub;
+      html+=`<div class="inv-line"><span>Staff accommodation · ${remaining} staff</span><span>${fmt(sub)}</span></div>`;
+      html+=`<div class="inv-line sub"><span>${remaining} × ${fmt(R.staff.bed)} × ${nights}n</span></div>`;
+    }
   }
   html+=`<div class="inv-line total"><span>Accommodation subtotal</span><span>${fmt(bedTotal)}</span></div>`;
 
