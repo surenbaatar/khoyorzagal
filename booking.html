@@ -2256,7 +2256,9 @@ function reserveBooking(){
     gers:gerDetails,gerNums,singles:singleNums,
     staffGers:staffGerDetails,
     guidesM,guidesF,driversM,driversF,
-    total,comments,
+    total,
+    invoiceTotal:Number(total.replace(/[^0-9.-]/g,''))||0,
+    comments,
     mealSelections:mealSelectionsRes,
     staffMealNights:staffMealNightsRes,
     reservedAt:new Date().toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})

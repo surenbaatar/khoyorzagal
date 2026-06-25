@@ -602,7 +602,9 @@ window.logInvoice=function(key,type){
 }
 
 function calcInvoice(r){
-  if(r.invoiceTotal&&Number(r.invoiceTotal)>0)return{total:Number(r.invoiceTotal),estimated:false};
+  // Check invoiceTotal first (numeric), then total (may be formatted string like "₮1,234,000")
+  var stored=r.invoiceTotal||r.total;
+  if(stored){var num=Number(String(stored).replace(/[^0-9.-]/g,''));if(num>0)return{total:num,estimated:false};}
   var nights=nightsBetween(r.checkIn,r.checkOut),tg=r.guests||0,isFIT=tg<FIT_THRESHOLD;
   var stdRate=isFIT?BED_RATES.standard_fit:BED_RATES.standard_group,bt=0;
   var gers=r.gers||[],singles=r.singles||[];
