@@ -2251,6 +2251,9 @@ function reserveBooking(){
   });
   saveReservations();
 
+  // Immediate toast so user knows it saved
+  showToast(isEdit ? '✓ Booking updated — '+company : '✓ Booking saved — '+company, '#0F6E56');
+
   // Mark gers as occupied so next booking can't use them
   gerNums.forEach(n=>occupied.add(n));
 
@@ -2266,10 +2269,12 @@ function reserveBooking(){
   document.getElementById('newBookingPrompt').style.display='';
 
   // Rebuild grid so new booking tag appears behind the overlay
-  buildGrid();
+  try{ buildGrid(); }catch(e){ console.error('[Booking] buildGrid error after save:', e); }
 
   // Show big success confirmation overlay
-  showBookingConfirmation(_savedCompany,_savedGerCount,_savedCI,_savedCO,_savedGuests,_savedIsEdit,_savedColor);
+  try{
+    showBookingConfirmation(_savedCompany,_savedGerCount,_savedCI,_savedCO,_savedGuests,_savedIsEdit,_savedColor);
+  }catch(e){ console.error('[Booking] Confirmation overlay error:', e); }
 }
 
 function downloadCurrentInvoice(){
