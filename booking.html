@@ -757,6 +757,16 @@ function viewDateStr(){
 function updateDateDisplay(){
   document.getElementById('dateDisplay').textContent=fmtViewDate(viewDate);
   try{document.getElementById('jumpDate').value=viewDateStr();}catch(e){}
+  // Keep URL in sync so refresh stays on the current date
+  try{
+    const vds=viewDateStr();
+    const nextDay=new Date(viewDate);nextDay.setDate(nextDay.getDate()+1);
+    const coStr=nextDay.getFullYear()+'-'+String(nextDay.getMonth()+1).padStart(2,'0')+'-'+String(nextDay.getDate()).padStart(2,'0');
+    const url=new URL(window.location);
+    url.searchParams.set('checkIn',vds);
+    url.searchParams.set('checkOut',coStr);
+    history.replaceState(null,'',url);
+  }catch(e){}
 }
 function navDay(delta){
   viewDate.setDate(viewDate.getDate()+delta);
