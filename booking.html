@@ -2172,9 +2172,10 @@ function reserveBooking(){
 
   const ci=document.getElementById('checkIn').value;
   const co=document.getElementById('checkOut').value;
-  const adults=+document.getElementById('adults').value||0;
-  const c03=+document.getElementById('children03').value||0;
-  const c48=+document.getElementById('children48').value||0;
+  // In manual mode, guest count comes from ger occupancy tally, not form fields
+  const adults=mode==='manual'?getManualTally():(+document.getElementById('adults').value||0);
+  const c03=mode==='manual'?0:(+document.getElementById('children03').value||0);
+  const c48=mode==='manual'?0:(+document.getElementById('children48').value||0);
   const guests=adults+c03+c48;
   const tripCode=document.getElementById('tripCode').value.trim();
   const guide=document.getElementById('guideName').value.trim();
@@ -2194,7 +2195,7 @@ function reserveBooking(){
     return;
   }
 
-  // Capture reserved ger numbers
+  // Capture reserved ger numbers (snapshot before clearing)
   const gerNums=[...selected].sort((a,b)=>a-b);
   const singleNums=[...singleGers].sort((a,b)=>a-b);
 
