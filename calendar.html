@@ -220,6 +220,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .sr-timing.upcoming{background:#DBEAFE;color:#1D4ED8}
 .sr-group-label{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.4px;padding:8px 0 4px;display:flex;align-items:center;gap:6px}
 .sr-group-label i{font-size:13px}
+
+/* Company summary card */
+.sr-summary{background:linear-gradient(135deg,#534AB7 0%,#6C5CE7 100%);color:#fff;border-radius:10px;padding:16px 18px;margin-bottom:14px}
+.sr-summary-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.sr-summary-header .sr-sum-icon{width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sr-summary-header .sr-sum-name{font-size:15px;font-weight:700}
+.sr-summary-header .sr-sum-count{font-size:11px;opacity:.8;margin-top:1px}
+.sr-sum-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.sr-sum-stat{background:rgba(255,255,255,.12);border-radius:8px;padding:8px 10px;text-align:center}
+.sr-sum-stat .ss-val{font-size:18px;font-weight:700}
+.sr-sum-stat .ss-lbl{font-size:9px;opacity:.7;text-transform:uppercase;letter-spacing:.3px;margin-top:1px}
+.sr-sum-pay{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.12);border-radius:8px;padding:8px 12px}
+.sr-sum-pay .sp-bar-wrap{flex:1;height:6px;background:rgba(255,255,255,.2);border-radius:3px;overflow:hidden}
+.sr-sum-pay .sp-bar-fill{height:100%;border-radius:3px;transition:width .3s}
+.sr-sum-pay .sp-bar-fill.paid{background:#4ADE80}
+.sr-sum-pay .sp-bar-fill.partial{background:#FBBF24}
+.sr-sum-pay .sp-bar-fill.unpaid{background:#F87171}
+.sr-sum-pay .sp-label{font-size:11px;font-weight:600;white-space:nowrap}
+.sr-sum-pay .sp-detail{font-size:10px;opacity:.7;white-space:nowrap}
+.sr-sum-dates{font-size:11px;opacity:.8;margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sr-sum-dates i{font-size:13px;opacity:.6}
+.sr-sum-guides{font-size:11px;opacity:.8;margin-top:4px;display:flex;align-items:center;gap:6px}
+.sr-sum-guides i{font-size:13px;opacity:.6}
 </style>
 </head>
 <body>
@@ -346,11 +369,20 @@ const BOOKINGS=[];
         company:r.company,
         color:r.color||'#999',
         guests:r.guests||(r.adults||0)+(r.children03||0)+(r.children48||0),
+        adults:r.adults||0,
+        children03:r.children03||0,
+        children48:r.children48||0,
+        guidesM:r.guidesM||0,guidesF:r.guidesF||0,
+        driversM:r.driversM||0,driversF:r.driversF||0,
         guide:r.guide||'',
+        contact:r.contact||'',
         checkIn:r.checkIn,
         checkOut:r.checkOut,
         nationality:r.nationality||'',
         tripCode:r.tripCode||'',
+        total:r.total||'',
+        invoiceTotal:r.invoiceTotal||0,
+        singles:r.singles||[],
         gers:(r.gers||[]).map(g=>typeof g==='object'?g:{n:g,occ:2}),
         gerNums:r.gerNums||[],
         staffGers:r.staffGers||[],
@@ -727,6 +759,91 @@ function hlMatch(text,query){
   var esc=query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   return text.replace(new RegExp('('+esc+')','gi'),'<span class="sr-match">$1</span>');
 }
+function buildCompanySummary(companyName,bookings){
+  var today=new Date();today.setHours(0,0,0,0);
+  var totalNights=0,totalGuests=0,totalAdults=0,totalChildren=0,totalStaff=0;
+  var totalInvoice=0,totalPaid=0;
+  var totalGers=0,ensGers=0,stdGers=0;
+  var firstCI=null,lastCO=null;
+  var guides=new Set();
+  var cur=0,upc=0,pst=0;
+  bookings.forEach(function(r){
+    var nights=Math.max(1,diffD(pd(r.checkIn),pd(r.checkOut)));
+    totalNights+=nights;
+    totalGuests+=(r.guests||0);
+    totalAdults+=(r.adults||0);
+    totalChildren+=((r.children03||0)+(r.children48||0));
+    totalStaff+=((r.guidesM||0)+(r.guidesF||0)+(r.driversM||0)+(r.driversF||0));
+    var gNums=r.gerNums||(r.gers||[]).map(function(g){return typeof g==='object'?g.n:g});
+    totalGers+=gNums.length;
+    gNums.forEach(function(n){if(ENSUITE_NUMS.has(n))ensGers++;else stdGers++});
+    if(r.guide) r.guide.split(/[,\/&]/).forEach(function(g){var t=g.trim();if(t)guides.add(t)});
+    var ci=pd(r.checkIn),co=pd(r.checkOut);
+    if(!firstCI||ci<firstCI)firstCI=ci;
+    if(!lastCO||co>lastCO)lastCO=co;
+    if(co<=today)pst++;else if(ci<=today&&co>today)cur++;else upc++;
+    // Payment
+    var ps=getPayStatus(r);
+    totalInvoice+=ps.invoice;
+    totalPaid+=ps.paid;
+  });
+  var payPct=totalInvoice>0?Math.min(Math.round(totalPaid/totalInvoice*100),100):0;
+  var payStatus=payPct>=100?'paid':payPct>0?'partial':'unpaid';
+  var statusParts=[];
+  if(cur) statusParts.push(cur+' current');
+  if(upc) statusParts.push(upc+' upcoming');
+  if(pst) statusParts.push(pst+' past');
+
+  var h='<div class="sr-summary">';
+  h+='<div class="sr-summary-header">';
+  h+='<div class="sr-sum-icon"><i class="ti ti-building"></i></div>';
+  h+='<div><div class="sr-sum-name">'+companyName+'</div>';
+  h+='<div class="sr-sum-count">'+bookings.length+' booking'+(bookings.length!==1?'s':'')+' · '+statusParts.join(', ')+'</div>';
+  h+='</div></div>';
+
+  h+='<div class="sr-sum-grid">';
+  h+='<div class="sr-sum-stat"><div class="ss-val">'+totalGuests+'</div><div class="ss-lbl">Guests</div></div>';
+  h+='<div class="sr-sum-stat"><div class="ss-val">'+totalNights+'</div><div class="ss-lbl">Nights</div></div>';
+  h+='<div class="sr-sum-stat"><div class="ss-val">'+totalGers+'</div><div class="ss-lbl">Ger-nights</div></div>';
+  h+='</div>';
+
+  // Breakdown line
+  var breakParts=[];
+  if(totalAdults) breakParts.push(totalAdults+' adults');
+  if(totalChildren) breakParts.push(totalChildren+' children');
+  if(totalStaff) breakParts.push(totalStaff+' staff');
+  if(ensGers||stdGers){
+    var gp=[];if(ensGers)gp.push(ensGers+' ensuite');if(stdGers)gp.push(stdGers+' standard');
+    breakParts.push(gp.join(' + '));
+  }
+  if(breakParts.length){
+    h+='<div style="font-size:10px;opacity:.7;margin:-4px 0 8px;text-align:center">'+breakParts.join(' · ')+'</div>';
+  }
+
+  // Payment bar
+  if(totalInvoice>0){
+    h+='<div class="sr-sum-pay">';
+    h+='<div class="sp-label">₮'+totalInvoice.toLocaleString()+'</div>';
+    h+='<div class="sp-bar-wrap"><div class="sp-bar-fill '+payStatus+'" style="width:'+payPct+'%"></div></div>';
+    h+='<div class="sp-detail">'+payPct+'% paid';
+    if(totalInvoice>totalPaid) h+=' · ₮'+(totalInvoice-totalPaid).toLocaleString()+' due';
+    h+='</div>';
+    h+='</div>';
+  }
+
+  // Date range
+  if(firstCI&&lastCO){
+    h+='<div class="sr-sum-dates"><i class="ti ti-calendar-event"></i> '+fd(firstCI)+' → '+fd(lastCO)+'</div>';
+  }
+  // Guides
+  var guideArr=Array.from(guides);
+  if(guideArr.length){
+    h+='<div class="sr-sum-guides"><i class="ti ti-user"></i> Guides: '+guideArr.join(', ')+'</div>';
+  }
+  h+='</div>';
+  return h;
+}
+
 function runSearch(query){
   var res=document.getElementById('searchResults');
   var q=query.trim().toLowerCase();
@@ -755,12 +872,31 @@ function runSearch(query){
     else if(ci<=today&&co>today) current.push(r);
     else upcoming.push(r);
   });
+
+  var html='';
+
+  // Group by company for summary cards
+  var companies={};
+  matches.forEach(function(r){
+    var name=r.company||'Unknown';
+    if(!companies[name]) companies[name]=[];
+    companies[name].push(r);
+  });
+  var companyNames=Object.keys(companies);
+  // Show summary card(s) for each company
+  companyNames.forEach(function(name){
+    html+=buildCompanySummary(name,companies[name]);
+  });
+
   var totalNights=0,totalGuests=0;
   sorted.forEach(function(r){
     totalNights+=Math.max(1,diffD(pd(r.checkIn),pd(r.checkOut)));
     totalGuests+=(r.guests||0);
   });
-  var html='<div class="sr-count">'+matches.length+' booking'+(matches.length!==1?'s':'')+' found · '+totalGuests+' total guests · '+totalNights+' total nights</div>';
+  if(companyNames.length>1){
+    html+='<div class="sr-count">'+matches.length+' booking'+(matches.length!==1?'s':'')+' across '+companyNames.length+' companies · '+totalGuests+' total guests · '+totalNights+' total nights</div>';
+  }
+
   function renderGroup(label,icon,items,cls){
     if(!items.length) return;
     html+='<div class="sr-group-label"><i class="ti ti-'+icon+'"></i> '+label+' ('+items.length+')</div>';
@@ -819,11 +955,20 @@ window.onFirebaseSync = function(changedKey){
           company:r.company,
           color:r.color||'#999',
           guests:r.guests||(r.adults||0)+(r.children03||0)+(r.children48||0),
+          adults:r.adults||0,
+          children03:r.children03||0,
+          children48:r.children48||0,
+          guidesM:r.guidesM||0,guidesF:r.guidesF||0,
+          driversM:r.driversM||0,driversF:r.driversF||0,
           guide:r.guide||'',
+          contact:r.contact||'',
           checkIn:r.checkIn,
           checkOut:r.checkOut,
           nationality:r.nationality||'',
           tripCode:r.tripCode||'',
+          total:r.total||'',
+          invoiceTotal:r.invoiceTotal||0,
+          singles:r.singles||[],
           gers:(r.gers||[]).map(function(g){return typeof g==='object'?g:{n:g,occ:2}}),
           gerNums:r.gerNums||[],
           staffGers:r.staffGers||[],
